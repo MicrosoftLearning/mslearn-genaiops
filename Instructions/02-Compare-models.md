@@ -71,7 +71,7 @@ To compare the precision and performance of two models, let's deploy the models 
 
 1. Navigate to the **Models + endpoints** page using the menu on the left.
 1. Deploy a `gpt-4o` base model, with the default settings. Select **Customize** to ensure the **Tokens per Minute Rate Limit** is set to **10K**.
-1. Deploy a `gpt-4o-mini` base model. Similarly, ensure the **Tokens per Minute Rate Limit** is set to **10K**.
+1. Deploy a `gpt-4o-mini` base model. Similarly, ensure the **Tokens per Minute Rate Limit** is set to **50K**.
 
 Now that the models are deployed, you can interact with them through the **Chat playground** to evaluate their responses.
 
@@ -79,7 +79,41 @@ Now that the models are deployed, you can interact with them through the **Chat 
 
 In your use case, you want the model to provide accurate responses when a student asks for a code sample. As a test, let's take the image of a pie chart and ask each model to write code to create the image.
 
-1. Download the 
+1. Download the pie chart image from the following URL, and store it locally: [https://github.com/MicrosoftLearning/mslearn-genaiops/blob/main/Instructions/images/demo.png](https://raw.githubusercontent.com/MicrosoftLearning/mslearn-genaiops/refs/heads/main/Instructions/images/demo.png)
 1. Navigate to the **Playground** page using the menu on the left. And open the **Chat playground**.
 1. In the setup pane, select the **gpt-4o** model for deployment.
-1. Attach the image
+1. Attach the **demo.png** image and add the prompt: `Please create Python code for image`
+1. To easily compare, open the portal in another tab: [ai.azure.com](ai.azure.com).
+1. In the newly opened tab, navigate to the playground and make sure the chat is empty. Use the sweeping broom icon to clear the chat if needed.
+1. Use the exact same prompt with the deployed **gpt-4o-mini** model.
+
+You now have two code snippets that a student could use to generate a pie chart. Review the code and try to answer the following questions:
+
+- *How do the two code snippets differ?*
+- *Which output would you prefer as a student?*
+
+**Optionally**, you can run the code and explore how the output differs.
+
+## Filter for performance
+
+Now that you have tested both models, you can explore their metrics to evaluate their performance.
+
+1. Navigate to **Models + endpoints**.
+1. Select a model, and navigate to the **Metrics** tab.
+1. Select the **Last day** filter to get a better view on the tokens usage and requests per minute.
+1. Repeat these steps for the other model.
+
+The resulting views allow you to compare the token usage per model. Try to answer the following questions:
+
+- *Which model had a higher token usage?*
+- *Why did this model have a higher token usage?*
+
+**Optionally**, you can get a more detailed view if you select **Open in Azure Monitor**. In the Azure portal, you can also explore the costs for each resource.
+
+## Clean up
+
+If you've finished exploring Azure AI Foundry portal, you should delete the resources you have created in this exercise to avoid incurring unnecessary Azure costs.
+
+1. Return to the browser tab containing the Azure portal (or re-open the [Azure portal](https://portal.azure.com?azure-portal=true) in a new browser tab) and view the contents of the resource group where you deployed the resources used in this exercise.
+1. On the toolbar, select **Delete resource group**.
+1. Enter the resource group name and confirm that you want to delete it.
