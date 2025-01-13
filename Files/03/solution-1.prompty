@@ -1,6 +1,6 @@
 ---
-name: ExamplePrompt
-description: A prompt that uses context to ground an incoming question
+name: Python Tutor Prompt
+description: A teaching assistant for students learning to code in Python.
 authors:
   - Seth Juarez
 model:
@@ -9,17 +9,12 @@ model:
     type: azure_openai
     azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
     azure_deployment: ${env:AZURE_OPENAI_CHAT_DEPLOYMENT}
+    api_key: ${env:AZURE_OPENAI_API_KEY}
   parameters:
     max_tokens: 3000
 sample:
-  firstName: Seth
-  context: >
-    The Alpine Explorer Tent boasts a detachable divider for privacy, 
-    numerous mesh windows and adjustable vents for ventilation, and 
-    a waterproof design. It even has a built-in gear loft for storing 
-    your outdoor essentials. In short, it's a blend of privacy, comfort, 
-    and convenience, making it your second home in the heart of nature!
-  question: What can you tell me about your tents?
+  firstName: Daniel
+  question: What's the difference between 'for' loops and 'while' loops.
 ---
 
 system:
