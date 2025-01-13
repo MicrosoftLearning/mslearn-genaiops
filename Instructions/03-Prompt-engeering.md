@@ -65,7 +65,9 @@ To quickly experiment and iterate, you'll use Prompty in Visual Studio (VS) Code
 1. Select **New Prompty** from the drop-down menu.
 1. Open the newly created file named **basic.prompty**.
 1. Run the Prompty file by selecting the **play** button a the top-left corner (or press F5).
-1. An **Output** pane will open with an error message. The error message should tell you that the deployed model isn't specified or can't be found.
+1. When prompted to sign in, select **Allow**.
+1. Select your Azure account and sign in.
+1. Go back to VS Code, where an **Output** pane will open with an error message. The error message should tell you that the deployed model isn't specified or can't be found.
 
 To fix the error, you need to configure a model for Prompty to use.
 
@@ -80,13 +82,13 @@ To execute the Prompty file, you need to specify the language model to use for g
     - **Name**:
 
         ```yaml
-        name: Contoso Chat Prompt
+        name: Python Tutor Prompt
         ```
 
     - **Description**:
 
         ```yaml
-        description: A retail assistant for Contoso Outdoors products retailer.
+        description: A teaching assistant for students wanting to learn how to write and edit Python code.
         ```
 
     - **Deployed model**:
@@ -103,6 +105,8 @@ To execute the Prompty file, you need to specify the language model to use for g
         api_key: ${env:AZURE_OPENAI_API_KEY}
         ```
 
+1. Save the updated Prompty file.
+
 The Prompty file now has all the necessary parameters, but some parameters use placeholders to obtain the required values. The placeholders are stored in the **.env** file in the same folder.
 
 ## Update model configuration
@@ -117,3 +121,33 @@ To specify which model Prompty, you need to provide your model's information in 
     - AZURE_OPENAI_ENDPOINT="<Your endpoint target URI>"
     - AZURE_OPENAI_API_KEY="<Your endpoint key>"
     ```
+
+1. Save the .env file.
+1. Run the **chat-1.prompty** file again.
+
+You should now get an AI generated response, albeit unrelated to your scenario as it just uses the sample input. Let's update the template to make it an AI teaching assistant.
+
+## Edit the sample section
+
+The sample section specifies the inputs to the Prompty, and supplies default values to use if no inputs are provided.
+
+1. Edit the fields of the following paramaters:
+
+    - **firstName**: Choose any other name.
+    - **context**: Remove this entire section.
+    - **question**: Replace the provided text with:
+
+    ```yaml
+    What is the difference between 'for' loops and 'while' loops?
+    ```
+
+    You **sample** section should now look like this:
+    
+    ```yaml
+    sample:
+    firstName: Daniel
+    question: What is the difference between 'for' loops and 'while' loops?
+    ```
+
+    1. Run the updated Prompty file and review the output.
+
