@@ -102,3 +102,18 @@ To execute the Prompty file, you need to specify the language model to use for g
         ```yaml
         api_key: ${env:AZURE_OPENAI_API_KEY}
         ```
+
+The Prompty file now has all the necessary parameters, but some parameters use placeholders to obtain the required values. The placeholders are stored in the **.env** file in the same folder.
+
+## Update model configuration
+
+To specify which model Prompty, you need to provide your model's information in the .env file.
+
+1. Open the **.env** file in the **Files/03** folder.
+1. Update each of the placeholders with the values you copied earlier from the model deployment page in the Azure AI Foundry portal:
+
+    ```yaml
+    - AZURE_OPENAI_CHAT_DEPLOYMENT="<Your deployment name>"
+    - AZURE_OPENAI_ENDPOINT="<Your endpoint target URI>"
+    - AZURE_OPENAI_API_KEY="<Your endpoint key>"
+    ```
