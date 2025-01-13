@@ -13,7 +13,7 @@ This exercise will take approximately **25** minutes.
 
 ## Scenario
 
-Imagine you want to build an app to help students learn how to code in Python. In the app you want an automated tutor that can help students write and evaluate code. In one exercise, students need to come up with the necessary Python code to plot a pie chart, based on the following example image:
+Imagine you want to build an app to help students learn how to code in Python. In the app, you want an automated tutor that can help students write and evaluate code. In one exercise, students need to come up with the necessary Python code to plot a pie chart, based on the following example image:
 
 ![Pie chart showing marks obtained in an exam with sections for maths (34.9%), physics (28.6%), chemistry (20.6%), and English (15.9%)](./images/demo.png)
 
@@ -50,7 +50,7 @@ You know that the model you select needs to accept images as input. You also wan
 1. Add another filter to only show models with **Inference tasks**: **Chat completion**.
 1. Search for `gpt-4o` and review the results.
 
-You notice that you can use the gpt-4o model, or the gpt-4o-mini model. Let's compare them based on benchmarks to explore their differences.
+    You notice that you can use the gpt-4o model, or the gpt-4o-mini model. Let's compare them based on benchmarks to explore their differences.
 
 1. Select **Compare models** (find the button next to the filters in the search pane).
 1. Remove the selected models.
