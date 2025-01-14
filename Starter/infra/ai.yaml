@@ -13,7 +13,7 @@ deployments:
     model:
       format: OpenAI
       name: gpt-4o
-      version: "2024-11-20"
+      version: "2024-08-06"
     sku:
       name: "Standard"
       capacity: 10
