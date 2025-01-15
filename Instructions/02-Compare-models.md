@@ -38,11 +38,18 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
     git clone https://github.com/MicrosoftLearning/mslearn-genaiops
      ```
 
-1. After the repo has been cloned, enter the following commands to initialize and run the Starter template, which provisions an AI Hub with dependent resources, AI project, AI Services and an online endpoint.
-
+1. After the repo has been cloned, enter the following commands to initialize the Starter template. 
+   
      ```powershell
     cd ./mslearn-genaiops/Starter
     azd init
+     ```
+
+1. Once prompted, give a name to the new environment as it will be used as basis for giving unique names to all the provisioned resources.
+        
+1. Next, enter the following command to run the Starter template. It will provision an AI Hub with dependent resources, AI project, AI Services and an online endpoint. It will also deploy the models GPT-4 Turbo, GPT-4o, and GPT-4o mini.
+
+     ```powershell
     azd up  
      ```
 
@@ -54,25 +61,33 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
    - Sweden Central
    - West US
    - West US 3
-
+    
 1. Wait for the script to complete - this typically takes around 10 minutes, but in some cases may take longer.
 
-    > **Note**: Azure OpenAI resources are constrained at the tenant level by regional quotas. The listed regions in the location helper include default quota for the model type(s) used in this exercise. Randomly choosing a region reduces the risk of a single region reaching its quota limit. In the event of a quota limit being reached, there's a possibility you may need to create another resource group in a different region. Learn more about [model availability per region](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models?tabs=standard%2Cstandard-chat-completions#global-standard-model-availability)
+    > **Note**: Azure OpenAI resources are constrained at the tenant level by regional quotas. The listed regions above include default quota for the model type(s) used in this exercise. Randomly choosing a region reduces the risk of a single region reaching its quota limit. In the event of a quota limit being reached, there's a possibility you may need to create another resource group in a different region. Learn more about [model availability per region](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models?tabs=standard%2Cstandard-chat-completions#global-standard-model-availability)
 
-## Select the model
+    <details>
+      <summary><b>Troubleshooting tip</b>: No quota available in a given region</summary>
+        <p>If you receive a deployment error for any of the models due to no quota available in the region you chose, try running the following commands:</p>
+        <ul>
+          <pre><code>azd env set AZURE_ENV_NAME new_env_name
+   azd env set AZURE_RESOURCE_GROUP new_rg_name
+   azd env set AZURE_LOCATION new_location
+   azd up</code></pre>
+        Replacing <code>new_env_name</code>, <code>new_rg_name</code>, and <code>new_location</code> with new values. The new location must be one of the regions listed at the beginning of the exercise, e.g <code>eastus2</code>, <code>northcentralus</code>, etc.
+        </ul>
+    </details>
+    
+## Compare the models
 
-You know that the model you select needs to accept images as input. You also want to start with a model whose inference infrastructure is fully managed by Azure. So, you opt for the Azure OpenAI model GPT-4o.
+You know that there are three models that accept images as input whose inference infrastructure is fully managed by Azure. Now, you need to compare them to decide which one is ideal for our use case.
 
+1. In a web browser, open [Azure AI Foundry portal](https://ai.azure.com) at `https://ai.azure.com` and sign in using your Azure credentials.
+1. If prompted, select the AI project created earlier.
 1. Navigate to the **Model catalog** page using the menu on the left.
-1. Add a filter to only show models from the **Collections**: **Azure OpenAI**.
-1. Add another filter to only show models with **Inference tasks**: **Chat completion**.
-1. Search for `gpt-4o` and review the results.
-
-    You notice that you can use the gpt-4o model, or the gpt-4o-mini model. Let's compare them based on benchmarks to explore their differences.
-
 1. Select **Compare models** (find the button next to the filters in the search pane).
 1. Remove the selected models.
-1. One by one, add the two models you want to compare: **gpt-4o** and **gpt-4o-mini**.
+1. One by one, add the three models you want to compare: **gpt-4**, **gpt-4o**, and **gpt-4o-mini**. For **gpt-4**, make sure that the selected version is **turbo-2024-04-09**, as it is the only version that accepts images as input.
 1. Change the x-axis to **Accuracy**.
 1. Ensure the y-axis is set to **Cost**.
 
@@ -81,17 +96,7 @@ Review the plot and try to answer the following questions:
 - *Which model is more accurate?*
 - *Which model is cheaper to use?*
 
-The benchmark metric accuracy is calculated based on publicly available generic datasets. Before making a decision, let's explore the quality of outputs of the two models specific to our use case.
-
-## Deploy two models to compare
-
-To compare the precision and performance of two models, let's deploy the models through the Azure AI Foundry portal.
-
-1. Navigate to the **Models + endpoints** page using the menu on the left.
-1. Deploy a `gpt-4o` base model, with the default settings. Select **Customize** to ensure the **Tokens per Minute Rate Limit** is set to **10K**.
-1. Deploy a `gpt-4o-mini` base model. Similarly, ensure the **Tokens per Minute Rate Limit** is set to **50K**.
-
-Now that the models are deployed, you can interact with them through the **Chat playground** to evaluate their responses.
+The benchmark metric accuracy is calculated based on publicly available generic datasets. From the plot we can already filter out one of the models, as it has the highest cost per token but not the highest accuracy. Before making a decision, let's explore the quality of outputs of the two remaining models specific to your use case.
 
 ## Filter for precision
 
@@ -104,7 +109,7 @@ In your use case, you want the model to provide accurate responses when a studen
 1. To easily compare, open the portal in another tab: [ai.azure.com](ai.azure.com).
 1. In the newly opened tab, navigate to the playground and make sure the chat is empty. Use the sweeping broom icon to clear the chat if needed.
 1. Use the exact same prompt with the deployed **gpt-4o-mini** model.
-
+1. Optionally, you can add aditional prompts to improve the code. For example: `Add a legend to the plot replacing the labels`
 You now have two code snippets that a student could use to generate a pie chart. Review the code and try to answer the following questions:
 
 - *How do the two code snippets differ?*
