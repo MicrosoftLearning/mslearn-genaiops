@@ -17,29 +17,47 @@ Imagine you want to build an app to help students learn how to code in Python. I
 
 ![Pie chart showing marks obtained in an exam with sections for maths (34.9%), physics (28.6%), chemistry (20.6%), and English (15.9%)](./images/demo.png)
 
-You need to select a language model that accepts images as input, and is able to generate accurate code.
+You need to select a language model that accepts images as input, and is able to generate accurate code. The available models that meet those criteria are GPT-4 Turbo, GPT-4o, and GPT-4o mini.
 
-Let's start by selecting a model from the Azure AI Foundry model catalog, based on the necessary characteristics.
+Let's start by deploying the necessary resources to work with these models in the Azure AI Foundry portal.
 
 ## Create an Azure AI hub and project
 
-You can access the model catalog without having a hub and project. However, since you know you also want to deploy models to evaluate their precision and performance, you need a project, so let's create one.
+You can create an Azure AI hub and project manually through the Azure AI Foundry portal, as well as deploy the models used in the exercise. However, you can also automate this process through the use of a template application with [Azure Developer CLI (azd)](https://aka.ms/azd).
 
-1. In a web browser, open [Azure AI Foundry portal](https://ai.azure.com) at `https://ai.azure.com` and sign in using your Azure credentials.
+1. In a web browser, open [Azure portal](https://portal.azure.com) at `https://portal.azure.com` and sign in using your Azure credentials.
 
-1. In the home page, select **+ Create project**. In the **Create a project** wizard you can see all the Azure resources that will be automatically created with your project, or you can customize the following settings by selecting **Customize** before selecting **Create**:
+1. Use the **[\>_]** button to the right of the search bar at the top of the page to create a new Cloud Shell in the Azure portal, selecting a ***PowerShell*** environment. The cloud shell provides a command line interface in a pane at the bottom of the Azure portal. For more information about using the Azure Cloud Shell, see the [Azure Cloud Shell documentation](https://docs.microsoft.com/azure/cloud-shell/overview).
 
-    - **Hub name**: *A unique name*
-    - **Subscription**: *Your Azure subscription*
-    - **Resource group**: *A new resource group*
-    - **Location**: Select **Help me choose** and then select **gpt-4o** in the Location helper window and use the recommended region\*
-    - **Connect Azure AI Services or Azure OpenAI**: (New) *Autofills with your selected hub name*
-    - **Connect Azure AI Search**: Skip connecting
+    > **Note**: If you have previously created a cloud shell that uses a *Bash* environment, switch it to ***PowerShell***.
 
-    > \* Azure OpenAI resources are constrained at the tenant level by regional quotas. The listed regions in the location helper include default quota for the model type(s) used in this exercise. Randomly choosing a region reduces the risk of a single region reaching its quota limit. In the event of a quota limit being reached later in the exercise, there's a possibility you may need to create another resource in a different region. Learn more about [model availability per region](https://learn.microsoft.com/azure/ai-services/openai/concepts/models#gpt-35-turbo-model-availability)
+1. In the PowerShell pane, enter the following commands to clone this exercise's repo:
 
-1. If you selected **Customize**, select **Next** and review your configuration.
-1. Select **Create** and wait for the process to complete.
+     ```powershell
+    rm -r mslearn-genaiops -f
+    git clone https://github.com/MicrosoftLearning/mslearn-genaiops
+     ```
+
+1. After the repo has been cloned, enter the following commands to initialize and run the Starter template, which provisions an AI Hub with dependent resources, AI project, AI Services and an online endpoint.
+
+     ```powershell
+    cd ./mslearn-genaiops/Starter
+    azd init
+    azd up  
+     ```
+
+1. When prompted, choose which subscription you want to use and then choose one of the following locations for resource provision:
+   - East US
+   - East US 2
+   - North Central US
+   - South Central US
+   - Sweden Central
+   - West US
+   - West US 3
+
+1. Wait for the script to complete - this typically takes around 10 minutes, but in some cases may take longer.
+
+    > **Note**: Azure OpenAI resources are constrained at the tenant level by regional quotas. The listed regions in the location helper include default quota for the model type(s) used in this exercise. Randomly choosing a region reduces the risk of a single region reaching its quota limit. In the event of a quota limit being reached, there's a possibility you may need to create another resource group in a different region. Learn more about [model availability per region](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models?tabs=standard%2Cstandard-chat-completions#global-standard-model-availability)
 
 ## Select the model
 
