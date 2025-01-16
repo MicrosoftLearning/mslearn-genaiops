@@ -17,43 +17,76 @@ Imagine you want to build an app to help students learn how to code in Python. I
 
 You've selected a GPT-4 model to start experimenting with. You now want to apply prompt engineering to guide the chat's behavior into being a tutor that generates personalized hints.
 
-Let's start by deploying a model through Azure AI Foundry, that you then can use for local ideation with Prompty.
+Let's start by deploying the necessary resources to work with this model in the Azure AI Foundry portal.
 
-## Create an AI project in the Azure AI Foundry portal
+## Create an Azure AI hub and project
 
-You start by creating an Azure AI Foundry portal project within an Azure AI hub:
+> **Note**: If you already have an Azure AI hub and project, you can skip this procedure and use your existing project.
 
-1. In a web browser, open [https://ai.azure.com](https://ai.azure.com) and sign in using your Azure credentials.
-1. From the home page, select **+ Create project**.
-1. In the **Create a new project** wizard, create a project with the following settings:
-    - **Project name**: *A unique name for your project*
-    - Select **Customize**
-        - **Hub**: *Autofills with default name*
-        - **Subscription**: *Autofills with your signed in account*
-        - **Resource group**: (New) *Autofills with your project name*
-        - **Location**: Choose one of the following regions **East US2**, **North Central US**, **Sweden Central**, **Switzerland West**\*
-        - **Connect Azure AI Services or Azure OpenAI**: (New) *Autofills with your selected hub name*
-        - **Connect Azure AI Search**: Skip connecting
+You can create an Azure AI hub and project manually through the Azure AI Foundry portal, as well as deploy the model used in the exercise. However, you can also automate this process through the use of a template application with [Azure Developer CLI (azd)](https://aka.ms/azd).
 
-    > \* Azure OpenAI resources are constrained at the tenant level by regional quotas. The listed regions in the location helper include default quota for the model type(s) used in this exercise. Randomly choosing a region reduces the risk of a single region reaching its quota limit. In the event of a quota limit being reached later in the exercise, there's a possibility you may need to create another resource in a different region. Learn more about [Azure OpenAI model regions](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models?tabs=python-secure%2Cglobal-standard%2Cstandard-chat-completions#fine-tuning-models)
+1. In a web browser, open [Azure portal](https://portal.azure.com) at `https://portal.azure.com` and sign in using your Azure credentials.
 
-1. Review your configuration and create your project.
-1. Wait for your project to be created.
+1. Use the **[\>_]** button to the right of the search bar at the top of the page to create a new Cloud Shell in the Azure portal, selecting a ***PowerShell*** environment. The cloud shell provides a command line interface in a pane at the bottom of the Azure portal. For more information about using the Azure Cloud Shell, see the [Azure Cloud Shell documentation](https://docs.microsoft.com/azure/cloud-shell/overview).
 
-## Deploy the model
+    > **Note**: If you have previously created a cloud shell that uses a *Bash* environment, switch it to ***PowerShell***.
 
-When you have an AI project, you can deploy a GPT-4 model.
+1. In the PowerShell pane, enter the following commands to clone this exercise's repo:
 
-1. Navigate to the **Models + endpoints** page using the menu on the left.
-1. Deploy a `gpt-4` base model, with the default settings. Select **Customize** to ensure the **Tokens per Minute Rate Limit** is set to **10K**.
-1. When the model is deployed, copy the following values from the deployment overview page and store them in a notepad:
+     ```powershell
+    rm -r mslearn-genaiops -f
+    git clone https://github.com/MicrosoftLearning/mslearn-genaiops
+     ```
 
-![Screenshot of the required variables](./images/environment-variables.png)
+1. After the repo has been cloned, enter the following commands to initialize the Starter template. 
+   
+     ```powershell
+    cd ./mslearn-genaiops/Starter
+    azd init
+     ```
 
-    - **Deployment name**.
-    - **Endpoint target URI**.
-    - **Endpoint key**
+1. Once prompted, give the new environment a name as it will be used as basis for giving unique names to all the provisioned resources.
+        
+1. Next, enter the following command to run the Starter template. It will provision an AI Hub with dependent resources, AI project, AI Services and an online endpoint.
 
+     ```powershell
+    azd up
+     ```
+
+1. When prompted, choose which subscription you want to use and then choose one of the following locations for resource provision:
+   - East US
+   - East US 2
+   - North Central US
+   - South Central US
+   - Sweden Central
+   - West US
+   - West US 3
+    
+1. Wait for the script to complete - this typically takes around 10 minutes, but in some cases may take longer.
+
+    > **Note**: Azure OpenAI resources are constrained at the tenant level by regional quotas. The listed regions above include default quota for the model type(s) used in this exercise. Randomly choosing a region reduces the risk of a single region reaching its quota limit. In the event of a quota limit being reached, there's a possibility you may need to create another resource group in a different region. Learn more about [model availability per region](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models?tabs=standard%2Cstandard-chat-completions#global-standard-model-availability)
+
+    <details>
+      <summary><b>Troubleshooting tip</b>: No quota available in a given region</summary>
+        <p>If you receive a deployment error for any of the models due to no quota available in the region you chose, try running the following commands:</p>
+        <ul>
+          <pre><code>azd env set AZURE_ENV_NAME new_env_name
+   azd env set AZURE_RESOURCE_GROUP new_rg_name
+   azd env set AZURE_LOCATION new_location
+   azd up</code></pre>
+        Replacing <code>new_env_name</code>, <code>new_rg_name</code>, and <code>new_location</code> with new values. The new location must be one of the regions listed at the beginning of the exercise, e.g <code>eastus2</code>, <code>northcentralus</code>, etc.
+        </ul>
+    </details>
+
+1. Once all resources have been provisioned, use the following commands to fetch the endpoint and access key to your AI Services resource. Note that you must replace `<rg-env_name>` and `<aoai-xxxxxxxxxx>` with the names of your resource group and AI Services resource. Both are printed in the deployment's output.
+
+     ```powershell
+    Get-AzCognitiveServicesAccount -ResourceGroupName <rg-env_name> -Name <aoai-xxxxxxxxxx> | Select-Object -Property endpoint
+    Get-AzCognitiveServicesAccountKey -ResourceGroupName <rg-env_name> -Name <aoai-xxxxxxxxxx> | Select-Object -Property Key1
+     ```
+
+1. Copy these values as they will be used later on.
+   
 ## Set up your local development environment
 
 To quickly experiment and iterate, you'll use Prompty in Visual Studio (VS) Code. Let's get VS Code ready to use for local ideation.
@@ -64,7 +97,7 @@ To quickly experiment and iterate, you'll use Prompty in Visual Studio (VS) Code
 1. In the VS Code Explorer (left pane), right-click on the **Files/03** folder.
 1. Select **New Prompty** from the drop-down menu.
 1. Open the newly created file named **basic.prompty**.
-1. Run the Prompty file by selecting the **play** button a the top-left corner (or press F5).
+1. Run the Prompty file by selecting the **play** button at the top-right corner (or press F5).
 1. When prompted to sign in, select **Allow**.
 1. Select your Azure account and sign in.
 1. Go back to VS Code, where an **Output** pane will open with an error message. The error message should tell you that the deployed model isn't specified or can't be found.
@@ -111,13 +144,13 @@ The Prompty file now has all the necessary parameters, but some parameters use p
 
 ## Update model configuration
 
-To specify which model Prompty, you need to provide your model's information in the .env file.
+To specify which model Prompty uses, you need to provide your model's information in the .env file.
 
 1. Open the **.env** file in the **Files/03** folder.
-1. Update each of the placeholders with the values you copied earlier from the model deployment page in the Azure AI Foundry portal:
+1. Update each of the placeholders with the values you copied earlier from the model deployment's output in the Azure Portal:
 
     ```yaml
-    - AZURE_OPENAI_CHAT_DEPLOYMENT="<Your deployment name>"
+    - AZURE_OPENAI_CHAT_DEPLOYMENT="gpt-4"
     - AZURE_OPENAI_ENDPOINT="<Your endpoint target URI>"
     - AZURE_OPENAI_API_KEY="<Your endpoint key>"
     ```
