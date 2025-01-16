@@ -45,7 +45,7 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
     azd init
      ```
 
-1. Once prompted, give a name to the new environment as it will be used as basis for giving unique names to all the provisioned resources.
+1. Once prompted, give the new environment a name as it will be used as basis for giving unique names to all the provisioned resources.
         
 1. Next, enter the following command to run the Starter template. It will provision an AI Hub with dependent resources, AI project, AI Services and an online endpoint. It will also deploy the models GPT-4 Turbo, GPT-4o, and GPT-4o mini.
 
