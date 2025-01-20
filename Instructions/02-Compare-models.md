@@ -98,44 +98,18 @@ Review the plot and try to answer the following questions:
 
 The benchmark metric accuracy is calculated based on publicly available generic datasets. From the plot we can already filter out one of the models, as it has the highest cost per token but not the highest accuracy. Before making a decision, let's explore the quality of outputs of the two remaining models specific to your use case.
 
-## Filter for precision
+## Set up your local development environment
 
-In your use case, you want the model to provide accurate responses when a student asks for a code sample. As a test, let's take the image of a pie chart and ask each model to write code to create the image.
+To quickly experiment and iterate, you'll use a notebook with Python code in Visual Studio (VS) Code. Let's get VS Code ready to use for local ideation.
 
-1. Download the pie chart image from the following URL, and store it locally: [https://github.com/MicrosoftLearning/mslearn-genaiops/blob/main/Instructions/images/demo.png](https://raw.githubusercontent.com/MicrosoftLearning/mslearn-genaiops/refs/heads/main/Instructions/images/demo.png)
-1. Navigate to the **Playground** page using the menu on the left. And open the **Chat playground**.
-1. In the setup pane, select the **gpt-4o** model for deployment.
-1. Attach the **demo.png** image and add the prompt: `Please create Python code for image`
-1. To easily compare, open the portal in another tab: [ai.azure.com](ai.azure.com).
-1. In the newly opened tab, navigate to the playground and make sure the chat is empty. Use the sweeping broom icon to clear the chat if needed.
-1. Use the exact same prompt with the deployed **gpt-4o-mini** model.
-1. Optionally, you can add aditional prompts to improve the code. For example: `Add a legend to the plot replacing the labels`
-You now have two code snippets that a student could use to generate a pie chart. Review the code and try to answer the following questions:
-
-- *How do the two code snippets differ?*
-- *Which output would you prefer as a student?*
-
-**Optionally**, you can run the code and explore how the output differs.
-
-## Filter for performance
-
-Now that you have tested both models, you can explore their metrics to evaluate their performance.
-
-1. Navigate to **Models + endpoints**.
-1. Select a model, and navigate to the **Metrics** tab.
-1. Select the **Last day** filter to get a better view on the tokens usage and requests per minute.
-1. Repeat these steps for the other model.
-
-The resulting views allow you to compare the token usage per model. Try to answer the following questions:
-
-- *Which model had a higher token usage?*
-- *Why did this model have a higher token usage?*
-
-**Optionally**, you can get a more detailed view if you select **Open in Azure Monitor**. In the Azure portal, you can also explore the costs for each resource.
+1. Open VS Code and **Clone** the following Git repo: [https://github.com/MicrosoftLearning/mslearn-genaiops.git](https://github.com/MicrosoftLearning/mslearn-genaiops.git)
+1. Store the clone on a local drive, and open the folder after cloning.
+1. In the VS Code Explorer (left pane), open the notebook **02-Compare-models.ipynb** in the **Files/02** folder.
+1. Run all cells in the notebook.
 
 ## Clean up
 
-If you've finished exploring Azure AI Foundry portal, you should delete the resources you have created in this exercise to avoid incurring unnecessary Azure costs.
+If you've finished exploring Azure AI Services, you should delete the resources you have created in this exercise to avoid incurring unnecessary Azure costs.
 
 1. Return to the browser tab containing the Azure portal (or re-open the [Azure portal](https://portal.azure.com?azure-portal=true) in a new browser tab) and view the contents of the resource group where you deployed the resources used in this exercise.
 1. On the toolbar, select **Delete resource group**.
