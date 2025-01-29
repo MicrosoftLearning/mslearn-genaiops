@@ -5,7 +5,7 @@ lab:
 
 ## Orchestrate a RAG system
 
-Retrieval-Augmented Generation (RAG) systems combine the power of large language models with efficient retrieval mechanisms to enhance the accuracy and relevance of generated responses. By leveraging LangChain for orchestration and Azure AI Foundry for AI capabilities, we can create a robust pipeline that retrieves relevant information from a dataset and generates coherent responses. In this exercise, you will go through the steps of setting up your environment, preprocessing data, creating embeddings, and building a FAISS index, ultimately enabling you to implement a RAG system effectively.
+Retrieval-Augmented Generation (RAG) systems combine the power of large language models with efficient retrieval mechanisms to enhance the accuracy and relevance of generated responses. By leveraging LangChain for orchestration and Azure AI Foundry for AI capabilities, we can create a robust pipeline that retrieves relevant information from a dataset and generates coherent responses. In this exercise, you will go through the steps of setting up your environment, preprocessing data, creating embeddings, and building a index, ultimately enabling you to implement a RAG system effectively.
 
 ## Scenario
 
@@ -65,6 +65,15 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
         Replacing <code>new_env_name</code>, <code>new_rg_name</code>, and <code>new_location</code> with new values. The new location must be one of the regions listed at the beginning of the exercise, e.g <code>eastus2</code>, <code>northcentralus</code>, etc.
         </ul>
     </details>
+
+1. Once all resources have been provisioned, use the following commands to fetch the endpoint and access key to your AI Services resource. Note that you must replace `<rg-env_name>` and `<aoai-xxxxxxxxxx>` with the names of your resource group and AI Services resource. Both are printed in the deployment's output.
+
+     ```powershell
+    Get-AzCognitiveServicesAccount -ResourceGroupName <rg-env_name> -Name <aoai-xxxxxxxxxx> | Select-Object -Property endpoint
+    Get-AzCognitiveServicesAccountKey -ResourceGroupName <rg-env_name> -Name <aoai-xxxxxxxxxx> | Select-Object -Property Key1
+     ```
+
+1. Copy these values as they will be used later on.
 
 ## Set up your local development environment
 
