@@ -9,6 +9,12 @@ Retrieval-Augmented Generation (RAG) systems combine the power of large language
 
 ## Scenario
 
+Imagine you want to build an app that gives recommendations about hotels. In the app, you want an agent that can not only recommend hotels but answer questions that the users might have about them.
+
+You've selected a GPT-4 model to provide generative answers. You now want to put together a RAG system that will provide grounding data to the model based on other users reviews, guiding the chat's behavior into giving personalized recommendations.
+
+Let's start by deploying the necessary resources to build this application.
+
 ## Create an Azure AI hub and project
 
 You can create an Azure AI hub and project manually through the Azure AI Foundry portal, as well as deploy the models used in the exercise. However, you can also automate this process through the use of a template application with [Azure Developer CLI (azd)](https://aka.ms/azd).
