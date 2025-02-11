@@ -1,17 +1,17 @@
 ---
 lab:
-    title: 'Optimize your model with a synthetic dataset'
+    title: 'Optimize your model using a synthetic dataset'
 ---
 
-## Optimize your model with a synthetic dataset
+## Optimize your model using a synthetic dataset
 
-Retrieval-Augmented Generation (RAG) systems combine the power of large language models with efficient retrieval mechanisms to enhance the accuracy and relevance of generated responses. By leveraging LangChain for orchestration and Azure AI Foundry for AI capabilities, we can create a robust pipeline that retrieves relevant information from a dataset and generates coherent responses. In this exercise, you will go through the steps of setting up your environment, preprocessing data, creating embeddings, and building a index, ultimately enabling you to implement a RAG system effectively.
+Optimizing a generative AI application involves leveraging datasets to enhance the model's performance and reliability. By using synthetic data, developers can simulate a wide range of scenarios and edge cases that might not be present in real-world data. Furthermore, the evaluation of the model's outputs is crucial to obtain high-quality and reliable AI applications. The entire optimization and evaluation process can be efficiently managed using the Azure AI Evaluation SDK, which provides robust tools and frameworks to streamline these tasks.
 
 ## Scenario
 
-Imagine you want to build an app that gives recommendations about hotels. In the app, you want an agent that can not only recommend hotels but answer questions that the users might have about them.
+Imagine you want to build an AI-powered smart guide app to enhance visitors' experiences in a museum. The app aims to answer questions about historical figures. To evaluate the responses from the app, you need to create a comprehensive synthetic question-answer dataset that covers various aspects of these personalities and their work.
 
-You've selected a GPT-4 model to provide generative answers. You now want to put together a RAG system that will provide grounding data to the model based on other users reviews, guiding the chat's behavior into giving personalized recommendations.
+You've selected a GPT-4 model to provide generative answers. You now want to put together a simulator that generates contextually relevant interactions, evaluating the AI's performance across different scenarios.
 
 Let's start by deploying the necessary resources to build this application.
 
@@ -87,7 +87,7 @@ To quickly experiment and iterate, you'll use a notebook with Python code in Vis
 
 1. Open VS Code and **Clone** the following Git repo: [https://github.com/MicrosoftLearning/mslearn-genaiops.git](https://github.com/MicrosoftLearning/mslearn-genaiops.git)
 1. Store the clone on a local drive, and open the folder after cloning.
-1. In the VS Code Explorer (left pane), open the notebook **02-Compare-models.ipynb** in the **Files/02** folder.
+1. In the VS Code Explorer (left pane), open the notebook **06-Optimize-your-model.ipynb** in the **Files/06** folder.
 1. Run all cells in the notebook.
 
 ## Clean up
