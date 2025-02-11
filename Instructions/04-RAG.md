@@ -87,7 +87,7 @@ To quickly experiment and iterate, you'll use a notebook with Python code in Vis
 
 1. Open VS Code and **Clone** the following Git repo: [https://github.com/MicrosoftLearning/mslearn-genaiops.git](https://github.com/MicrosoftLearning/mslearn-genaiops.git)
 1. Store the clone on a local drive, and open the folder after cloning.
-1. In the VS Code Explorer (left pane), open the notebook **02-Compare-models.ipynb** in the **Files/02** folder.
+1. In the VS Code Explorer (left pane), open the notebook **04-RAG.ipynb** in the **Files/04** folder.
 1. Run all cells in the notebook.
 
 ## Clean up
