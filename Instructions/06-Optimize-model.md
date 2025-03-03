@@ -1,25 +1,19 @@
 ---
 lab:
-    title: 'Compare language models from the model catalog'
+    title: 'Optimize your model using a synthetic dataset'
 ---
 
-## Compare language models from the model catalog
+## Optimize your model using a synthetic dataset
 
-When you have defined your use case, you can use the model catalog to explore whether an AI model solves your problem. You can use the model catalog to select models to deploy, which you can then compare to explore which model best meets your needs.
-
-In this exercise, you compare two language models through the model catalog in Azure AI Foundry portal.
-
-This exercise will take approximately **25** minutes.
+Optimizing a generative AI application involves leveraging datasets to enhance the model's performance and reliability. By using synthetic data, developers can simulate a wide range of scenarios and edge cases that might not be present in real-world data. Furthermore, the evaluation of the model's outputs is crucial to obtain high-quality and reliable AI applications. The entire optimization and evaluation process can be efficiently managed using the Azure AI Evaluation SDK, which provides robust tools and frameworks to streamline these tasks.
 
 ## Scenario
 
-Imagine you want to build an app to help students learn how to code in Python. In the app, you want an automated tutor that can help students write and evaluate code. In one exercise, students need to come up with the necessary Python code to plot a pie chart, based on the following example image:
+Imagine you want to build an AI-powered smart guide app to enhance visitors' experiences in a museum. The app aims to answer questions about historical figures. To evaluate the responses from the app, you need to create a comprehensive synthetic question-answer dataset that covers various aspects of these personalities and their work.
 
-![Pie chart showing marks obtained in an exam with sections for maths (34.9%), physics (28.6%), chemistry (20.6%), and English (15.9%)](./images/demo.png)
+You've selected a GPT-4 model to provide generative answers. You now want to put together a simulator that generates contextually relevant interactions, evaluating the AI's performance across different scenarios.
 
-You need to select a language model that accepts images as input, and is able to generate accurate code. The available models that meet those criteria are GPT-4 Turbo, GPT-4o, and GPT-4o mini.
-
-Let's start by deploying the necessary resources to work with these models in the Azure AI Foundry portal.
+Let's start by deploying the necessary resources to build this application.
 
 ## Create an Azure AI hub and project
 
@@ -38,15 +32,15 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
     git clone https://github.com/MicrosoftLearning/mslearn-genaiops
      ```
 
-1. After the repo has been cloned, enter the following commands to initialize the Starter template. 
-   
+1. After the repo has been cloned, enter the following commands to initialize the Starter template.
+
      ```powershell
     cd ./mslearn-genaiops/Starter
     azd init
      ```
 
 1. Once prompted, give the new environment a name as it will be used as basis for giving unique names to all the provisioned resources.
-        
+
 1. Next, enter the following command to run the Starter template. It will provision an AI Hub with dependent resources, AI project, AI Services and an online endpoint. It will also deploy the models GPT-4 Turbo, GPT-4o, and GPT-4o mini.
 
      ```powershell
@@ -61,7 +55,7 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
    - Sweden Central
    - West US
    - West US 3
-    
+
 1. Wait for the script to complete - this typically takes around 10 minutes, but in some cases may take longer.
 
     > **Note**: Azure OpenAI resources are constrained at the tenant level by regional quotas. The listed regions above include default quota for the model type(s) used in this exercise. Randomly choosing a region reduces the risk of a single region reaching its quota limit. In the event of a quota limit being reached, there's a possibility you may need to create another resource group in a different region. Learn more about [model availability per region](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models?tabs=standard%2Cstandard-chat-completions#global-standard-model-availability)
@@ -87,33 +81,13 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
 
 1. Copy these values as they will be used later on.
 
-## Compare the models
-
-You know that there are three models that accept images as input whose inference infrastructure is fully managed by Azure. Now, you need to compare them to decide which one is ideal for our use case.
-
-1. In a web browser, open [Azure AI Foundry portal](https://ai.azure.com) at `https://ai.azure.com` and sign in using your Azure credentials.
-1. If prompted, select the AI project created earlier.
-1. Navigate to the **Model catalog** page using the menu on the left.
-1. Select **Compare models** (find the button next to the filters in the search pane).
-1. Remove the selected models.
-1. One by one, add the three models you want to compare: **gpt-4**, **gpt-4o**, and **gpt-4o-mini**. For **gpt-4**, make sure that the selected version is **turbo-2024-04-09**, as it is the only version that accepts images as input.
-1. Change the x-axis to **Accuracy**.
-1. Ensure the y-axis is set to **Cost**.
-
-Review the plot and try to answer the following questions:
-
-- *Which model is more accurate?*
-- *Which model is cheaper to use?*
-
-The benchmark metric accuracy is calculated based on publicly available generic datasets. From the plot we can already filter out one of the models, as it has the highest cost per token but not the highest accuracy. Before making a decision, let's explore the quality of outputs of the two remaining models specific to your use case.
-
 ## Set up your local development environment
 
 To quickly experiment and iterate, you'll use a notebook with Python code in Visual Studio (VS) Code. Let's get VS Code ready to use for local ideation.
 
 1. Open VS Code and **Clone** the following Git repo: [https://github.com/MicrosoftLearning/mslearn-genaiops.git](https://github.com/MicrosoftLearning/mslearn-genaiops.git)
 1. Store the clone on a local drive, and open the folder after cloning.
-1. In the VS Code Explorer (left pane), open the notebook **02-Compare-models.ipynb** in the **Files/02** folder.
+1. In the VS Code Explorer (left pane), open the notebook **06-Optimize-your-model.ipynb** in the **Files/06** folder.
 1. Run all cells in the notebook.
 
 ## Clean up

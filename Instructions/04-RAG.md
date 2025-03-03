@@ -1,25 +1,19 @@
 ---
 lab:
-    title: 'Compare language models from the model catalog'
+    title: 'Orchestrate a RAG system'
 ---
 
-## Compare language models from the model catalog
+## Orchestrate a RAG system
 
-When you have defined your use case, you can use the model catalog to explore whether an AI model solves your problem. You can use the model catalog to select models to deploy, which you can then compare to explore which model best meets your needs.
-
-In this exercise, you compare two language models through the model catalog in Azure AI Foundry portal.
-
-This exercise will take approximately **25** minutes.
+Retrieval-Augmented Generation (RAG) systems combine the power of large language models with efficient retrieval mechanisms to enhance the accuracy and relevance of generated responses. By leveraging LangChain for orchestration and Azure AI Foundry for AI capabilities, we can create a robust pipeline that retrieves relevant information from a dataset and generates coherent responses. In this exercise, you will go through the steps of setting up your environment, preprocessing data, creating embeddings, and building a index, ultimately enabling you to implement a RAG system effectively.
 
 ## Scenario
 
-Imagine you want to build an app to help students learn how to code in Python. In the app, you want an automated tutor that can help students write and evaluate code. In one exercise, students need to come up with the necessary Python code to plot a pie chart, based on the following example image:
+Imagine you want to build an app that gives recommendations about hotels. In the app, you want an agent that can not only recommend hotels but answer questions that the users might have about them.
 
-![Pie chart showing marks obtained in an exam with sections for maths (34.9%), physics (28.6%), chemistry (20.6%), and English (15.9%)](./images/demo.png)
+You've selected a GPT-4 model to provide generative answers. You now want to put together a RAG system that will provide grounding data to the model based on other users reviews, guiding the chat's behavior into giving personalized recommendations.
 
-You need to select a language model that accepts images as input, and is able to generate accurate code. The available models that meet those criteria are GPT-4 Turbo, GPT-4o, and GPT-4o mini.
-
-Let's start by deploying the necessary resources to work with these models in the Azure AI Foundry portal.
+Let's start by deploying the necessary resources to build this application.
 
 ## Create an Azure AI hub and project
 
@@ -87,33 +81,13 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
 
 1. Copy these values as they will be used later on.
 
-## Compare the models
-
-You know that there are three models that accept images as input whose inference infrastructure is fully managed by Azure. Now, you need to compare them to decide which one is ideal for our use case.
-
-1. In a web browser, open [Azure AI Foundry portal](https://ai.azure.com) at `https://ai.azure.com` and sign in using your Azure credentials.
-1. If prompted, select the AI project created earlier.
-1. Navigate to the **Model catalog** page using the menu on the left.
-1. Select **Compare models** (find the button next to the filters in the search pane).
-1. Remove the selected models.
-1. One by one, add the three models you want to compare: **gpt-4**, **gpt-4o**, and **gpt-4o-mini**. For **gpt-4**, make sure that the selected version is **turbo-2024-04-09**, as it is the only version that accepts images as input.
-1. Change the x-axis to **Accuracy**.
-1. Ensure the y-axis is set to **Cost**.
-
-Review the plot and try to answer the following questions:
-
-- *Which model is more accurate?*
-- *Which model is cheaper to use?*
-
-The benchmark metric accuracy is calculated based on publicly available generic datasets. From the plot we can already filter out one of the models, as it has the highest cost per token but not the highest accuracy. Before making a decision, let's explore the quality of outputs of the two remaining models specific to your use case.
-
 ## Set up your local development environment
 
 To quickly experiment and iterate, you'll use a notebook with Python code in Visual Studio (VS) Code. Let's get VS Code ready to use for local ideation.
 
 1. Open VS Code and **Clone** the following Git repo: [https://github.com/MicrosoftLearning/mslearn-genaiops.git](https://github.com/MicrosoftLearning/mslearn-genaiops.git)
 1. Store the clone on a local drive, and open the folder after cloning.
-1. In the VS Code Explorer (left pane), open the notebook **02-Compare-models.ipynb** in the **Files/02** folder.
+1. In the VS Code Explorer (left pane), open the notebook **04-RAG.ipynb** in the **Files/04** folder.
 1. Run all cells in the notebook.
 
 ## Clean up

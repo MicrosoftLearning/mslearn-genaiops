@@ -1,0 +1,39 @@
+---
+name: ApplicationPrompty
+description: Chat RAG application
+model:
+  api: chat
+  configuration:
+    type: azure_openai
+    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    azure_deployment: ${env:AZURE_OPENAI_CHAT_DEPLOYMENT}
+    api_key: ${env:AZURE_OPENAI_API_KEY}
+  parameters:
+    max_tokens: 800
+    temperature: 0.0
+    top_p: 1.0
+    presence_penalty: 0
+    frequency_penalty: 0
+    response_format:
+      type: text
+ 
+inputs:
+  conversation_history:
+    type: dict
+  context:
+    type: string
+  query:
+    type: string
+ 
+---
+system:
+You are a helpful assistant and you're helping with the user's query. Keep the conversation engaging and interesting.
+
+Keep your conversation grounded in the provided context: 
+{{ context }}
+
+Output with a string that continues the conversation, responding to the latest message from the user query:
+{{ query }}
+
+given the conversation history:
+{{ conversation_history }}
