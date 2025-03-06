@@ -4,7 +4,7 @@ permalink: index.html
 layout: home
 ---
 
-# Implement Generative AI Operations
+# Operationalize generative AI applications
 
 The following quickstart exercises are designed to provide you with a hands-on learning experience in which you'll explore common tasks required to operationalize a generative AI workload on Microsoft Azure.
 
@@ -21,4 +21,4 @@ The following quickstart exercises are designed to provide you with a hands-on l
 
 {% endfor %}
 
-> **Note**: While you can complete these exercises on their own, they're designed to complement modules on [Microsoft Learn](https://learn.microsoft.com/training/paths/create-custom-copilots-ai-studio/); in which you'll find a deeper dive into some of the underlying concepts on which these exercises are based.
+> **Note**: While you can complete these exercises on their own, they're designed to complement modules on [Microsoft Learn](https://learn.microsoft.com/training/paths/operationalize-gen-ai-apps/); in which you'll find a deeper dive into some of the underlying concepts on which these exercises are based.
