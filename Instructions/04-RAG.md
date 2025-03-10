@@ -1,6 +1,7 @@
 ---
 lab:
     title: 'Orchestrate a RAG system'
+    description: 'Learn how to implement Retrieval-Augmented Generation (RAG) systems in your apps to enhance the accuracy and relevance of generated responses.'
 ---
 
 ## Orchestrate a RAG system
