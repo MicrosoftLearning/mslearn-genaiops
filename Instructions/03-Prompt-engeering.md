@@ -1,6 +1,7 @@
 ---
 lab:
     title: 'Explore prompt engineering with Prompty'
+    description: 'Learn how to use Prompty to quickly test and improve on different prompts with your language model and ensure that they are constructed and orchestrated for best results.'
 ---
 
 ## Explore prompt engineering with Prompty

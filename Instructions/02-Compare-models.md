@@ -1,6 +1,7 @@
 ---
 lab:
     title: 'Compare language models from the model catalog'
+    description: 'Learn how to compare and select appropriate models for your generative AI project.'
 ---
 
 ## Compare language models from the model catalog
