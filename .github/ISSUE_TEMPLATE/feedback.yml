@@ -1,0 +1,62 @@
+name: Feedback Report
+description: File a feedback report
+title: "M00-LAB00: QUICK_DESCRIPTION"
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Thanks for taking the time to fill out this feedback report!
+        
+        **Replace feedback name LAB00:QUICK_DESCRIPTION, for example "LAB01: My new feedback"**
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Details
+      description: How can we get in touch with you if we need more info 😉?
+      placeholder: ex. email@example.com
+    validations:
+      required: false
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What should we change?
+      description: What should we change?
+      placeholder: Tell us your proposal!
+      value: PROPOSAL
+    validations:
+      required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: Lab
+      description: Lab name
+      options:
+        - Other
+        - Lab 00 Validate lab environment
+        - Lab 01 Agile planning and portfolio management with Azure Boards
+        - Lab 02 Version controlling with Git in Azure Repos
+        - Lab 03 Configuring agent pools and understanding pipeline styles
+        - Lab 04 Enabling continuous integration with Azure Pipelines
+        - Lab 05 Implementing GitHub Actions by using DevOps Starter
+        - Lab 06 Deploying Docker Containers to Azure App Service web apps
+        - Lab 07 Control Deployments using Release Gates
+        - Lab 08 Configuring pipelines as code with YAML
+        - Lab 09 Setting up and running functional tests
+        - Lab 10 Integrate Azure Key Vault with Azure DevOps
+        - Lab 11 Enable Dynamic Configuration and Feature Flags
+        - Lab 12 Deployments using Azure Bicep templates
+        - Lab 13 Implement security and compliance in Azure DevOps Pipelines
+        - Lab 14 Managing technical debt with SonarQube and Azure DevOps
+        - Lab 15 Package management with Azure Artifacts
+        - Lab 16 Monitoring application performance with Application Insights
+        - Lab 17 Sharing Team Knowledge using Azure Project Wikis
+    validations:
+      required: true
+  - type: textarea
+    id: Screenshots
+    attributes:
+      label: Relevant screenshots
+      description: Please copy and paste any relevant screenshots 📸
+      value: paste here 😉 
+  
