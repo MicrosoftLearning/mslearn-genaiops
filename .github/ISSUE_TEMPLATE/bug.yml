@@ -1,0 +1,79 @@
+name: Bug Report
+description: File a bug report
+title: "M00-LABNAME: QUICK_DESCRIPTION"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Thanks for taking the time to fill out this bug report!
+        
+        **Replace issue name M00-LABNAME: QUICK_DESCRIPTION"**
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Details
+      description: How can we get in touch with you if we need more info 😉?
+      placeholder: ex. email@example.com
+    validations:
+      required: false
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What happened?
+      placeholder: Tell us what you see!
+      value: |
+        Exercise : 00
+        Task: 00
+        Step: 00
+        
+        Description of issue:
+
+        Repro steps:
+        1.
+        1.
+        1.
+    validations:
+      required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: Lab
+      description: Lab name
+      options:
+        - Other
+        - Validate lab environment
+        - Agile planning and portfolio management with Azure Boards
+        - Version controlling with Git in Azure Repos
+        - Configuring agent pools and understanding pipeline styles
+        - Enabling continuous integration with Azure Pipelines
+        - Implementing GitHub Actions by using DevOps Starter
+        - Deploying Docker Containers to Azure App Service web apps
+        - Control Deployments using Release Gates
+        - Configuring pipelines as code with YAML
+        - Setting up and running functional tests
+        - Integrate Azure Key Vault with Azure DevOps
+        - Enable Dynamic Configuration and Feature Flags
+        - Deployments using Azure Bicep templates
+        - Implement security and compliance in Azure DevOps Pipelines
+        - Managing technical debt with SonarQube and Azure DevOps
+        - Package management with Azure Artifacts
+        - Monitoring application performance with Application Insights
+        - Sharing Team Knowledge using Azure Project Wikis
+    validations:
+      required: true
+  - type: textarea
+    id: Screenshots
+    attributes:
+      label: Relevant screenshots
+      description: Please copy and paste any relevant screenshots 📸
+      value: paste here 😉 
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Do you want to help us? 👏
+      description: GitHub/Git uses Pull Requests (PR) to propose and collaborate on changes to a repository. **No git/github experience?** Follow the [video in the Contribution Guide](https://github.com/MicrosoftLearning/AZ400-DesigningandImplementingMicrosoftDevOpsSolutions/blob/master/.github/CONTRIBUTING.md#easy-prs-using-github-no-gitgithub-knowledge-needed)
+      options:
+        - label: Create a Pull Request by following this project's [Contribution Guide](https://github.com/MicrosoftLearning/AZ400-DesigningandImplementingMicrosoftDevOpsSolutions/blob/master/.github/CONTRIBUTING.md#how-can-i-collaborate)
+          required: false
