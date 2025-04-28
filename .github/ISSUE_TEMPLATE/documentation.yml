@@ -1,6 +1,6 @@
 name: Documentation error
 description: File an error with the documentation, for example a typo or outdated instructions.
-title: "LABNAME: QUICK_DESCRIPTION"
+title: "QUICK_DESCRIPTION"
 labels: ["documentation"]
 body:
   - type: markdown
@@ -8,7 +8,7 @@ body:
       value: |
         # Thanks for taking the time to fill out this documentation error report!
         
-        **Replace issue name "QUICK_DESCRIPTION"**
+        **Replace title name "QUICK_DESCRIPTION"**
   - type: dropdown
     id: version
     attributes:
@@ -32,12 +32,12 @@ body:
       description: Where is the error located, and how should it be fixed?
       placeholder: Tell us what you found! Be as specific as possible to help us find and fix the error quickly.
       value: |
-        **Where is the error on the page?**
+        Where is the error on the page?
         Exercise: 
         Task: 
         Step: 
         
-        **What is wrong?**
+        What is wrong?
         Description of issue, and possible fix:
         
     validations:
@@ -51,7 +51,7 @@ body:
   - type: checkboxes
     id: terms
     attributes:
-      label: Do you want to help us? 👏
+      label: Do you want to help us fix the issue even faster? 👏
       description: GitHub/Git uses Pull Requests (PR) to propose and collaborate on changes to a repository. **No git/github experience?** Follow the [video in the Contribution Guide](https://github.com/MicrosoftLearning/AZ400-DesigningandImplementingMicrosoftDevOpsSolutions/blob/master/.github/CONTRIBUTING.md#easy-prs-using-github-no-gitgithub-knowledge-needed)
       options:
         - label: Create a Pull Request by following this project's [Contribution Guide](https://github.com/MicrosoftLearning/AZ400-DesigningandImplementingMicrosoftDevOpsSolutions/blob/master/.github/CONTRIBUTING.md#how-can-i-collaborate)
