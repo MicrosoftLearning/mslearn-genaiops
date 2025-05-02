@@ -1,0 +1,44 @@
+name: Feedback report
+description: File any other feedback you have to improve the labs
+title: "M00-LAB00: QUICK_DESCRIPTION"
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Thanks for taking the time to fill out this feedback report!
+        
+        **Replace feedback name QUICK_DESCRIPTION"**
+  - type: dropdown
+    id: version
+    attributes:
+      label: Lab name
+      description: To which lab does your feedback apply?
+      options:
+        - All labs
+        - No existing lab
+        - Plan and prepare a GenAIOps solution
+        - Optimize prompts for your generative AI app
+        - Implement orchestration for your generative AI app
+        - Automate evaluations of generative AI applications
+        - Automate the deployment of generative AI applications
+        - Tracing generative AI applications
+        - Monitor your generative AI applications
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What should we change?
+      description: What should we change?
+      placeholder: Tell us your proposal!
+      value: PROPOSAL
+    validations:
+      required: true
+  - type: textarea
+    id: Screenshots
+    attributes:
+      label: Relevant screenshots
+      description: Please copy and paste any relevant screenshots 📸
+      value: paste here 😉 
+  
