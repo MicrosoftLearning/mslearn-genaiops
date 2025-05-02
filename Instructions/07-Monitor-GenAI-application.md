@@ -1,6 +1,7 @@
 ---
 lab:
-  title: 'Monitor your generative AI application'
+    title: 'Monitor your generative AI application'
+    description: 'In this lab, you learn how to monitor the performance of a deployed generative AI model in Azure AI Foundry using Azure Monitor, analyze key metrics, and set up alerts to optimize the model's deployment.'
 ---
 
 # Monitor your generative AI application
