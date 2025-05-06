@@ -34,12 +34,9 @@ To quickly setup a hub and project, simple instructions to use the Azure AI Foun
     1. Enter a **project name**.
     1. When prompted, **create a new hub**.
     1. Customize the hub:
-
         1. Choose **subscription**, **resource group**, **location**, etc.
         1. Connect a **new Azure AI Services** resource (skip AI Search).
-
     1. Review and select **Create**.
-
 1. **Wait for deployment to complete** (~ 1-2 minutes).
 
 ### B. Deploy a model
