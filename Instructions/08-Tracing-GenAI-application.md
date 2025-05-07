@@ -363,10 +363,15 @@ This is an exercise designed to challenge you, which means instructions are inte
 1. *Hopefully*, the output message includes **Failed to generate trip profile. Please check Application Insights for trace.**.
 1. Navigate to the trace for the **trip_profile_generation** and inspect why there was an error.
 
+<br>
 <details>
-    <summary><b>Get the answer on</b>: Why you may have experienced an error...</summary><br>
-    <p>If you inspect the output of the LLM trace of the trip profile generation function, you can see that the **Assistant** message contains backticks (`) and the word json to visualize the output as a code block. For further processing however, this creates a problem and therefore throws and error as the output is not recognized as pure JSON.</p>
-    </details>
+<summary><b>Get the answer on</b>: Why you may have experienced an error...</summary><br>
+<p>If you inspect the LLM trace for the generate_trip_profile function, you'll notice that the assistant's response includes backticks and the word json to format the output as a code block.
+
+While this is helpful for display, it causes issues in the code because the output is no longer valid JSON. This leads to a parsing error during further processing.
+
+The error is likely caused by how the LLM is instructed to adhere to a specific format for its output. Including the instructions in the user prompt appears more effective than to put it in the system prompt.</p>
+</details>
 
 ## Where to find other labs
 
