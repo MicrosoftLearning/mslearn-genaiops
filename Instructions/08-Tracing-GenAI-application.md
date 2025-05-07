@@ -82,7 +82,7 @@ Start by retrieving the necessary information to be authenticated to interact wi
 1. In the Cloud Shell pane, enter and run the following commands:
 
     ```
-    rm -r mslearn-ai-foundry -f
+    rm -r mslearn-genaiops -f
     git clone https://github.com/microsoftlearning/mslearn-genaiops mslearn-genaiops
     ```
 
@@ -91,7 +91,7 @@ Start by retrieving the necessary information to be authenticated to interact wi
 1. After the repo has been cloned, navigate to the folder containing the application code files:  
 
     ```
-   cd mslearn-ai-foundry/Files/07
+   cd mslearn-genaiops/Files/07
     ```
 
 1. In the Cloud Shell command-line pane, enter the following command to install the libraries you need:
