@@ -1,8 +1,3 @@
-"""
-Trail Guide AI Assistant - Demonstrates Tracing with Azure AI Foundry
-Now includes proactive hike recommendation based on user preferences.
-"""
-
 import os
 import uuid
 import json
@@ -54,6 +49,7 @@ mock_product_catalog = [
     "Trail Mix Energy Bars"
 ]
 
+# Function to call the model and handle tracing
 def call_model(system_prompt, user_prompt, span_name):
     with tracer.start_as_current_span(span_name) as span:
         span.set_attribute("session.id", SESSION_ID)
@@ -71,6 +67,7 @@ def call_model(system_prompt, user_prompt, span_name):
         span.set_attribute("response.tokens", len(output.split()))
         return output
 
+# Function to recommend a hike based on user preferences
 def recommend_hike(preferences):
     with tracer.start_as_current_span("recommend_hike") as span:
         prompt = f"""
@@ -86,16 +83,12 @@ def recommend_hike(preferences):
         span.set_attribute("hike_recommendation", response.strip())
         return response.strip()
 
+# Function to generate a trip profile for the recommended hike
 def generate_trip_profile(hike_name):
     with tracer.start_as_current_span("trip_profile_generation") as span:
-        prompt = f"""
-        Hike: {hike_name}
-        Respond ONLY with a valid JSON object and nothing else.
-        Do not include any intro text, commentary, or markdown formatting.
-        Format: {{ "trailType": ..., "typicalWeather": ..., "recommendedGear": [ ... ] }}
-        """
+        prompt = f"Hike: {hike_name}"
         response = call_model(
-            "You are an AI assistant that returns structured hiking trip data in JSON format.",
+            "You are an AI assistant that returns structured hiking trip data in JSON format. Do not include any explanations—only return a valid JSON object. Include: trailType, typicalWeather, and recommendedGear (list of 3 items).",
             prompt,
             "trip_profile_model_call"
         )
@@ -104,11 +97,11 @@ def generate_trip_profile(hike_name):
             profile = json.loads(response)
             span.set_attribute("profile.success", True)
             return profile
-        except json.JSONDecodeError as e:
-            print("❌ JSON decode error:", e)
+        except json.JSONDecodeError:
             span.set_attribute("profile.success", False)
             return {}
 
+# Function to match recommended gear with products in the catalog
 def match_products(recommended_gear):
     with tracer.start_as_current_span("product_matching") as span:
         matched = []

@@ -1,9 +1,9 @@
 ---
 lab:
-    title: 'Monitor your generative AI application'
+    title: 'Analyze and debug your generative AI app with tracing'
 ---
 
-# Monitor your generative AI application
+# Analyze and debug your generative AI app with tracing
 
 This exercise takes approximately **30 minutes**.
 
@@ -11,9 +11,11 @@ This exercise takes approximately **30 minutes**.
 
 ## Introduction
 
-In this exercise, you enable monitoring for a chat completion app and view its performance in Azure Monitor. You interact with your deployed model to generate data, view the generated data through the Insights for Generative AI applications dashboard, and set up alerts to help optimize the model's deployment.
+In this exercise, you’ll run a multi-step generative AI assistant that recommends hiking trips and suggests outdoor gear. You’ll use the Azure AI Inference SDK’s tracing features to analyze how your application executes and identify key decision points made by the model and surrounding logic.
 
-## 1. Set up the environment
+You’ll interact with a deployed model to simulate a real user journey, trace each stage of the application from user input to model response to post-processing, and view the trace data in Azure AI Foundry. This will help you understand how tracing enhances observability, simplifies debugging, and supports performance optimization of generative AI applications.
+
+## Set up the environment
 
 To complete the tasks in this exercise, you need:
 
@@ -22,7 +24,7 @@ To complete the tasks in this exercise, you need:
 - A deployed model (like GPT-4o),
 - A connected Application Insights resource.
 
-### A. Create an AI Foundry hub and project
+### Create an AI Foundry hub and project
 
 To quickly setup a hub and project, simple instructions to use the Azure AI Foundry portal UI are provided below.
 
@@ -39,7 +41,7 @@ To quickly setup a hub and project, simple instructions to use the Azure AI Foun
     1. Review and select **Create**.
 1. **Wait for deployment to complete** (~ 1-2 minutes).
 
-### B. Deploy a model
+### Deploy a model
 
 To generate data that you can monitor, you first need to deploy a model and interact with it. In the instructions you're asked to deploy a GPT-4o model, but **you can use any model** from the Azure OpenAI Service collection that is available to you.
 
@@ -50,9 +52,9 @@ To generate data that you can monitor, you first need to deploy a model and inte
 
 The hub and project are ready, with all required Azure resources provisioned automatically.
 
-### C. Connect Application Insights
+### Connect Application Insights
 
-Connect Application Insights to your project in Azure AI Foundry to start collected data for monitoring.
+Connect Application Insights to your project in Azure AI Foundry to start collecting data for analysis.
 
 1. Open your project in the Azure AI Foundry portal.
 1. Use the menu on the left, and select the **Tracing** page.
@@ -61,13 +63,13 @@ Connect Application Insights to your project in Azure AI Foundry to start collec
 
 Application Insights is now connected to your project, and data will begin to be collected for analysis.
 
-## 2. Interact with a deployed model
+## Run a generative AI app with the Cloud Shell
 
-You'll interact with your deployed model programmatically by setting up a connection to your Azure AI Foundry project using Azure Cloud Shell. This will allow you to send a prompt to the model and generate monitoring data.
+You'll connect to your Azure AI Foundry project from Azure Cloud Shell and programmatically interact with a deployed model as part of a generative AI application.
 
-### A. Connect with a model through the Cloud Shell
+### Interact with a deployed model
 
-Start by retrieving the necessary information to be authenticated to interact with your model. Then, you'll access the Azure Cloud Shell and update the configuration to send the provided prompts to your own deployed model.
+Start by retrieving the necessary information to be authenticated to interact with your deployed model. Then, you'll access the Azure Cloud Shell and update the code of your generative AI app.
 
 1. In the Azure AI Foundry portal, view the **Overview** page for your project.
 1. In the **Project details** area, note the **Project connection string**.
@@ -91,7 +93,7 @@ Start by retrieving the necessary information to be authenticated to interact wi
 1. After the repo has been cloned, navigate to the folder containing the application code files:  
 
     ```
-   cd mslearn-genaiops/Files/07
+   cd mslearn-genaiops/Files/08
     ```
 
 1. In the Cloud Shell command-line pane, enter the following command to install the libraries you need:
@@ -117,132 +119,254 @@ Start by retrieving the necessary information to be authenticated to interact wi
 
 1. *After* you've replaced the placeholders, in the code editor, use the **CTRL+S** command or **Right-click > Save** to **save your changes**.
 
-### B. Send prompts to your deployed model
+### Update the code for your generative AI app
 
-You'll now run multiple script that send different prompts to your deployed model. These interactions generate data that you can later observe in Azure Monitor.
+Now that your environment is set up and your .env file is configured, it's time to prepare your AI assistant script for execution. Next to connecting with an AI project and enabling Application Insights, you need to:
 
-1. Run the following command to **view the first script** that has been provided:
+- Interact with your deployed model.
+- Define the function to specify your prompt.
+- Define the main flow that calls all functions.
+
+You will add these three parts to a starting script.
+
+1. Run the following command to **open the script** that has been provided:
 
     ```
    code start-prompt.py
     ```
 
+    You'll see that several key lines have been left blank or marked with empty # Comments. Your task is to complete the script by copying and pasting the correct lines below into the appropriate locations.
+
+1. In the script, locate **# Function to call the model and handle tracing**.
+1. Below this comment, paste the following code:
+
+    ```
+   def call_model(system_prompt, user_prompt, span_name):
+        with tracer.start_as_current_span(span_name) as span:
+            span.set_attribute("session.id", SESSION_ID)
+            span.set_attribute("prompt.user", user_prompt)
+            start_time = time.time()
+    
+            response = chat_client.complete(
+                model=model_name,
+                messages=[SystemMessage(system_prompt), UserMessage(user_prompt)]
+            )
+    
+            duration = time.time() - start_time
+            output = response.choices[0].message.content
+            span.set_attribute("response.time", duration)
+            span.set_attribute("response.tokens", len(output.split()))
+            return output
+    ```
+
+1. In the script, locate **# Function to recommend a hike based on user preferences**.
+1. Below this comment, paste the following code:
+
+    ```
+   def recommend_hike(preferences):
+        with tracer.start_as_current_span("recommend_hike") as span:
+            prompt = f"""
+            Recommend a named hiking trail based on the following user preferences.
+            Provide only the name of the trail and a one-sentence summary.
+            Preferences: {preferences}
+            """
+            response = call_model(
+                "You are an expert hiking trail recommender.",
+                prompt,
+                "recommend_model_call"
+            )
+            span.set_attribute("hike_recommendation", response.strip())
+            return response.strip()
+    ```
+
+1. In the script, locate **# ---- Main Flow ----**.
+1. Below this comment, paste the following code:
+
+    ```
+   if __name__ == "__main__":
+       with tracer.start_as_current_span("trail_guide_session") as session_span:
+           session_span.set_attribute("session.id", SESSION_ID)
+           print("\n--- Trail Guide AI Assistant ---")
+           preferences = input("Tell me what kind of hike you're looking for (location, difficulty, scenery):\n> ")
+
+           hike = recommend_hike(preferences)
+           print(f"\n✅ Recommended Hike: {hike}")
+
+           # Run profile function
+
+
+           # Run match product function
+
+
+           print(f"\n🔍 Trace ID available in Application Insights for session: {SESSION_ID}")
+    ```
+
+1. **Save the changes** you made in the script.
 1. In the Cloud Shell command-line pane beneath the code editor, enter the following command to **run the script**:
 
     ```
    python start-prompt.py
     ```
 
-    The model will generate a response, which will be captured with Application Insights for further analysis. Let's vary our prompts to explore their effects.
-
-1. **Open and review the script**, where the prompt instructs to model to **only answer with one sentence and a list**:
+1. Give some description of the kind of hike you're looking for, for example:
 
     ```
-   code short-prompt.py
+   A one-day hike in the mountains
     ```
 
-1. **Run the script** by entering the following command in the command-line:
-
-    ```
-   python short-prompt.py
-    ```
-
-1. The next script has a similar objective, but includes the instructions for the output in the **system message** instead of the user message:
-
-    ```
-   code system-prompt.py
-    ```
-
-1. **Run the script** by entering the following command in the command-line:
-
-    ```
-   python system-prompt.py
-    ```
-
-1. Finally, let's try to trigger an error by running a prompt with **too many tokens**:
-
-    ```
-   code error-prompt.py
-    ```
-
-1. **Run the script** by entering the following command in the command-line. Note that you're very **likely to experience an error!**
-
-    ```
-   python error-prompt.py
-    ```
-
-Now that you have interacted with the model, you can review the data in Azure Monitor.
+    The model will generate a response, which will be captured with Application Insights. You can visualize the traces in the **Azure AI Foundry portal**.
 
 > **Note**: It may take a few minutes for monitoring data to show in Azure Monitor.
 
-## 4. View monitoring data in Azure Monitor
+## View traces data in the Azure AI Foundry portal
 
-To view data collected from your model interactions, you'll access the dashboard that links to a workbook in Azure Monitor.
+After running the script, you captured a trace of your AI application’s execution. Now you'll explore it using Application Insights in Azure AI Foundry.
 
-### A. Navigate to Azure Monitor from the Azure AI Foundry portal
+> **Note:** Later, you'll run the code again, and view the traces in the Azure AI Foundry portal again. Let's first explore where to find the traces to visualize them.
 
+### Navigate to the Azure AI Foundry portal
+
+1. **Keep you Cloud Shell open!** You'll come back to this to update the code and run it again.
 1. Navigate to the tab in your browser with the **Azure AI Foundry portal** open.
 1. Use the menu on the left, select **Tracing**.
-1. Select link at the top, that says **Check out your Insights for Generative AI applications dashboard**. The link will open Azure Monitor in a new tab.
-1. Review the **Overview** providing summarized data of the interactions with your deployed model.
+1. *If* no data is shown, **refresh** your view.
+1. Select the trace **train_guide_session** to open a new window that shows more details.
 
-## 5. Interpret monitoring metrics in Azure Monitor
+### Review your trace
 
-Now it's time to dig into the data and begin interpreting what it tells you.
+This view shows the trace for one full session of the Trail Guide AI Assistant.
 
-### A. Review the token usage
+- **Top-level span**: trail_guide_session
+    This is the parent span. It represents the entire execution of your assistant from start to finish.
 
-Focus on the **token usage** section first and review the following metrics:
+- **Nested child spans**:
+    Each indented line represents a nested operation. You’ll find:
 
-- **Prompt tokens**: The total number of tokens used in the input (the prompts you sent) across all model calls.
+    - **recommend_hike** which captures your logic to decide on a hike.
+    - **recommend_model_call** which is the span created by call_model() inside recommend_hike.
+    - **chat gpt-4o** which is automatically instrumented by the Azure AI Inference SDK to show actual LLM interaction.
 
-> Think of this as the *cost of asking* the model a question.
+1. You can click on any span to view:
 
-- **Completion tokens**: The number of tokens the model returned as output, essentially the length of the responses.
+    1. Its duration.
+    1. Its attributes like user prompt, tokens used, response time.
+    1. Any errors or custom data attached with **span.set_attribute(...)**.
 
-> The generated completion tokens often represent the bulk of token usage and cost, especially for long or verbose answers.
+## Add more functions to your code
 
-- **Total tokens**: The combined total prompt tokens and completion tokens.
 
-> Most important metric for billing and performance, as it drives latency and cost.
+1. Run the following command to **re-open the script:**
 
-- **Total calls**: The number of separate inference requests, which is how many times the model was called.
+    ```
+   code start-prompt.py
+    ```
 
-> Useful for analyzing throughput and understanding average cost per call.
+1. In the script, locate **# Function to generate a trip profile for the recommended hike**.
+1. Below this comment, paste the following code:
 
-### B. Compare the individual prompts
+    ```
+   def generate_trip_profile(hike_name):
+       with tracer.start_as_current_span("trip_profile_generation") as span:
+           prompt = f"""
+           Hike: {hike_name}
+           Respond ONLY with a valid JSON object and nothing else.
+           Do not include any intro text, commentary, or markdown formatting.
+           Format: {{ "trailType": ..., "typicalWeather": ..., "recommendedGear": [ ... ] }}
+           """
+           response = call_model(
+               "You are an AI assistant that returns structured hiking trip data in JSON format.",
+               prompt,
+               "trip_profile_model_call"
+           )
+           print("🔍 Raw model response:", response)
+           try:
+               profile = json.loads(response)
+               span.set_attribute("profile.success", True)
+               return profile
+           except json.JSONDecodeError as e:
+               print("❌ JSON decode error:", e)
+               span.set_attribute("profile.success", False)
+               return {}
+    ```
 
-Scroll down to find the **Gen AI Spans**, which is visualized as a table where each prompt is represented as a new row of data. Review and compare the contents of the following columns:
+1. In the script, locate **# Function to match recommended gear with products in the catalog**.
+1. Below this comment, paste the following code:
 
-- **Status**: Whether a model call succeeded or failed.
+    ```
+   def match_products(recommended_gear):
+       with tracer.start_as_current_span("product_matching") as span:
+           matched = []
+           for gear_item in recommended_gear:
+               for product in mock_product_catalog:
+                   if any(word in product.lower() for word in gear_item.lower().split()):
+                       matched.append(product)
+                       break
+           span.set_attribute("matched.count", len(matched))
+           return matched
+    ```
 
-> Use this to identify problematic prompts or configuration errors. The last prompt likely failed because the prompt was too long.
+1. In the script, locate **# Run profile function**.
+1. Below and **aligned with** this comment, paste the following code:
 
-- **Duration**: Shows how long the model took to respond, in milliseconds.
+    ```
+           profile = generate_trip_profile(hike)
+           if not profile:
+           print("Failed to generate trip profile. Please check Application Insights for trace.")
+           exit(1)
 
-> Compare across rows to explore which prompt patterns result in longer processing times.
+           print(f"\n📋 Trip Profile for {hike}:")
+           print(json.dumps(profile, indent=2))
+    ```
 
-- **Input**: Displays the user message that was sent to the model.
+1. In the script, locate **# Run match product function**.
+1. Below and **aligned with** this comment, paste the following code:
 
-> Use this column to assess which prompt formulations are efficient or problematic.
+    ```
+           matched = match_products(profile.get("recommendedGear", []))
+           print("\n🛒 Recommended Products from Lakeshore Retail:")
+           print("\n".join(matched))
+    ```
 
-- **System**: Shows the system message used in the prompt (if there was any).
+1. **Save the changes** you made in the script.
+1. In the Cloud Shell command-line pane beneath the code editor, enter the following command to **run the script**:
 
-> Compare entries to evaluate the impact of using or changing system messages.
+    ```
+   python start-prompt.py
+    ```
 
-- **Output**: Contains the model's response.
+1. Give some description of the kind of hike you're looking for, for example:
 
-> Use it to assess verbosity, relevance, and consistency. Especially in relation to token counts and duration.
+    ```
+   I want to go for a multi-day adventure along the beach
+    ```
 
-## 6. (OPTIONAL) Create an alert
+> **Note**: It may take a few minutes for monitoring data to show in Azure Monitor.
 
-If you have extra time, try setting up an alert to notify you when model latency exceeds a certain threshold. This is an exercise designed to challenge you, which means instructions are intentionally less detailed.
+### View the new traces in the Azure AI Foundry portal
 
-- In Azure Monitor, create a **new alert rule** for your Azure AI Foundry project and model.
-- Choose a metric such as **Request duration (ms)** and define a threshold (for example, greater than 4000 ms).
-- Create a **new action group** to define how you'll be notified.
+1. Navigate back to the Azure AI Foundry portal.
+1. A new trace with the same name **trail_guide_session** should appear. Refresh your view if necesary.
+1. Select the new trace to open the more detailed view.
+1. Review the new nested child spans **trip_profile_generation** and **product_matching**.
+1. Select **product_matching** and review the metadata that appears.
 
-Alerts help you prepare for production by establishing proactive monitoring. The alerts you configure will depend on your project's priorities and how your team has decided to measure and mitigate risks.
+    In the product_matching function, you included **span.set_attribute("matched.count", len(matched))**. By setting the attribute with the key-value pair **matched.count** and the length of the variable matched, you added this information to the **product_matching** trace. You can find this key-value pair under **attributes** in the metadata.
+
+## (OPTIONAL) Trace an error
+
+If you have extra time, you can review how to use traces when you have an error. A script that is likely to throw an error is provided to you. Run it and review the traces.
+
+This is an exercise designed to challenge you, which means instructions are intentionally less detailed.
+
+1. In the Cloud Shell, open the **error-prompt.py** script. This script is located in the same directory as the **start-prompt.py** script. Review its content.
+1. Run the **error-prompt.py** script. Provide an answer in the command-line when prompted.
+1. *Hopefully*, the output message includes **Failed to generate trip profile. Please check Application Insights for trace.**.
+1. Navigate to the trace for the **trip_profile_generation** and inspect why there was an error.
+
+<details>
+    <summary><b>Get the answer on</b>: Why you may have experienced an error...</summary><br>
+    <p>If you inspect the output of the LLM trace of the trip profile generation function, you can see that the **Assistant** message contains backticks (`) and the word json to visualize the output as a code block. For further processing however, this creates a problem and therefore throws and error as the output is not recognized as pure JSON.</p>
+    </details>
 
 ## Where to find other labs
 
