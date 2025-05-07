@@ -53,11 +53,11 @@ To generate data that you can monitor, you first need to deploy a model and inte
     - **Automatic version update**: Enabled
     - **Model version**: *Select the most recent available version*
     - **Connected AI resource**: *Select your Azure OpenAI resource connection*
-    - **Tokens per Minute Rate Limit (thousands)**: 5K *(or the maximum available in your subscription if less than 5K)*
+    - **Tokens per Minute Rate Limit (thousands)**: 1K
     - **Content filter**: DefaultV2
     - **Enable dynamic quota**: Disabled
 
-    > **Note**: Reducing the TPM helps avoid over-using the quota available in the subscription you are using. 5,000 TPM should be sufficient for the data used in this exercise. If your available quota is lower than this, you will be able to complete the exercise but you may experience errors if the rate limit is exceeded.
+    > **Note**: Reducing the TPM helps avoid over-using the quota available in the subscription you are using. 1,000 TPM should be sufficient for the data used in this exercise. If your available quota is lower than this, you will be able to complete the exercise but you may experience errors if the rate limit is exceeded.
 
 1. Wait for the deployment to complete.
 
