@@ -74,6 +74,10 @@ response = client.chat.completions.create(
 
 result = response.choices[0].message.content
 
+# Optional - uncomment the lines below if you want to see the response to the new prompt
+#print("\nAI's response:")
+#print(response.choices[0].message.content)
+
 # Function to encode a local image into a data URL
 def local_image_to_data_url(image_path):
     # Guess the MIME type of the image based on the file extension
