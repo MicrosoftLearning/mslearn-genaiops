@@ -120,7 +120,7 @@ To quickly experiment and iterate, you'll use a set of Python scripts in Cloud S
     ```powershell
    python -m venv labenv
    ./labenv/bin/Activate.ps1
-   pip install python-dotenv azure-identity azure-ai-projects matplotlib
+   pip install python-dotenv azure-identity azure-ai-projects openai matplotlib
     ```
 
 1. Enter the following command to open the configuration file that has been provided:
