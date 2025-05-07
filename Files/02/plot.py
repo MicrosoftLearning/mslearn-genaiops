@@ -58,6 +58,6 @@ if response.status_code == 200:
     plt.legend()
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.savefig('plot.png')
+    plt.savefig('imgs/plot.png')
 else:
     print("Failed to retrieve metrics:", response.status_code, response.text)
