@@ -7,6 +7,8 @@ lab:
 
 Retrieval-Augmented Generation (RAG) systems combine the power of large language models with efficient retrieval mechanisms to enhance the accuracy and relevance of generated responses. By leveraging LangChain for orchestration and Azure AI Foundry for AI capabilities, we can create a robust pipeline that retrieves relevant information from a dataset and generates coherent responses. In this exercise, you will go through the steps of setting up your environment, preprocessing data, creating embeddings, and building a index, ultimately enabling you to implement a RAG system effectively.
 
+This exercise will take approximately **45** minutes.
+
 ## Scenario
 
 Imagine you want to build an app that gives recommendations about hotels. In the app, you want an agent that can not only recommend hotels but answer questions that the users might have about them.
@@ -25,27 +27,31 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
 
     > **Note**: If you have previously created a cloud shell that uses a *Bash* environment, switch it to ***PowerShell***.
 
+1. In the Cloud Shell toolbar, in the **Settings** menu, select **Go to Classic version**.
+
+    **<font color="red">Ensure you've switched to the Classic version of the Cloud Shell before continuing.</font>**
+
 1. In the PowerShell pane, enter the following commands to clone this exercise's repo:
 
-     ```powershell
-    rm -r mslearn-genaiops -f
-    git clone https://github.com/MicrosoftLearning/mslearn-genaiops
-     ```
+    ```powershell
+   rm -r mslearn-genaiops -f
+   git clone https://github.com/MicrosoftLearning/mslearn-genaiops
+    ```
 
 1. After the repo has been cloned, enter the following commands to initialize the Starter template. 
    
-     ```powershell
-    cd ./mslearn-genaiops/Starter
-    azd init
-     ```
+    ```powershell
+   cd ./mslearn-genaiops/Starter
+   azd init
+    ```
 
 1. Once prompted, give the new environment a name as it will be used as basis for giving unique names to all the provisioned resources.
         
 1. Next, enter the following command to run the Starter template. It will provision an AI Hub with dependent resources, AI project, AI Services and an online endpoint. It will also deploy the models GPT-4 Turbo, GPT-4o, and GPT-4o mini.
 
-     ```powershell
-    azd up  
-     ```
+    ```powershell
+   azd up  
+    ```
 
 1. When prompted, choose which subscription you want to use and then choose one of the following locations for resource provision:
    - East US
@@ -81,14 +87,47 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
 
 1. Copy these values as they will be used later on.
 
-## Set up your local development environment
+## Set up your development environment in Cloud Shell
 
-To quickly experiment and iterate, you'll use a notebook with Python code in Visual Studio (VS) Code. Let's get VS Code ready to use for local ideation.
+To quickly experiment and iterate, you'll use a set of Python scripts in Cloud Shell.
 
-1. Open VS Code and **Clone** the following Git repo: [https://github.com/MicrosoftLearning/mslearn-genaiops.git](https://github.com/MicrosoftLearning/mslearn-genaiops.git)
-1. Store the clone on a local drive, and open the folder after cloning.
-1. In the VS Code Explorer (left pane), open the notebook **04-RAG.ipynb** in the **Files/04** folder.
-1. Run all cells in the notebook.
+1. In the Azure AI Foundry portal, view the **Overview** page for your project.
+1. In the **Project details** area, note the **Project connection string**.
+1. Save the string in a notepad. You'll use this connection string to connect to your project in a client application.
+1. Back in the Azure Portal tab, open Cloud Shell if you closed it before and run the following command to navigate to the folder with the code files used in this exercise:
+
+     ```powershell
+    cd ~/mslearn-genaiops/Files/04/
+     ```
+
+1. In the Cloud Shell command-line pane, enter the following command to install the libraries you need:
+
+    ```powershell
+   python -m venv labenv
+   ./labenv/bin/Activate.ps1
+   pip install python-dotenv azure-identity azure-ai-projects langchain-text-splitters langchain-community langchain-openai
+    ```
+
+1. Enter the following command to open the configuration file that has been provided:
+
+    ```powershell
+   code .env
+    ```
+
+    The file is opened in a code editor.
+
+1. In the code file, replace the **your_project_connection_string** placeholder with the connection string for your project (copied from the project **Overview** page in the Azure AI Foundry portal). Observe that the first and second model used in the exercise are **gpt-4o** and **gpt-4o-mini** respectively.
+1. *After* you've replaced the placeholder, in the code editor, use the **CTRL+S** command or **Right-click > Save** to save your changes and then use the **CTRL+Q** command or **Right-click > Quit** to close the code editor while keeping the cloud shell command line open.
+
+## Implement RAG
+
+You'll now run a script that ingests and preprocesses data, creates embeddings, and builds a vector store and index, ultimately enabling you to implement a RAG system effectively.
+
+1. Run the following command to **view the script** that has been provided:
+
+    ```powershell
+   code RAG.py
+    ```
 
 ## Clean up
 
