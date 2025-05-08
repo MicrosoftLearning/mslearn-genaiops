@@ -321,8 +321,8 @@ This view shows the trace for one full session of the Trail Guide AI Assistant.
     ```
            profile = generate_trip_profile(hike)
            if not profile:
-           print("Failed to generate trip profile. Please check Application Insights for trace.")
-           exit(1)
+               print("Failed to generate trip profile. Please check Application Insights for trace.")
+               exit(1)
 
            print(f"\n📋 Trip Profile for {hike}:")
            print(json.dumps(profile, indent=2))
