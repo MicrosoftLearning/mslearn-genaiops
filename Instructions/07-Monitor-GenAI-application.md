@@ -46,7 +46,7 @@ To quickly setup a hub and project, simple instructions to use the Azure AI Foun
 To generate data that you can monitor, you first need to deploy a model and interact with it. In the instructions you're asked to deploy a GPT-4o model, but **you can use any model** from the Azure OpenAI Service collection that is available to you.
 
 1. Use the menu on the left, in the **My assets**, select the **Models + endpoints** page.
-1. In the **Models + endpoints** page, in the **+ Deploy model** menu, select **Deploy base model**.
+1. In the **+ Deploy model** menu, select **Deploy base model**.
 1. Select the **gpt-4o** model in the list and deploy it with the following settings by selecting **Customize** in the deployment details:
     - **Deployment name**: *A valid name for your model deployment*
     - **Deployment type**: Standard
