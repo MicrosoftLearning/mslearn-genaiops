@@ -1,7 +1,7 @@
 ---
 lab:
     title: 'Optimize your model using a synthetic dataset'
-    description: 'Learn how to create synthetic datasets and use them to enhance a model's performance and reliability.'
+    description: 'Learn how to create synthetic datasets and use them to enhance performance and reliability of your model.'
 ---
 
 ## Optimize your model using a synthetic dataset
