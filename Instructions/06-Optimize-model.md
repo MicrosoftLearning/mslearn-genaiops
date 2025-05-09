@@ -1,7 +1,7 @@
 ---
 lab:
-    title: 'Optimize your model using a synthetic dataset'
-    description: 'Learn how to create synthetic datasets and use them to enhance a model's performance and reliability.'
+    title: 'Orchestrate a RAG system'
+    description: 'Learn how to implement Retrieval-Augmented Generation (RAG) systems in your apps to enhance the accuracy and relevance of generated responses.'
 ---
 
 ## Optimize your model using a synthetic dataset
