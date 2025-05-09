@@ -38,12 +38,25 @@ print(f"Split documents into {len(all_splits)} sub-documents.")
 document_ids = vector_store.add_documents(documents=all_splits)
 
 # Test the RAG application
-prompt = hub.pull("rlm/rag-prompt")
-question = "Where can I stay in London?"
+prompt_template = hub.pull("rlm/rag-prompt")
 
-retrieved_docs = vector_store.similarity_search(question)
-docs_content = "\n\n".join(doc.page_content for doc in retrieved_docs)
-prompt = prompt.invoke({"question": question, "context": docs_content})
-answer = llm.invoke(prompt)
+print("Enter 'exit' or 'quit' to close the program.")
 
-print(answer.content)
+# Loop to handle multiple questions from the user
+while True:
+    question = input("\nPlease enter your question: ")
+    if question.lower() in ['exit', 'quit']:
+        break
+
+    # Retrieve relevant documents from the vector store based on user input
+    retrieved_docs = vector_store.similarity_search(question)
+    docs_content = "\n\n".join(doc.page_content for doc in retrieved_docs)
+
+    # Generate the prompt and obtain the answer from the language model
+    prompt = prompt_template.invoke({"question": question, "context": docs_content})
+    answer = llm.invoke(prompt)
+
+    # Print the answer
+    print("\nAnswer:")
+    print(answer.content) 
+
