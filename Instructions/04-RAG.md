@@ -7,11 +7,11 @@ lab:
 
 Retrieval-Augmented Generation (RAG) systems combine the power of large language models with efficient retrieval mechanisms to enhance the accuracy and relevance of generated responses. By leveraging LangChain for orchestration and Azure AI Foundry for AI capabilities, we can create a robust pipeline that retrieves relevant information from a dataset and generates coherent responses. In this exercise, you will go through the steps of setting up your environment, preprocessing data, creating embeddings, and building a index, ultimately enabling you to implement a RAG system effectively.
 
-This exercise will take approximately **45** minutes.
+This exercise will take approximately **30** minutes.
 
 ## Scenario
 
-Imagine you want to build an app that gives recommendations about hotels. In the app, you want an agent that can not only recommend hotels but answer questions that the users might have about them.
+Imagine you want to build an app that gives recommendations about hotels in London. In the app, you want an agent that can not only recommend hotels but answer questions that the users might have about them.
 
 You've selected a GPT-4 model to provide generative answers. You now want to put together a RAG system that will provide grounding data to the model based on other users reviews, guiding the chat's behavior into giving personalized recommendations.
 
@@ -82,6 +82,9 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
 
      ```powershell
     Get-AzCognitiveServicesAccount -ResourceGroupName <rg-env_name> -Name <aoai-xxxxxxxxxx> | Select-Object -Property endpoint
+     ```
+
+     ```powershell
     Get-AzCognitiveServicesAccountKey -ResourceGroupName <rg-env_name> -Name <aoai-xxxxxxxxxx> | Select-Object -Property Key1
      ```
 
@@ -91,21 +94,18 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
 
 To quickly experiment and iterate, you'll use a set of Python scripts in Cloud Shell.
 
-1. In the Azure AI Foundry portal, view the **Overview** page for your project.
-1. In the **Project details** area, note the **Project connection string**.
-1. Save the string in a notepad. You'll use this connection string to connect to your project in a client application.
-1. Back in the Azure Portal tab, open Cloud Shell if you closed it before and run the following command to navigate to the folder with the code files used in this exercise:
+1. In the Cloud Shell command-line pane, enter the following command to navigate to the folder with the code files used in this exercise:
 
      ```powershell
     cd ~/mslearn-genaiops/Files/04/
      ```
 
-1. In the Cloud Shell command-line pane, enter the following command to install the libraries you need:
+1. Enter the following commands to activate a virtual environment and install the libraries you need:
 
     ```powershell
    python -m venv labenv
    ./labenv/bin/Activate.ps1
-   pip install python-dotenv azure-identity azure-ai-projects langchain-text-splitters langchain-community langchain-openai
+   pip install python-dotenv langchain-text-splitters langchain-community langchain-openai
     ```
 
 1. Enter the following command to open the configuration file that has been provided:
@@ -116,8 +116,8 @@ To quickly experiment and iterate, you'll use a set of Python scripts in Cloud S
 
     The file is opened in a code editor.
 
-1. In the code file, replace the **your_project_connection_string** placeholder with the connection string for your project (copied from the project **Overview** page in the Azure AI Foundry portal). Observe that the first and second model used in the exercise are **gpt-4o** and **gpt-4o-mini** respectively.
-1. *After* you've replaced the placeholder, in the code editor, use the **CTRL+S** command or **Right-click > Save** to save your changes and then use the **CTRL+Q** command or **Right-click > Quit** to close the code editor while keeping the cloud shell command line open.
+1. In the code file, replace the **your_azure_openai_service_endpoint** and **your_azure_openai_service_api_key** placeholders with the endpoint and key values you copied earlier.
+1. *After* you've replaced the placeholders, in the code editor, use the **CTRL+S** command or **Right-click > Save** to save your changes and then use the **CTRL+Q** command or **Right-click > Quit** to close the code editor while keeping the cloud shell command line open.
 
 ## Implement RAG
 
@@ -128,6 +128,19 @@ You'll now run a script that ingests and preprocesses data, creates embeddings, 
     ```powershell
    code RAG.py
     ```
+
+1. Review the script and notice that it uses a .csv file with hotel reviews as grounding data. You can see the contents of this file by running the command `download app_hotel_reviews.csv` and opening the file.
+1. **Run the script** by entering the following command in the command-line:
+
+    ```
+   python RAG.py
+    ```
+
+1. Once the application is running, you can start asking questions such as `Where can I stay in London?` and then follow up with more specific inquiries.
+
+## Conclusion
+
+In this exercise you built a typical RAG system with its main components. By using your own documents to inform a model's responses, you provide grounding data used by the LLM when it formulates a response. For an enterprise solution, that means that you can constrain generative AI to your enterprise content.
 
 ## Clean up
 
