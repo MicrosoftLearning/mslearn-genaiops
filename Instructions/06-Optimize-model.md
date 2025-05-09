@@ -1,7 +1,6 @@
 ---
 lab:
-    title: 'Optimize your model using a synthetic dataset'
-    description: 'Learn how to create synthetic datasets and use them to enhance a model's performance and reliability.'
+    title: 'Monitor your generative AI application'
 ---
 
 ## Optimize your model using a synthetic dataset
