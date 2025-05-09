@@ -42,6 +42,8 @@ prompt_template = hub.pull("rlm/rag-prompt")
 
 print("Enter 'exit' or 'quit' to close the program.")
 
+history = []
+
 # Loop to handle multiple questions from the user
 while True:
     question = input("\nPlease enter your question: ")
@@ -49,14 +51,31 @@ while True:
         break
 
     # Retrieve relevant documents from the vector store based on user input
-    retrieved_docs = vector_store.similarity_search(question)
+    retrieved_docs = vector_store.similarity_search(question, k=10)
     docs_content = "\n\n".join(doc.page_content for doc in retrieved_docs)
 
-    # Generate the prompt and obtain the answer from the language model
-    prompt = prompt_template.invoke({"question": question, "context": docs_content})
+    # Format the conversation history as a string
+    history_text = ""
+    if history:
+        history_lines = []
+        for record in history:
+            history_lines.append(f"Q: {record['question']}\nA: {record['answer']}")
+        history_text = "\n\n".join(history_lines)
+
+    # Generate the prompt with the latest question, retrieved context, and conversation history
+    prompt = prompt_template.invoke({
+        "question": question,
+        "context": docs_content,
+        "history": history_text
+    })
     answer = llm.invoke(prompt)
 
     # Print the answer
     print("\nAnswer:")
     print(answer.content) 
 
+    # Append the current exchange to the history
+    history.append({
+        "question": question,
+        "answer": answer.content
+    })
