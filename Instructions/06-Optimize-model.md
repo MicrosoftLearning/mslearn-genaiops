@@ -10,7 +10,7 @@ Optimizing a generative AI application involves leveraging datasets to enhance t
 
 This exercise will take approximately **30** minutes\*.
 
->*: This estimate does not include the optional task at the end of the lab.
+>*: This estimate does not include the optional task at the end of the exercise.
 ## Scenario
 
 Imagine you want to build an AI-powered smart guide app to enhance visitors' experiences in a museum. The app aims to answer questions about historical figures. To evaluate the responses from the app, you need to create a comprehensive synthetic question-answer dataset that covers various aspects of these personalities and their work.
