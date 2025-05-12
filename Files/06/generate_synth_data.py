@@ -1,10 +1,14 @@
 import os
 import json
 import wikipedia
+from dotenv import load_dotenv
 from promptflow.client import load_flow
 from typing import List, Dict, Any, Optional
 from azure.ai.evaluation.simulator import Simulator
 from azure.ai.evaluation import GroundednessEvaluator, evaluate
+
+# Load environment variables from a .env file
+load_dotenv()
 
 # Prepare the text to send to the simulator
 wiki_search_term = "Isaac Asimov"
@@ -50,7 +54,7 @@ model_config = {
 }
 
 simulator = Simulator(model_config=model_config)
-    
+
 outputs = await simulator(
     target=callback,
     text=text,
