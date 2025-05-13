@@ -107,7 +107,7 @@ To quickly experiment and iterate, you'll use a set of Python scripts in Cloud S
     ```powershell
    python -m venv labenv
    ./labenv/bin/Activate.ps1
-   pip install python-dotenv azure-ai-evaluation promptflow wikipedia
+   pip install python-dotenv azure-ai-evaluation azure-ai-projects promptflow wikipedia aiohttp openai==1.77.0
     ```
 
 1. Enter the following command to open the configuration file that has been provided:
@@ -145,7 +145,7 @@ You'll now run a script that generates a synthetic dataset and uses it to evalua
         # Get the last message
         latest_message = messages_list[-1]
         query = latest_message["content"]
-        context = latest_message.get("context", None) # looks for context, default None
+        context = text
         # Call your endpoint or AI application here
         current_dir = os.getcwd()
         prompty_path = os.path.join(current_dir, "application.prompty")
@@ -187,11 +187,11 @@ You'll now run a script that generates a synthetic dataset and uses it to evalua
     
     simulator = Simulator(model_config=model_config)
     
-    outputs = await simulator(
+    outputs = asyncio.run(simulator(
         target=callback,
         text=text,
         num_queries=1,  # Minimal number of queries
-    )
+    ))
     
     output_file = "simulation_output.jsonl"
     with open(output_file, "w") as file:
@@ -224,7 +224,7 @@ You'll now run a script that generates a synthetic dataset and uses it to evalua
    python generate_synth_data.py
     ```
 
-    Once the script is finished, you can download the output files by running `download simulation_output.jsonl` and `download groundedness_eval_output.json` and review their contents. If the groundedness metric isn't close to 1.0, you can change the LLM parameters such as `temperature`, `top_p`, `presence_penalty` or `frequency_penalty` in the `application.prompty` file and re-run the script to generate a new dataset for evaluation. You can also change the `wiki_search_term` to obtain a synthetic dataset based on a different context.
+    Once the script is finished, you can download the output files by running `download simulation_output.jsonl` and `download groundedness_eval_output.json` and review their contents. If the groundedness metric isn't close to 3.0, you can change the LLM parameters such as `temperature`, `top_p`, `presence_penalty` or `frequency_penalty` in the `application.prompty` file and re-run the script to generate a new dataset for evaluation. You can also change the `wiki_search_term` to obtain a synthetic dataset based on a different context.
 
 ## (OPTIONAL) Fine-tune your model
 
