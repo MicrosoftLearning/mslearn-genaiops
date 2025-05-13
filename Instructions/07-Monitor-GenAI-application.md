@@ -1,6 +1,7 @@
 ---
 lab:
     title: 'Monitor your generative AI application'
+    description: 'Learn how to monitor interactions with your deployed model and get insights on how to optimize its usage with your generative AI application.'
 ---
 
 # Monitor your generative AI application
