@@ -1,5 +1,6 @@
 import os
 import json
+import asyncio
 import wikipedia
 from dotenv import load_dotenv
 from promptflow.client import load_flow
