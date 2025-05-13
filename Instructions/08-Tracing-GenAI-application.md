@@ -1,6 +1,7 @@
 ---
 lab:
     title: 'Analyze and debug your generative AI app with tracing'
+    description: 'Learn how to debug your generative AI application by tracing its workflow from user input to model response and post-processing.'
 ---
 
 # Analyze and debug your generative AI app with tracing
