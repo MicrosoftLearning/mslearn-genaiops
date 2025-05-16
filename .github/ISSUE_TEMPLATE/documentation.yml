@@ -1,0 +1,58 @@
+name: Documentation error
+description: File an error with the documentation, for example a typo or outdated instructions.
+title: "QUICK_DESCRIPTION"
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Thanks for taking the time to fill out this documentation error report!
+        
+        **Replace title name "QUICK_DESCRIPTION"**
+  - type: dropdown
+    id: version
+    attributes:
+      label: Lab name
+      description: In which lab did you encounter an issue
+      options:
+        - All labs
+        - Plan and prepare a GenAIOps solution
+        - Optimize prompts for your generative AI app
+        - Implement orchestration for your generative AI app
+        - Automate evaluations of generative AI applications
+        - Automate the deployment of generative AI applications
+        - Tracing generative AI applications
+        - Monitor your generative AI applications
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What is the documentation error?
+      description: Where is the error located, and how should it be fixed?
+      placeholder: Tell us what you found! Be as specific as possible to help us find and fix the error quickly.
+      value: |
+        Where is the error on the page?
+        Exercise: 
+        Task: 
+        Step: 
+        
+        What is wrong?
+        Description of issue, and possible fix:
+        
+    validations:
+      required: true
+  - type: textarea
+    id: Screenshots
+    attributes:
+      label: Relevant screenshots
+      description: Please copy and paste any relevant screenshots 📸
+      value: paste here 😉 
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Do you want to help us fix the issue even faster? 👏
+      description: GitHub/Git uses Pull Requests (PR) to propose and collaborate on changes to a repository. **No git/github experience?** Follow the [video in the Contribution Guide](https://github.com/MicrosoftLearning/AZ400-DesigningandImplementingMicrosoftDevOpsSolutions/blob/master/.github/CONTRIBUTING.md#easy-prs-using-github-no-gitgithub-knowledge-needed)
+      options:
+        - label: Create a Pull Request by following this project's [Contribution Guide](https://github.com/MicrosoftLearning/AZ400-DesigningandImplementingMicrosoftDevOpsSolutions/blob/master/.github/CONTRIBUTING.md#how-can-i-collaborate)
+          required: false

@@ -10,7 +10,7 @@ When you have defined your use case, you can use the model catalog to explore wh
 
 In this exercise, you compare two language models through the model catalog in Azure AI Foundry portal.
 
-This exercise will take approximately **25** minutes.
+This exercise will take approximately **30** minutes.
 
 ## Scenario
 
@@ -32,6 +32,10 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
 
     > **Note**: If you have previously created a cloud shell that uses a *Bash* environment, switch it to ***PowerShell***.
 
+1. In the Cloud Shell toolbar, in the **Settings** menu, select **Go to Classic version**.
+
+    **<font color="red">Ensure you've switched to the Classic version of the Cloud Shell before continuing.</font>**
+
 1. In the PowerShell pane, enter the following commands to clone this exercise's repo:
 
      ```powershell
@@ -51,7 +55,7 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
 1. Next, enter the following command to run the Starter template. It will provision an AI Hub with dependent resources, AI project, AI Services and an online endpoint. It will also deploy the models GPT-4 Turbo, GPT-4o, and GPT-4o mini.
 
      ```powershell
-    azd up  
+    azd up
      ```
 
 1. When prompted, choose which subscription you want to use and then choose one of the following locations for resource provision:
@@ -79,20 +83,11 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
         </ul>
     </details>
 
-1. Once all resources have been provisioned, use the following commands to fetch the endpoint and access key to your AI Services resource. Note that you must replace `<rg-env_name>` and `<aoai-xxxxxxxxxx>` with the names of your resource group and AI Services resource. Both are printed in the deployment's output.
-
-     ```powershell
-    Get-AzCognitiveServicesAccount -ResourceGroupName <rg-env_name> -Name <aoai-xxxxxxxxxx> | Select-Object -Property endpoint
-    Get-AzCognitiveServicesAccountKey -ResourceGroupName <rg-env_name> -Name <aoai-xxxxxxxxxx> | Select-Object -Property Key1
-     ```
-
-1. Copy these values as they will be used later on.
-
 ## Compare the models
 
 You know that there are three models that accept images as input whose inference infrastructure is fully managed by Azure. Now, you need to compare them to decide which one is ideal for our use case.
 
-1. In a web browser, open [Azure AI Foundry portal](https://ai.azure.com) at `https://ai.azure.com` and sign in using your Azure credentials.
+1. In a new browser tab, open [Azure AI Foundry portal](https://ai.azure.com) at `https://ai.azure.com` and sign in using your Azure credentials.
 1. If prompted, select the AI project created earlier.
 1. Navigate to the **Model catalog** page using the menu on the left.
 1. Select **Compare models** (find the button next to the filters in the search pane).
@@ -108,14 +103,95 @@ Review the plot and try to answer the following questions:
 
 The benchmark metric accuracy is calculated based on publicly available generic datasets. From the plot we can already filter out one of the models, as it has the highest cost per token but not the highest accuracy. Before making a decision, let's explore the quality of outputs of the two remaining models specific to your use case.
 
-## Set up your local development environment
+## Set up your development environment in Cloud Shell
 
-To quickly experiment and iterate, you'll use a notebook with Python code in Visual Studio (VS) Code. Let's get VS Code ready to use for local ideation.
+To quickly experiment and iterate, you'll use a set of Python scripts in Cloud Shell.
 
-1. Open VS Code and **Clone** the following Git repo: [https://github.com/MicrosoftLearning/mslearn-genaiops.git](https://github.com/MicrosoftLearning/mslearn-genaiops.git)
-1. Store the clone on a local drive, and open the folder after cloning.
-1. In the VS Code Explorer (left pane), open the notebook **02-Compare-models.ipynb** in the **Files/02** folder.
-1. Run all cells in the notebook.
+1. In the Azure AI Foundry portal, view the **Overview** page for your project.
+1. In the **Project details** area, note the **Project connection string**.
+1. Save the string in a notepad. You'll use this connection string to connect to your project in a client application.
+1. Back in the Azure Portal tab, open Cloud Shell if you closed it before and run the following command to navigate to the folder with the code files used in this exercise:
+
+     ```powershell
+    cd ~/mslearn-genaiops/Files/02/
+     ```
+
+1. In the Cloud Shell command-line pane, enter the following command to install the libraries you need:
+
+    ```powershell
+   python -m venv labenv
+   ./labenv/bin/Activate.ps1
+   pip install python-dotenv azure-identity azure-ai-projects openai matplotlib
+    ```
+
+1. Enter the following command to open the configuration file that has been provided:
+
+    ```powershell
+   code .env
+    ```
+
+    The file is opened in a code editor.
+
+1. In the code file, replace the **your_project_connection_string** placeholder with the connection string for your project (copied from the project **Overview** page in the Azure AI Foundry portal). Observe that the first and second model used in the exercise are **gpt-4o** and **gpt-4o-mini** respectively.
+1. *After* you've replaced the placeholder, in the code editor, use the **CTRL+S** command or **Right-click > Save** to save your changes and then use the **CTRL+Q** command or **Right-click > Quit** to close the code editor while keeping the cloud shell command line open.
+
+## Send prompts to your deployed models
+
+You'll now run multiple scripts that send different prompts to your deployed models. These interactions generate data that you can later observe in Azure Monitor.
+
+1. Run the following command to **view the first script** that has been provided:
+
+    ```powershell
+   code model1.py
+    ```
+
+The script will encode the image used in this exercise into a data URL. This URL will be used to embed the image directly in the chat completion request together with the first text prompt. Next, the script will output the model's response and add it to the chat history and then submit a second prompt. The second prompt is submitted and stored for the purpose of making the metrics observed later on more significant, but you can uncomment the optional section of the code to have the second response as an output as well.
+
+1. In the Cloud Shell command-line pane beneath the code editor, enter the following command to run the **first** script:
+
+    ```powershell
+   python model1.py
+    ```
+
+    The model will generate a response, which will be captured with Application Insights for further analysis. Let's use the second model to explore their differences.
+
+1. In the Cloud Shell command-line pane beneath the code editor, enter the following command to run the **second** script:
+
+    ```powershell
+   python model2.py
+    ```
+
+    Now that you have outputs from both models, are they in any way different?
+
+    > **Note**: Optionally, you can test the scripts given as answers by copying the code blocks, running the command `code your_filename.py`, pasting the code in the editor, saving the file and then running the command `python your_filename.py`. If the script ran successfully, you should have a saved image that can be downloaded with `download imgs/gpt-4o.jpg` or `download imgs/gpt-4o-mini.jpg`.
+
+## Compare token usage of models
+
+Lastly, you will run a third script that will plot the number of processed tokens over time for each model. This data is obtained from Azure Monitor.
+
+1. Before running the last script, you need to copy the resource ID for your Azure AI Services from the Azure Portal. Go to the overview page of your Azure AI Services resource and select **JSON View**. Copy the Resource ID and replace the `your_resource_id` placeholder in the code file:
+
+    ```powershell
+   code plot.py
+    ```
+
+1. Save your changes.
+
+1. In the Cloud Shell command-line pane beneath the code editor, enter the following command to run the **third** script:
+
+    ```powershell
+   python plot.py
+    ```
+
+1. Once the script is finished, enter the following command to download the metrics plot:
+
+    ```powershell
+   download imgs/plot.png
+    ```
+
+## Conclusion
+
+After reviewing the plot and remembering the benchmark values in the Accuracy vs. Cost chart observed before, can you conclude which model is best for your use case? Does the difference in the outputs' accuracy outweight the difference in tokens generated and therefore cost?
 
 ## Clean up
 

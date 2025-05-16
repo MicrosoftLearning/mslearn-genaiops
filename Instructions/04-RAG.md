@@ -8,9 +8,11 @@ lab:
 
 Retrieval-Augmented Generation (RAG) systems combine the power of large language models with efficient retrieval mechanisms to enhance the accuracy and relevance of generated responses. By leveraging LangChain for orchestration and Azure AI Foundry for AI capabilities, we can create a robust pipeline that retrieves relevant information from a dataset and generates coherent responses. In this exercise, you will go through the steps of setting up your environment, preprocessing data, creating embeddings, and building a index, ultimately enabling you to implement a RAG system effectively.
 
+This exercise will take approximately **30** minutes.
+
 ## Scenario
 
-Imagine you want to build an app that gives recommendations about hotels. In the app, you want an agent that can not only recommend hotels but answer questions that the users might have about them.
+Imagine you want to build an app that gives recommendations about hotels in London. In the app, you want an agent that can not only recommend hotels but answer questions that the users might have about them.
 
 You've selected a GPT-4 model to provide generative answers. You now want to put together a RAG system that will provide grounding data to the model based on other users reviews, guiding the chat's behavior into giving personalized recommendations.
 
@@ -26,27 +28,31 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
 
     > **Note**: If you have previously created a cloud shell that uses a *Bash* environment, switch it to ***PowerShell***.
 
+1. In the Cloud Shell toolbar, in the **Settings** menu, select **Go to Classic version**.
+
+    **<font color="red">Ensure you've switched to the Classic version of the Cloud Shell before continuing.</font>**
+
 1. In the PowerShell pane, enter the following commands to clone this exercise's repo:
 
-     ```powershell
-    rm -r mslearn-genaiops -f
-    git clone https://github.com/MicrosoftLearning/mslearn-genaiops
-     ```
+    ```powershell
+   rm -r mslearn-genaiops -f
+   git clone https://github.com/MicrosoftLearning/mslearn-genaiops
+    ```
 
 1. After the repo has been cloned, enter the following commands to initialize the Starter template. 
    
-     ```powershell
-    cd ./mslearn-genaiops/Starter
-    azd init
-     ```
+    ```powershell
+   cd ./mslearn-genaiops/Starter
+   azd init
+    ```
 
 1. Once prompted, give the new environment a name as it will be used as basis for giving unique names to all the provisioned resources.
         
 1. Next, enter the following command to run the Starter template. It will provision an AI Hub with dependent resources, AI project, AI Services and an online endpoint. It will also deploy the models GPT-4 Turbo, GPT-4o, and GPT-4o mini.
 
-     ```powershell
-    azd up  
-     ```
+    ```powershell
+   azd up  
+    ```
 
 1. When prompted, choose which subscription you want to use and then choose one of the following locations for resource provision:
    - East US
@@ -77,19 +83,65 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
 
      ```powershell
     Get-AzCognitiveServicesAccount -ResourceGroupName <rg-env_name> -Name <aoai-xxxxxxxxxx> | Select-Object -Property endpoint
+     ```
+
+     ```powershell
     Get-AzCognitiveServicesAccountKey -ResourceGroupName <rg-env_name> -Name <aoai-xxxxxxxxxx> | Select-Object -Property Key1
      ```
 
 1. Copy these values as they will be used later on.
 
-## Set up your local development environment
+## Set up your development environment in Cloud Shell
 
-To quickly experiment and iterate, you'll use a notebook with Python code in Visual Studio (VS) Code. Let's get VS Code ready to use for local ideation.
+To quickly experiment and iterate, you'll use a set of Python scripts in Cloud Shell.
 
-1. Open VS Code and **Clone** the following Git repo: [https://github.com/MicrosoftLearning/mslearn-genaiops.git](https://github.com/MicrosoftLearning/mslearn-genaiops.git)
-1. Store the clone on a local drive, and open the folder after cloning.
-1. In the VS Code Explorer (left pane), open the notebook **04-RAG.ipynb** in the **Files/04** folder.
-1. Run all cells in the notebook.
+1. In the Cloud Shell command-line pane, enter the following command to navigate to the folder with the code files used in this exercise:
+
+     ```powershell
+    cd ~/mslearn-genaiops/Files/04/
+     ```
+
+1. Enter the following commands to activate a virtual environment and install the libraries you need:
+
+    ```powershell
+   python -m venv labenv
+   ./labenv/bin/Activate.ps1
+   pip install python-dotenv langchain-text-splitters langchain-community langchain-openai
+    ```
+
+1. Enter the following command to open the configuration file that has been provided:
+
+    ```powershell
+   code .env
+    ```
+
+    The file is opened in a code editor.
+
+1. In the code file, replace the **your_azure_openai_service_endpoint** and **your_azure_openai_service_api_key** placeholders with the endpoint and key values you copied earlier.
+1. *After* you've replaced the placeholders, in the code editor, use the **CTRL+S** command or **Right-click > Save** to save your changes and then use the **CTRL+Q** command or **Right-click > Quit** to close the code editor while keeping the cloud shell command line open.
+
+## Implement RAG
+
+You'll now run a script that ingests and preprocesses data, creates embeddings, and builds a vector store and index, ultimately enabling you to implement a RAG system effectively.
+
+1. Run the following command to **view the script** that has been provided:
+
+    ```powershell
+   code RAG.py
+    ```
+
+1. Review the script and notice that it uses a .csv file with hotel reviews as grounding data. You can see the contents of this file by running the command `download app_hotel_reviews.csv` and opening the file.
+1. **Run the script** by entering the following command in the command-line:
+
+    ```
+   python RAG.py
+    ```
+
+1. Once the application is running, you can start asking questions such as `Where can I stay in London?` and then follow up with more specific inquiries.
+
+## Conclusion
+
+In this exercise you built a typical RAG system with its main components. By using your own documents to inform a model's responses, you provide grounding data used by the LLM when it formulates a response. For an enterprise solution, that means that you can constrain generative AI to your enterprise content.
 
 ## Clean up
 
