@@ -12,7 +12,7 @@ model:
   parameters:
     max_tokens: 2000
 sample:
-  question: Please write a short text inviting friends to a Game Night.
+  question: What are some recommended supplies for a camping trip in the mountains?
 ---
 
 system:
