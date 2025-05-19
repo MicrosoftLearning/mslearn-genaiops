@@ -6,7 +6,7 @@ model:
   configuration:
     type: azure_openai
     azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
-    azure_deployment: ${env:AZURE_OPENAI_CHAT_DEPLOYMENT}
+    azure_deployment: ${env:AZURE_OPENAI_DEPLOYMENT}
     api_key: ${env:AZURE_OPENAI_API_KEY}
   parameters:
     max_tokens: 800
