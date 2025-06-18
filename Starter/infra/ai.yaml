@@ -16,7 +16,7 @@ deployments:
       version: "2024-08-06"
     sku:
       name: "Standard"
-      capacity: 10
+      capacity: 50
   - name: gpt-4o-mini
     model:
       format: OpenAI

@@ -1,25 +1,30 @@
 ---
 lab:
     title: 'Explore prompt engineering with Prompty'
+    description: 'Learn how to use Prompty to quickly test and improve on different prompts with your language model and ensure that they are constructed and orchestrated for best results.'
 ---
 
 ## Explore prompt engineering with Prompty
 
+This exercise takes approximately **45 minutes**.
+
+> **Note**: This exercise assumes some familiarity with Azure AI Foundry, which is why some instructions are intentionally less detailed to encourage more active exploration and hands-on learning.
+
+## Introduction
+
 During ideation, you want to quickly test and improve on different prompts with your language model. There are various ways you can approach prompt engineering, through the playground in the Azure AI Foundry portal, or using Prompty for a more code-first approach.
 
-In this exercise, you explore prompt engineering with Prompty in Visual Studio Code, using a model deployed through Azure AI Foundry.
+In this exercise, you explore prompt engineering with Prompty in Azure Cloud Shell, using a model deployed through Azure AI Foundry.
 
-This exercise will take approximately **40** minutes.
+## Set up the environment
 
-## Scenario
+To complete the tasks in this exercise, you need:
 
-Imagine you want to build an app to help students learn how to code in Python. In the app, you want an automated tutor that can help students write and evaluate code. However, you don't want the chat app to just provide all the answers. You want students to receive personalized hints that encourage them to think about how to proceed.
+- An Azure AI Foundry hub,
+- An Azure AI Foundry project,
+- A deployed model (like GPT-4o).
 
-You've selected a GPT-4 model to start experimenting with. You now want to apply prompt engineering to guide the chat's behavior into being a tutor that generates personalized hints.
-
-Let's start by deploying the necessary resources to work with this model in the Azure AI Foundry portal.
-
-## Create an Azure AI hub and project
+### Create an Azure AI hub and project
 
 > **Note**: If you already have an Azure AI hub and project, you can skip this procedure and use your existing project.
 
@@ -87,7 +92,7 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
 
 1. Copy these values as they will be used later on.
    
-## Set up your local development environment
+### Set up your local development environment
 
 To quickly experiment and iterate, you'll use Prompty in Visual Studio (VS) Code. Let's get VS Code ready to use for local ideation.
 

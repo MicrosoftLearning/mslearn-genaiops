@@ -1,0 +1,26 @@
+---
+name: Optimization Prompty
+description: A template for prompt optimization
+authors:
+  - Coleman Pottinger
+model:
+  api: chat
+  configuration:
+    type: azure_openai
+    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    azure_deployment: gpt-4o
+  parameters:
+    max_tokens: 2000
+sample:
+  question: What are some recommended supplies for a camping trip in the mountains?
+---
+
+system:
+You are a helpful assistant. Your job is to answer questions and provide information to users in a concise and accurate manner.
+
+example:
+user: What's the weather like today?
+assistant: The weather today is sunny with a high of 25°C.
+
+user:
+{{question}}

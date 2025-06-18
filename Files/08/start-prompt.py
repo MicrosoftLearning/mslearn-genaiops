@@ -62,25 +62,3 @@ mock_product_catalog = [
 
 
 # ---- Main Flow ----
-if __name__ == "__main__":
-    with tracer.start_as_current_span("trail_guide_session") as session_span:
-        session_span.set_attribute("session.id", SESSION_ID)
-        print("\n--- Trail Guide AI Assistant ---")
-        preferences = input("Tell me what kind of hike you're looking for (location, difficulty, scenery):\n> ")
-
-        hike = recommend_hike(preferences)
-        print(f"\n✅ Recommended Hike: {hike}")
-
-        profile = generate_trip_profile(hike)
-        if not profile:
-            print("Failed to generate trip profile. Please check Application Insights for trace.")
-            exit(1)
-
-        print(f"\n📋 Trip Profile for {hike}:")
-        print(json.dumps(profile, indent=2))
-
-        matched = match_products(profile.get("recommendedGear", []))
-        print("\n🛒 Recommended Products from Lakeshore Retail:")
-        print("\n".join(matched))
-
-        print(f"\n🔍 Trace ID available in Application Insights for session: {SESSION_ID}")
