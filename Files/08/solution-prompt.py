@@ -1,8 +1,3 @@
-"""
-Trail Guide AI Assistant - Demonstrates Tracing with Azure AI Foundry
-Now includes proactive hike recommendation based on user preferences.
-"""
-
 import os
 import uuid
 import json

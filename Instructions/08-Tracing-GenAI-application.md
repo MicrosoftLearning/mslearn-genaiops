@@ -340,6 +340,17 @@ This view shows the trace for one full session of the Trail Guide AI Assistant.
    I want to go for a multi-day adventure along the beach
     ```
 
+<br>
+<details>
+<summary><b>Solution script</b>: In case your code is not working.</summary><br>
+<p>If you inspect the LLM trace for the generate_trip_profile function, you'll notice that the assistant's response includes backticks and the word json to format the output as a code block.
+
+While this is helpful for display, it causes issues in the code because the output is no longer valid JSON. This leads to a parsing error during further processing.
+
+The error is likely caused by how the LLM is instructed to adhere to a specific format for its output. Including the instructions in the user prompt appears more effective than to put it in the system prompt.</p>
+</details>
+
+
 > **Note**: It may take a few minutes for monitoring data to show in Azure Monitor.
 
 ### View the new traces in the Azure AI Foundry portal
