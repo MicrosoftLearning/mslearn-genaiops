@@ -1,6 +1,7 @@
 ---
 lab:
     title: 'Analyze and debug your generative AI app with tracing'
+    description: 'Learn how to debug your generative AI application by tracing its workflow from user input to model response and post-processing.'
 ---
 
 # Analyze and debug your generative AI app with tracing
@@ -28,38 +29,48 @@ To complete the tasks in this exercise, you need:
 
 To quickly setup a hub and project, simple instructions to use the Azure AI Foundry portal UI are provided below.
 
-1. Navigate to the Azure AI Foundry portal: Open [https://ai.azure.com](https://ai.azure.com).
-1. Sign in using your Azure credentials.
-1. Create a project:
-    1. Navigate to **All hubs + projects**.
-    1. Select **+ New project**.
-    1. Enter a **project name**.
-    1. When prompted, **create a new hub**.
-    1. Customize the hub:
-        1. Choose **subscription**, **resource group**, **location**, etc.
-        1. Connect a **new Azure AI Services** resource (skip AI Search).
-    1. Review and select **Create**.
-1. **Wait for deployment to complete** (~ 1-2 minutes).
+1. In a web browser, open the [Azure AI Foundry portal](https://ai.azure.com) at `https://ai.azure.com` and sign in using your Azure credentials.
+1. In the home page, select **+ Create project**.
+1. In the **Create a project** wizard, enter a valid name for your project and if an existing hub is suggested, choose the option to create a new one. Then review the Azure resources that will be automatically created to support your hub and project.
+1. Select **Customize** and specify the following settings for your hub:
+    - **Hub name**: *A valid name for your hub*
+    - **Subscription**: *Your Azure subscription*
+    - **Resource group**: *Create or select a resource group*
+    - **Location**: Select **Help me choose** and then select **gpt-4o** in the Location helper window and use the recommended region\*
+    - **Connect Azure AI Services or Azure OpenAI**: *Create a new AI Services resource*
+    - **Connect Azure AI Search**: Skip connecting
+
+    > \* Azure OpenAI resources are constrained by regional model quotas. In the event of a quota limit being exceeded later in the exercise, there's a possibility you may need to create another resource in a different region.
+
+1. Select **Next** and review your configuration. Then select **Create** and wait for the process to complete.
 
 ### Deploy a model
 
 To generate data that you can monitor, you first need to deploy a model and interact with it. In the instructions you're asked to deploy a GPT-4o model, but **you can use any model** from the Azure OpenAI Service collection that is available to you.
 
 1. Use the menu on the left, in the **My assets**, select the **Models + endpoints** page.
-1. Deploy a **base model**, and choose **gpt-4o**.
-1. **Customize the deployment details**.
-1. Set the **capacity** to **5K tokens per minute (TPM)**.
+1. In the **+ Deploy model** menu, select **Deploy base model**.
+1. Select the **gpt-4o** model in the list and deploy it with the following settings by selecting **Customize** in the deployment details:
+    - **Deployment name**: *A valid name for your model deployment*
+    - **Deployment type**: Standard
+    - **Automatic version update**: Enabled
+    - **Model version**: *Select the most recent available version*
+    - **Connected AI resource**: *Select your Azure OpenAI resource connection*
+    - **Tokens per Minute Rate Limit (thousands)**: 5K
+    - **Content filter**: DefaultV2
+    - **Enable dynamic quota**: Disabled
 
-The hub and project are ready, with all required Azure resources provisioned automatically.
+    > **Note**: Reducing the TPM helps avoid over-using the quota available in the subscription you are using. 5,000 TPM should be sufficient for the data used in this exercise. If your available quota is lower than this, you will be able to complete the exercise but you may experience errors if the rate limit is exceeded.
+
+1. Wait for the deployment to complete.
 
 ### Connect Application Insights
 
 Connect Application Insights to your project in Azure AI Foundry to start collecting data for analysis.
 
-1. Open your project in the Azure AI Foundry portal.
 1. Use the menu on the left, and select the **Tracing** page.
 1. **Create a new** Application Insights resource to connect to your app.
-1. Enter a **Application Insights resource name**.
+1. Enter an Application Insights resource name and select **Create**.
 
 Application Insights is now connected to your project, and data will begin to be collected for analysis.
 
@@ -117,7 +128,7 @@ Start by retrieving the necessary information to be authenticated to interact wi
     1. Replace the **your_project_connection_string** placeholder with the connection string for your project (copied from the project **Overview** page in the Azure AI Foundry portal).
     1. Replace the **your_model_deployment** placeholder with the name you assigned to your GPT-4o model deployment (by default `gpt-4o`).
 
-1. *After* you've replaced the placeholders, in the code editor, use the **CTRL+S** command or **Right-click > Save** to **save your changes**.
+1. *After* you've replaced the placeholders, in the code editor, use the **CTRL+S** command or **Right-click > Save** to **save your changes** and then use the **CTRL+Q** command or **Right-click > Quit** to close the code editor while keeping the cloud shell command line open.
 
 ### Update the code for your generative AI app
 
@@ -254,7 +265,7 @@ This view shows the trace for one full session of the Trail Guide AI Assistant.
 
 ## Add more functions to your code
 
-
+1. Navigate to the tab in your browser with the **Azure Portal** open.
 1. Run the following command to **re-open the script:**
 
     ```
@@ -311,8 +322,8 @@ This view shows the trace for one full session of the Trail Guide AI Assistant.
     ```
            profile = generate_trip_profile(hike)
            if not profile:
-           print("Failed to generate trip profile. Please check Application Insights for trace.")
-           exit(1)
+               print("Failed to generate trip profile. Please check Application Insights for trace.")
+               exit(1)
 
            print(f"\n📋 Trip Profile for {hike}:")
            print(json.dumps(profile, indent=2))

@@ -1,6 +1,7 @@
 ---
 lab:
     title: 'Monitor your generative AI application'
+    description: 'Learn how to monitor interactions with your deployed model and get insights on how to optimize its usage with your generative AI application.'
 ---
 
 # Monitor your generative AI application
@@ -13,7 +14,7 @@ This exercise takes approximately **30 minutes**.
 
 In this exercise, you enable monitoring for a chat completion app and view its performance in Azure Monitor. You interact with your deployed model to generate data, view the generated data through the Insights for Generative AI applications dashboard, and set up alerts to help optimize the model's deployment.
 
-## 1. Set up the environment
+## Set up the environment
 
 To complete the tasks in this exercise, you need:
 
@@ -22,53 +23,60 @@ To complete the tasks in this exercise, you need:
 - A deployed model (like GPT-4o),
 - A connected Application Insights resource.
 
-### A. Create an AI Foundry hub and project
+### Create an AI Foundry hub and project
 
 To quickly setup a hub and project, simple instructions to use the Azure AI Foundry portal UI are provided below.
 
-1. Navigate to the Azure AI Foundry portal: Open [https://ai.azure.com](https://ai.azure.com).
-1. Sign in using your Azure credentials.
-1. Create a project:
-    1. Navigate to **All hubs + projects**.
-    1. Select **+ New project**.
-    1. Enter a **project name**.
-    1. When prompted, **create a new hub**.
-    1. Customize the hub:
+1. In a web browser, open the [Azure AI Foundry portal](https://ai.azure.com) at `https://ai.azure.com` and sign in using your Azure credentials.
+1. In the home page, select **+ Create project**.
+1. In the **Create a project** wizard, enter a valid name for your project and if an existing hub is suggested, choose the option to create a new one. Then review the Azure resources that will be automatically created to support your hub and project.
+1. Select **Customize** and specify the following settings for your hub:
+    - **Hub name**: *A valid name for your hub*
+    - **Subscription**: *Your Azure subscription*
+    - **Resource group**: *Create or select a resource group*
+    - **Location**: Select **Help me choose** and then select **gpt-4o** in the Location helper window and use the recommended region\*
+    - **Connect Azure AI Services or Azure OpenAI**: *Create a new AI Services resource*
+    - **Connect Azure AI Search**: Skip connecting
 
-        1. Choose **subscription**, **resource group**, **location**, etc.
-        1. Connect a **new Azure AI Services** resource (skip AI Search).
+    > \* Azure OpenAI resources are constrained by regional model quotas. In the event of a quota limit being exceeded later in the exercise, there's a possibility you may need to create another resource in a different region.
 
-    1. Review and select **Create**.
+1. Select **Next** and review your configuration. Then select **Create** and wait for the process to complete.
 
-1. **Wait for deployment to complete** (~ 1-2 minutes).
-
-### B. Deploy a model
+### Deploy a model
 
 To generate data that you can monitor, you first need to deploy a model and interact with it. In the instructions you're asked to deploy a GPT-4o model, but **you can use any model** from the Azure OpenAI Service collection that is available to you.
 
 1. Use the menu on the left, in the **My assets**, select the **Models + endpoints** page.
-1. Deploy a **base model**, and choose **gpt-4o**.
-1. **Customize the deployment details**.
-1. Set the **capacity** to **5K tokens per minute (TPM)**.
+1. In the **+ Deploy model** menu, select **Deploy base model**.
+1. Select the **gpt-4o** model in the list and deploy it with the following settings by selecting **Customize** in the deployment details:
+    - **Deployment name**: *A valid name for your model deployment*
+    - **Deployment type**: Standard
+    - **Automatic version update**: Enabled
+    - **Model version**: *Select the most recent available version*
+    - **Connected AI resource**: *Select your Azure OpenAI resource connection*
+    - **Tokens per Minute Rate Limit (thousands)**: 1K
+    - **Content filter**: DefaultV2
+    - **Enable dynamic quota**: Disabled
 
-The hub and project are ready, with all required Azure resources provisioned automatically.
+    > **Note**: Reducing the TPM helps avoid over-using the quota available in the subscription you are using. 1,000 TPM should be sufficient for the data used in this exercise. If your available quota is lower than this, you will be able to complete the exercise but you may experience errors if the rate limit is exceeded.
 
-### C. Connect Application Insights
+1. Wait for the deployment to complete.
 
-Connect Application Insights to your project in Azure AI Foundry to start collected data for monitoring.
+### Connect Application Insights
 
-1. Open your project in the Azure AI Foundry portal.
+Connect Application Insights to your project in Azure AI Foundry to start collecting data for monitoring.
+
 1. Use the menu on the left, and select the **Tracing** page.
 1. **Create a new** Application Insights resource to connect to your app.
-1. Enter a **Application Insights resource name**.
+1. Enter an Application Insights resource name and select **Create**.
 
 Application Insights is now connected to your project, and data will begin to be collected for analysis.
 
-## 2. Interact with a deployed model
+## Interact with a deployed model
 
 You'll interact with your deployed model programmatically by setting up a connection to your Azure AI Foundry project using Azure Cloud Shell. This will allow you to send a prompt to the model and generate monitoring data.
 
-### A. Connect with a model through the Cloud Shell
+### Connect with a model through the Cloud Shell
 
 Start by retrieving the necessary information to be authenticated to interact with your model. Then, you'll access the Azure Cloud Shell and update the configuration to send the provided prompts to your own deployed model.
 
@@ -90,6 +98,8 @@ Start by retrieving the necessary information to be authenticated to interact wi
     ```
 
     This command clones the GitHub repository containing the code files for this exercise.
+
+    > **Tip**: As you paste commands into the cloudshell, the output may take up a large amount of the screen buffer. You can clear the screen by entering the `cls` command to make it easier to focus on each task.
 
 1. After the repo has been cloned, navigate to the folder containing the application code files:  
 
@@ -118,11 +128,11 @@ Start by retrieving the necessary information to be authenticated to interact wi
     1. Replace the **your_project_connection_string** placeholder with the connection string for your project (copied from the project **Overview** page in the Azure AI Foundry portal).
     1. Replace the **your_model_deployment** placeholder with the name you assigned to your GPT-4o model deployment (by default `gpt-4o`).
 
-1. *After* you've replaced the placeholders, in the code editor, use the **CTRL+S** command or **Right-click > Save** to **save your changes**.
+1. *After* you've replaced the placeholders, in the code editor, use the **CTRL+S** command or **Right-click > Save** to **save your changes** and then use the **CTRL+Q** command or **Right-click > Quit** to close the code editor while keeping the cloud shell command line open.
 
-### B. Send prompts to your deployed model
+### Send prompts to your deployed model
 
-You'll now run multiple script that send different prompts to your deployed model. These interactions generate data that you can later observe in Azure Monitor.
+You'll now run multiple scripts that send different prompts to your deployed model. These interactions generate data that you can later observe in Azure Monitor.
 
 1. Run the following command to **view the first script** that has been provided:
 
@@ -138,7 +148,7 @@ You'll now run multiple script that send different prompts to your deployed mode
 
     The model will generate a response, which will be captured with Application Insights for further analysis. Let's vary our prompts to explore their effects.
 
-1. **Open and review the script**, where the prompt instructs to model to **only answer with one sentence and a list**:
+1. **Open and review the script**, where the prompt instructs the model to **only answer with one sentence and a list**:
 
     ```
    code short-prompt.py
@@ -178,22 +188,22 @@ Now that you have interacted with the model, you can review the data in Azure Mo
 
 > **Note**: It may take a few minutes for monitoring data to show in Azure Monitor.
 
-## 4. View monitoring data in Azure Monitor
+## View monitoring data in Azure Monitor
 
 To view data collected from your model interactions, you'll access the dashboard that links to a workbook in Azure Monitor.
 
-### A. Navigate to Azure Monitor from the Azure AI Foundry portal
+### Navigate to Azure Monitor from the Azure AI Foundry portal
 
 1. Navigate to the tab in your browser with the **Azure AI Foundry portal** open.
 1. Use the menu on the left, select **Tracing**.
 1. Select link at the top, that says **Check out your Insights for Generative AI applications dashboard**. The link will open Azure Monitor in a new tab.
 1. Review the **Overview** providing summarized data of the interactions with your deployed model.
 
-## 5. Interpret monitoring metrics in Azure Monitor
+## Interpret monitoring metrics in Azure Monitor
 
 Now it's time to dig into the data and begin interpreting what it tells you.
 
-### A. Review the token usage
+### Review the token usage
 
 Focus on the **token usage** section first and review the following metrics:
 
@@ -213,7 +223,7 @@ Focus on the **token usage** section first and review the following metrics:
 
 > Useful for analyzing throughput and understanding average cost per call.
 
-### B. Compare the individual prompts
+### Compare the individual prompts
 
 Scroll down to find the **Gen AI Spans**, which is visualized as a table where each prompt is represented as a new row of data. Review and compare the contents of the following columns:
 
@@ -237,7 +247,7 @@ Scroll down to find the **Gen AI Spans**, which is visualized as a table where e
 
 > Use it to assess verbosity, relevance, and consistency. Especially in relation to token counts and duration.
 
-## 6. (OPTIONAL) Create an alert
+## (OPTIONAL) Create an alert
 
 If you have extra time, try setting up an alert to notify you when model latency exceeds a certain threshold. This is an exercise designed to challenge you, which means instructions are intentionally less detailed.
 
