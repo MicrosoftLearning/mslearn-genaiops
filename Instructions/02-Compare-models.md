@@ -107,8 +107,8 @@ The benchmark metric accuracy is calculated based on publicly available generic 
 
 To quickly experiment and iterate, you'll use a set of Python scripts in Cloud Shell.
 
-1. In the Azure AI Foundry portal, view the **Overview** page for your project.
-1. In the **Endpoints and keys** area, ensure that the **Azure AI Foundry** library is selected and view the **Azure AI Foundry project endpoint**.
+1. Back in the Azure Portal tab, navigate to the resource group created by the deployment script earlier and select your **Azure AI Foundry** resource.
+1. In the **Overview** page for your resource, select **Click here to view endpoints** and copy the AI Foundry API endpoint.
 1. Save the endpoint in a notepad. You'll use it to connect to your project in a client application.
 1. Back in the Azure Portal tab, open Cloud Shell if you closed it before and run the following command to navigate to the folder with the code files used in this exercise:
 
@@ -147,7 +147,18 @@ You'll now run multiple scripts that send different prompts to your deployed mod
 
 The script will encode the image used in this exercise into a data URL. This URL will be used to embed the image directly in the chat completion request together with the first text prompt. Next, the script will output the model's response and add it to the chat history and then submit a second prompt. The second prompt is submitted and stored for the purpose of making the metrics observed later on more significant, but you can uncomment the optional section of the code to have the second response as an output as well.
 
-1. In the Cloud Shell command-line pane beneath the code editor, enter the following command to run the **first** script:
+1. In the cloud shell command-line pane, enter the following command to sign into Azure.
+
+    ```
+   az login
+    ```
+
+    **<font color="red">You must sign into Azure - even though the cloud shell session is already authenticated.</font>**
+
+    > **Note**: In most scenarios, just using *az login* will be sufficient. However, if you have subscriptions in multiple tenants, you may need to specify the tenant by using the *--tenant* parameter. See [Sign into Azure interactively using the Azure CLI](https://learn.microsoft.com/cli/azure/authenticate-azure-cli-interactively) for details.
+    
+1. When prompted, follow the instructions to open the sign-in page in a new tab and enter the authentication code provided and your Azure credentials. Then complete the sign in process in the command line, selecting the subscription containing your Azure AI Foundry hub if prompted.
+1. After you have signed in, enter the following command to run the application:
 
     ```powershell
    python model1.py
@@ -169,7 +180,7 @@ The script will encode the image used in this exercise into a data URL. This URL
 
 Lastly, you will run a third script that will plot the number of processed tokens over time for each model. This data is obtained from Azure Monitor.
 
-1. Before running the last script, you need to copy the resource ID for your Azure AI Services from the Azure Portal. Go to the overview page of your Azure AI Services resource and select **JSON View**. Copy the Resource ID and replace the `your_resource_id` placeholder in the code file:
+1. Before running the last script, you need to copy the resource ID for your Azure AI Foundry resource from the Azure Portal. Go to the overview page of your Azure AI Foundry resource and select **JSON View**. Copy the Resource ID and replace the `your_resource_id` placeholder in the code file:
 
     ```powershell
    code plot.py
