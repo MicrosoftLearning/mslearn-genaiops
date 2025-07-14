@@ -18,7 +18,6 @@ In this exercise, you enable monitoring for a chat completion app and view its p
 
 To complete the tasks in this exercise, you need:
 
-- An Azure AI Foundry hub,
 - An Azure AI Foundry project,
 - A deployed model (like GPT-4o),
 - A connected Application Insights resource.
