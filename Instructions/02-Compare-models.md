@@ -108,8 +108,8 @@ The benchmark metric accuracy is calculated based on publicly available generic 
 To quickly experiment and iterate, you'll use a set of Python scripts in Cloud Shell.
 
 1. In the Azure AI Foundry portal, view the **Overview** page for your project.
-1. In the **Project details** area, note the **Project connection string**.
-1. Save the string in a notepad. You'll use this connection string to connect to your project in a client application.
+1. In the **Endpoints and keys** area, ensure that the **Azure AI Foundry** library is selected and view the **Azure AI Foundry project endpoint**.
+1. Save the endpoint in a notepad. You'll use it to connect to your project in a client application.
 1. Back in the Azure Portal tab, open Cloud Shell if you closed it before and run the following command to navigate to the folder with the code files used in this exercise:
 
      ```powershell
@@ -132,7 +132,7 @@ To quickly experiment and iterate, you'll use a set of Python scripts in Cloud S
 
     The file is opened in a code editor.
 
-1. In the code file, replace the **your_project_connection_string** placeholder with the connection string for your project (copied from the project **Overview** page in the Azure AI Foundry portal). Observe that the first and second model used in the exercise are **gpt-4o** and **gpt-4o-mini** respectively.
+1. In the code file, replace the **your_project_endpoint** placeholder with the endpoint for your project (copied from the project **Overview** page in the Azure AI Foundry portal). Observe that the first and second model used in the exercise are **gpt-4o** and **gpt-4o-mini** respectively.
 1. *After* you've replaced the placeholder, in the code editor, use the **CTRL+S** command or **Right-click > Save** to save your changes and then use the **CTRL+Q** command or **Right-click > Quit** to close the code editor while keeping the cloud shell command line open.
 
 ## Send prompts to your deployed models
