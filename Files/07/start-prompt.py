@@ -34,7 +34,7 @@ project_client = AIProjectClient(
 )
 
 # Setup OpenTelemetry observability with Azure Monitor
-application_insights_connection_string = project.telemetry.get_connection_string()
+application_insights_connection_string = project_client.telemetry.get_connection_string()
 configure_azure_monitor(connection_string=application_insights_connection_string)
 AIInferenceInstrumentor().instrument()
 
