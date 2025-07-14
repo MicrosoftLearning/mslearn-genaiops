@@ -12,6 +12,8 @@ from opentelemetry.trace import Status, StatusCode
 
 # Load environment variables from a .env file
 load_dotenv()
+project_endpoint = os.getenv("PROJECT_ENDPOINT")
+model_deployment =  os.getenv("MODEL_DEPLOYMENT")
 
 # Get the tracer instance
 tracer = trace.get_tracer(__name__)
@@ -23,14 +25,12 @@ SESSION_ID = str(uuid.uuid4())
 os.environ['AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED'] = 'true'
 
 # Initialize the project
-connection_string = os.getenv('PROJECT_CONNECTION_STRING')
-if not connection_string:
-    raise ValueError("PROJECT_CONNECTION_STRING environment variable is not set")
-
-credential = DefaultAzureCredential()
-project = AIProjectClient.from_connection_string(
-    conn_str=connection_string,
-    credential=credential
+project_client = AIProjectClient(            
+    credential=DefaultAzureCredential(
+        exclude_environment_credential=True,
+        exclude_managed_identity_credential=True
+    ),
+    endpoint=project_endpoint,
 )
 
 # Setup OpenTelemetry observability with Azure Monitor
@@ -39,12 +39,7 @@ configure_azure_monitor(connection_string=application_insights_connection_string
 AIInferenceInstrumentor().instrument()
 
 # Set up the chat completion client
-default_connection = project.connections.get_default(
-    connection_type=ConnectionType.AZURE_OPEN_AI,
-    include_credentials=True,
-)
-chat_client = project.inference.get_chat_completions_client()
-model_name = os.environ.get("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o")
+chat_client = project_client.inference.get_chat_completions_client()
 
 # Generate a chat completion about camping supplies
 with tracer.start_as_current_span("generate_completion") as span:
@@ -52,7 +47,7 @@ with tracer.start_as_current_span("generate_completion") as span:
         span.set_attribute("session.id", SESSION_ID)
 
         response = chat_client.complete(
-            model=model_name,
+            model=model_deployment,
             messages=[
                 SystemMessage("You are an AI assistant that acts as a travel guide."),
                 UserMessage(content=(
