@@ -39,20 +39,28 @@ configure_azure_monitor(connection_string=application_insights_connection_string
 AIInferenceInstrumentor().instrument()
 
 # Set up the chat completion client
-chat_client = project_client.inference.get_chat_completions_client()
+chat_client = project_client.inference.get_azure_openai_client(api_version="2024-10-21")
+
+# Define the message to send to the model
+messages=[
+    { 
+        "role": "system", 
+        "content": "You are an AI assistant that acts as a travel guide." 
+    },
+    { 
+        "role": "user", 
+        "content": "What are some recommended supplies for a camping trip in the mountains?"
+    }
+]
 
 # Generate a chat completion about camping supplies
 with tracer.start_as_current_span("generate_completion") as span:
     try:
         span.set_attribute("session.id", SESSION_ID)
 
-        response = chat_client.complete(
-            model=model_deployment,
-            messages=[
-                SystemMessage("You are an AI assistant that acts as a travel guide."),
-                UserMessage(content=(
-                "What are some recommended supplies for a camping trip in the mountains?"
-            ))]
+        response = chat_client.chat.completions.create(
+          model=model_deployment,
+          messages=messages
         )
 
         print("\nAI's response:")
