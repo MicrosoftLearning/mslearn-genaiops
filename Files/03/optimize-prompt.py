@@ -7,13 +7,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# add console and json tracer:
-Tracer.add("console", console_tracer)
+# add json tracer:
 json_tracer = PromptyTracer()
 Tracer.add("PromptyTracer", json_tracer.tracer)
 
 @trace
-
 
 def run(    
       question: Any
