@@ -18,49 +18,30 @@ In this exercise, you enable monitoring for a chat completion app and view its p
 
 To complete the tasks in this exercise, you need:
 
-- An Azure AI Foundry hub,
 - An Azure AI Foundry project,
 - A deployed model (like GPT-4o),
 - A connected Application Insights resource.
 
-### Create an AI Foundry hub and project
+### Deploy a model in an Azure AI Foundry project
 
-To quickly setup a hub and project, simple instructions to use the Azure AI Foundry portal UI are provided below.
+To quickly setup an Azure AI Foundry project, simple instructions to use the Azure AI Foundry portal UI are provided below.
 
 1. In a web browser, open the [Azure AI Foundry portal](https://ai.azure.com) at `https://ai.azure.com` and sign in using your Azure credentials.
-1. In the home page, select **+ Create project**.
-1. In the **Create a project** wizard, enter a valid name for your project and if an existing hub is suggested, choose the option to create a new one. Then review the Azure resources that will be automatically created to support your hub and project.
-1. Select **Customize** and specify the following settings for your hub:
-    - **Hub name**: *A valid name for your hub*
+1. In the home page, in the **Explore models and capabilities** section, search for the `gpt-4o` model; which we'll use in our project.
+1. In the search results, select the **gpt-4o** model to see its details, and then at the top of the page for the model, select **Use this model**.
+1. When prompted to create a project, enter a valid name for your project and expand **Advanced options**.
+1. Select **Customize** and specify the following settings for your project:
+    - **Azure AI Foundry resource**: *A valid name for your Azure AI Foundry resource*
     - **Subscription**: *Your Azure subscription*
     - **Resource group**: *Create or select a resource group*
-    - **Location**: Select **Help me choose** and then select **gpt-4o** in the Location helper window and use the recommended region\*
-    - **Connect Azure AI Services or Azure OpenAI**: *Create a new AI Services resource*
-    - **Connect Azure AI Search**: Skip connecting
+    - **Region**: *Select any **AI Services supported location***\*
 
-    > \* Azure OpenAI resources are constrained by regional model quotas. In the event of a quota limit being exceeded later in the exercise, there's a possibility you may need to create another resource in a different region.
+    > \* Some Azure AI resources are constrained by regional model quotas. In the event of a quota limit being exceeded later in the exercise, there's a possibility you may need to create another resource in a different region.
 
-1. Select **Next** and review your configuration. Then select **Create** and wait for the process to complete.
-
-### Deploy a model
-
-To generate data that you can monitor, you first need to deploy a model and interact with it. In the instructions you're asked to deploy a GPT-4o model, but **you can use any model** from the Azure OpenAI Service collection that is available to you.
-
-1. Use the menu on the left, in the **My assets**, select the **Models + endpoints** page.
-1. In the **+ Deploy model** menu, select **Deploy base model**.
-1. Select the **gpt-4o** model in the list and deploy it with the following settings by selecting **Customize** in the deployment details:
-    - **Deployment name**: *A valid name for your model deployment*
-    - **Deployment type**: Standard
-    - **Automatic version update**: Enabled
-    - **Model version**: *Select the most recent available version*
-    - **Connected AI resource**: *Select your Azure OpenAI resource connection*
-    - **Tokens per Minute Rate Limit (thousands)**: 1K
-    - **Content filter**: DefaultV2
-    - **Enable dynamic quota**: Disabled
-
-    > **Note**: Reducing the TPM helps avoid over-using the quota available in the subscription you are using. 1,000 TPM should be sufficient for the data used in this exercise. If your available quota is lower than this, you will be able to complete the exercise but you may experience errors if the rate limit is exceeded.
-
-1. Wait for the deployment to complete.
+1. Select **Create** and wait for your project, including the gpt-4 model deployment you selected, to be created.
+1. In the navigation pane on the left, select **Overview** to see the main page for your project.
+1. In the **Endpoints and keys** area, ensure that the **Azure AI Foundry** library is selected and view the **Azure AI Foundry project endpoint**.
+1. **Save** the endpoint in a notepad. You'll use this endpoint to connect to your project in a client application.
 
 ### Connect Application Insights
 
@@ -80,9 +61,6 @@ You'll interact with your deployed model programmatically by setting up a connec
 
 Start by retrieving the necessary information to be authenticated to interact with your model. Then, you'll access the Azure Cloud Shell and update the configuration to send the provided prompts to your own deployed model.
 
-1. In the Azure AI Foundry portal, view the **Overview** page for your project.
-1. In the **Project details** area, note the **Project connection string**.
-1. **Save** the string in a notepad. You'll use this connection string to connect to your project in a client application.
 1. Open a new browser tab (keeping the Azure AI Foundry portal open in the existing tab).
 1. In the new tab, browse to the [Azure portal](https://portal.azure.com) at `https://portal.azure.com`; signing in with your Azure credentials if prompted.
 1. Use the **[\>_]** button to the right of the search bar at the top of the page to create a new Cloud Shell in the Azure portal, selecting a ***PowerShell*** environment with no storage in your subscription.
@@ -112,7 +90,7 @@ Start by retrieving the necessary information to be authenticated to interact wi
     ```
    python -m venv labenv
    ./labenv/bin/Activate.ps1
-   pip install python-dotenv azure-identity azure-ai-projects azure-ai-inference azure-monitor-opentelemetry
+   pip install python-dotenv openai azure-identity azure-ai-projects azure-ai-inference azure-monitor-opentelemetry
     ```
 
 1. Enter the following command to open the configuration file that has been provided:
@@ -125,7 +103,7 @@ Start by retrieving the necessary information to be authenticated to interact wi
 
 1. In the code file:
 
-    1. Replace the **your_project_connection_string** placeholder with the connection string for your project (copied from the project **Overview** page in the Azure AI Foundry portal).
+    1. In the code file, replace the **your_project_endpoint** placeholder with the endpoint for your project (copied from the project **Overview** page in the Azure AI Foundry portal).
     1. Replace the **your_model_deployment** placeholder with the name you assigned to your GPT-4o model deployment (by default `gpt-4o`).
 
 1. *After* you've replaced the placeholders, in the code editor, use the **CTRL+S** command or **Right-click > Save** to **save your changes** and then use the **CTRL+Q** command or **Right-click > Quit** to close the code editor while keeping the cloud shell command line open.
@@ -140,7 +118,18 @@ You'll now run multiple scripts that send different prompts to your deployed mod
    code start-prompt.py
     ```
 
-1. In the Cloud Shell command-line pane beneath the code editor, enter the following command to **run the script**:
+1. In the cloud shell command-line pane, enter the following command to sign into Azure.
+
+    ```
+   az login
+    ```
+
+    **<font color="red">You must sign into Azure - even though the cloud shell session is already authenticated.</font>**
+
+    > **Note**: In most scenarios, just using *az login* will be sufficient. However, if you have subscriptions in multiple tenants, you may need to specify the tenant by using the *--tenant* parameter. See [Sign into Azure interactively using the Azure CLI](https://learn.microsoft.com/cli/azure/authenticate-azure-cli-interactively) for details.
+    
+1. When prompted, follow the instructions to open the sign-in page in a new tab and enter the authentication code provided and your Azure credentials. Then complete the sign in process in the command line, selecting the subscription containing your Azure AI Foundry hub if prompted.
+1. After you have signed in, enter the following command to run the application:
 
     ```
    python start-prompt.py

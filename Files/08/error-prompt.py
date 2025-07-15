@@ -12,25 +12,27 @@ from opentelemetry import trace
 
 # Load environment and set session ID
 load_dotenv()
+project_endpoint = os.getenv("PROJECT_ENDPOINT")
+model_deployment =  os.getenv("MODEL_DEPLOYMENT")
 tracer = trace.get_tracer(__name__)
 SESSION_ID = str(uuid.uuid4())
 os.environ['AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED'] = 'true'
 
 # Initialize AI Project
-conn_str = os.getenv("PROJECT_CONNECTION_STRING")
-if not conn_str:
-    raise ValueError("Missing PROJECT_CONNECTION_STRING in environment.")
-credential = DefaultAzureCredential()
-project = AIProjectClient.from_connection_string(conn_str, credential=credential)
-
+project_client = AIProjectClient(            
+    credential=DefaultAzureCredential(
+        exclude_environment_credential=True,
+        exclude_managed_identity_credential=True
+    ),
+    endpoint=project_endpoint,
+)
 # Configure telemetry and instrument tracing
-ai_conn_str = project.telemetry.get_connection_string()
+ai_conn_str = project_client.telemetry.get_connection_string()
 configure_azure_monitor(connection_string=ai_conn_str)
 AIInferenceInstrumentor().instrument()
 
 # Prepare chat client
-chat_client = project.inference.get_chat_completions_client()
-model_name = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o")
+chat_client = project_client.inference.get_azure_openai_client(api_version="2024-10-21")
 
 # Mock product list
 mock_product_catalog = [
@@ -56,9 +58,18 @@ def call_model(system_prompt, user_prompt, span_name):
         span.set_attribute("prompt.user", user_prompt)
         start_time = time.time()
 
-        response = chat_client.complete(
-            model=model_name,
-            messages=[SystemMessage(system_prompt), UserMessage(user_prompt)]
+        response = chat_client.chat.completions.create(
+            model=model_deployment,
+            messages=[
+                { 
+                    "role": "system", 
+                    "content": system_prompt 
+                },
+                { 
+                    "role": "user", 
+                    "content": user_prompt
+                }
+            ]
         )
 
         duration = time.time() - start_time
