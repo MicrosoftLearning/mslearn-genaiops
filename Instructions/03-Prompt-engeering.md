@@ -26,9 +26,9 @@ To complete the tasks in this exercise, you need:
 
 ### Create an Azure AI hub and project
 
-> **Note**: If you already have an Azure AI hub and project, you can skip this procedure and use your existing project.
+> **Note**: If you already have an Azure AI project, you can skip this procedure and use your existing project.
 
-You can create an Azure AI hub and project manually through the Azure AI Foundry portal, as well as deploy the model used in the exercise. However, you can also automate this process through the use of a template application with [Azure Developer CLI (azd)](https://aka.ms/azd).
+You can create an Azure AI project manually through the Azure AI Foundry portal, as well as deploy the model used in the exercise. However, you can also automate this process through the use of a template application with [Azure Developer CLI (azd)](https://aka.ms/azd).
 
 1. In a web browser, open [Azure portal](https://portal.azure.com) at `https://portal.azure.com` and sign in using your Azure credentials.
 
@@ -43,15 +43,15 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
     git clone https://github.com/MicrosoftLearning/mslearn-genaiops
      ```
 
-1. After the repo has been cloned, enter the following commands to initialize the Starter template. 
-   
+1. After the repo has been cloned, enter the following commands to initialize the Starter template.
+
      ```powershell
     cd ./mslearn-genaiops/Starter
     azd init
      ```
 
 1. Once prompted, give the new environment a name as it will be used as basis for giving unique names to all the provisioned resources.
-        
+
 1. Next, enter the following command to run the Starter template. It will provision an AI Hub with dependent resources, AI project, AI Services and an online endpoint.
 
      ```powershell
@@ -66,7 +66,7 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
    - Sweden Central
    - West US
    - West US 3
-    
+
 1. Wait for the script to complete - this typically takes around 10 minutes, but in some cases may take longer.
 
     > **Note**: Azure OpenAI resources are constrained at the tenant level by regional quotas. The listed regions above include default quota for the model type(s) used in this exercise. Randomly choosing a region reduces the risk of a single region reaching its quota limit. In the event of a quota limit being reached, there's a possibility you may need to create another resource group in a different region. Learn more about [model availability per region](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models?tabs=standard%2Cstandard-chat-completions#global-standard-model-availability)
@@ -91,101 +91,171 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
      ```
 
 1. Copy these values as they will be used later on.
-   
-### Set up your local development environment
 
-To quickly experiment and iterate, you'll use Prompty in Visual Studio (VS) Code. Let's get VS Code ready to use for local ideation.
+### Set up your virtual environment in Cloud Shell
 
-1. Open VS Code and **Clone** the following Git repo: [https://github.com/MicrosoftLearning/mslearn-genaiops.git](https://github.com/MicrosoftLearning/mslearn-genaiops.git)
-1. Store the clone on a local drive, and open the folder after cloning.
-1. In the extensions pane in VS Code, search and install the **Prompty** extension.
-1. In the VS Code Explorer (left pane), right-click on the **Files/03** folder.
-1. Select **New Prompty** from the drop-down menu.
-1. Open the newly created file named **basic.prompty**.
-1. Run the Prompty file by selecting the **play** button at the top-right corner (or press F5).
-1. When prompted to sign in, select **Allow**.
-1. Select your Azure account and sign in.
-1. Go back to VS Code, where an **Output** pane will open with an error message. The error message should tell you that the deployed model isn't specified or can't be found.
+To quickly experiment and iterate, you'll use a set of Python scripts in Cloud Shell.
 
-To fix the error, you need to configure a model for Prompty to use.
+1. In the Cloud Shell command-line pane, enter the following command to navigate to the folder with the code files used in this exercise:
 
-## Update prompt metadata
+     ```powershell
+    cd ~/mslearn-genaiops/Files/03/
+     ```
 
-To execute the Prompty file, you need to specify the language model to use for generating the response. The metadata is defined in the *frontmatter* of the Prompty file. Let's update the metadata with the model configuration and other information.
+1. Enter the following commands to activate a virtual environment and install the libraries you need:
 
-1. Open the Visual Studio Code terminal pane.
-1. Copy the **basic.prompty** file (in the same folder) and rename the copy to `chat-1.prompty`.
-1. Open **chat-1.prompty** and update the following fields to change some basic information:
-
-    - **Name**:
-
-        ```yaml
-        name: Python Tutor Prompt
-        ```
-
-    - **Description**:
-
-        ```yaml
-        description: A teaching assistant for students wanting to learn how to write and edit Python code.
-        ```
-
-    - **Deployed model**:
-
-        ```yaml
-        azure_deployment: ${env:AZURE_OPENAI_CHAT_DEPLOYMENT}
-        ```
-
-1. Next, add the following placeholder for the API key under the **azure_deployment** parameter.
-
-    - **Endpoint key**:
-
-        ```yaml
-        api_key: ${env:AZURE_OPENAI_API_KEY}
-        ```
-
-1. Save the updated Prompty file.
-
-The Prompty file now has all the necessary parameters, but some parameters use placeholders to obtain the required values. The placeholders are stored in the **.env** file in the same folder.
-
-## Update model configuration
-
-To specify which model Prompty uses, you need to provide your model's information in the .env file.
-
-1. Open the **.env** file in the **Files/03** folder.
-1. Update each of the placeholders with the values you copied earlier from the model deployment's output in the Azure Portal:
-
-    ```yaml
-    - AZURE_OPENAI_CHAT_DEPLOYMENT="gpt-4"
-    - AZURE_OPENAI_ENDPOINT="<Your endpoint target URI>"
-    - AZURE_OPENAI_API_KEY="<Your endpoint key>"
+    ```powershell
+   python -m venv labenv
+   ./labenv/bin/Activate.ps1
+   pip install python-dotenv openai tiktoken azure-ai-projects prompty[azure]
     ```
 
-1. Save the .env file.
-1. Run the **chat-1.prompty** file again.
+1. Enter the following command to open the configuration file that has been provided:
 
-You should now get an AI generated response, albeit unrelated to your scenario as it just uses the sample input. Let's update the template to make it an AI teaching assistant.
-
-## Edit the sample section
-
-The sample section specifies the inputs to the Prompty, and supplies default values to use if no inputs are provided.
-
-1. Edit the fields of the following paramaters:
-
-    - **firstName**: Choose any other name.
-    - **context**: Remove this entire section.
-    - **question**: Replace the provided text with:
-
-    ```yaml
-    What is the difference between 'for' loops and 'while' loops?
+    ```powershell
+   code .env
     ```
 
-    You **sample** section should now look like this:
+    The file is opened in a code editor.
+
+1. In the code file, replace the **ENDPOINTNAME** and **APIKEY** placeholders with the endpoint and key values you copied earlier.
+1. *After* you've replaced the placeholders, in the code editor, use the **CTRL+S** command or **Right-click > Save** to save your changes and then use the **CTRL+Q** command or **Right-click > Quit** to close the code editor while keeping the cloud shell command line open.
+
+## Optimize system prompt
+
+Minimizing the length of system prompts while maintaining functionality in generative AI is fundamental for large-scale deployments. Shorter prompts can lead to faster response times, as the AI model processes fewer tokens, and also uses fewer computational resources.
+
+1. Enter the following command to open the application file that has been provided:
+
+    ```powershell
+   code optimize-prompt.py
+    ```
+
+The script will execute the `start.prompty` template file that already has a pre-defined system prompt.
+
+1. Run `code start.prompty` to review the system prompt. Consider how you might shorten it while keeping its intent clear and effective. For example:
+
+   ```python
+   original_prompt = "You are a helpful assistant. Your job is to answer questions and provide information to users in a concise and accurate manner."
+   optimized_prompt = "You are a helpful assistant. Answer questions concisely and accurately."
+   ```
+
+   Remove redundant words and focus on the essential instructions. Save your optimized prompt in the file.
+
+### Test and validate your optimization
+
+Testing prompt changes is important to ensure you reduce token usage without losing quality.
+
+1. Run `code token-count.py` to open and review the token counter app provided in the exercise. If you used an optimized prompt different than what was provided in the example above, you can use it in this app as well.
+
+1. Run the script with `python token-count.py` and observe the difference in token count. Ensure the optimized prompt still produces high-quality responses.
+
+## Analyze user interactions
+
+Understanding how users interact with your app helps identify patterns that increase token usage.
+
+1. Review a sample dataset of user prompts:
+
+    - **"Summarize the plot of *War and Peace*."**
+    - **"What are some fun facts about cats?"**
+    - **"Write a detailed business plan for a startup that uses AI to optimize supply chains."**
+    - **"Translate 'Hello, how are you?' into French."**
+    - **"Explain quantum entanglement to a 10-year-old."**
+    - **"Give me 10 creative ideas for a sci-fi short story."**
+
+For each, identify whether it is likely to result in a **short**, **medium**, or **long/complex** response from the AI.
+
+1. Review your categorizations. What patterns do you notice? Consider:
+
+    - Does the **level of abstraction** (e.g., creative vs factual) affect length?
+    - Do **open-ended prompts** tend to be longer?
+    - How does **instructional complexity** (e.g., “explain like I’m 10”) influence the response?
+
+1. Run `python optimize-prompt.py` and use some of the samples provided to verify your analysis.
+
+1. Take the following long-form prompt and **redesign it** to encourage a more concise response:
+
+> **Original Prompt**:  
+> “Write a comprehensive overview of the history of artificial intelligence, including key milestones, major contributors, and the evolution of machine learning techniques from the 1950s to today.”
+
+Rewrite this prompt to:
+    - Limit the scope
+    - Set expectations for brevity
+    - Use formatting or structure to guide the response
+
+<br>
+<details>
+<summary><b>Sample answer:</summary><br>
+<p>“Give a bullet-point summary of 5 key milestones in AI history.”</p>
+</details>
+
+## Scale template for automation
+
+Prompty files can be used as templates to help automate and standardize prompt generation, making it easier to optimize at scale. This is especially useful when you want to scale prompt creation across different use cases while maintaining consistency and optimizing for token usage.
+
+1. Enter the following command to open the prompty file that has been provided:
+
+    ```powershell
+   code start.prompty
+    ```
+
+The only input that the prompty file takes is the user's question, while the system prompt is fixed. However, the template can be modified to receive multiple inputs that can adapt the template to different case scenarios.
+
+1. In the prompty file, modify the system message to the following:
+
+    ```yaml
+   system:
+   You are a {{role}}. Answer questions concisely and accurately.
+    ```
+
+This will allow you to customize your model to assume different roles when providing a response.
+
+1. Run `code optimize-prompt.py` to open the script and replace the code under `@trace` with the following:
+
+    ```python
+   def run(
+         role:Any,    
+         question: Any
+   ) -> str:
     
-    ```yaml
-    sample:
-    firstName: Daniel
-    question: What is the difference between 'for' loops and 'while' loops?
+     # execute the prompty file
+     result = prompty.execute(
+       "start.prompty", 
+       inputs={
+         "role": role,
+         "question": question 
+       }
+     )
+    
+     return result
+    
+   if __name__ == "__main__":
+       while True:
+           assistant_role = input("Enter the assistant's role (e.g., 'customer support', 'technical expert', etc.) or type 'quit' to exit: ")
+           if role.strip().lower() == "quit":
+               print("Exiting.")
+               break
+           print(f"Role set to: {role}")
+    
+           # Prompt the user for a question
+           user_question = input("Enter your question (or type 'quit' to exit): ")
+           if user_question.strip().lower() == "quit":
+               print("Exiting.")
+               break
+           result = run(role=assistant_role, question=user_question)
+           print(result) 
     ```
 
-    1. Run the updated Prompty file and review the output.
+Normally the role would be defined within the app, but for the purpose of the exercise, it is typed in with the question. You can try repeating questions with different roles and review the different responses.
 
+## [OPTIONAL] Apply your optimizations in a real scenario
+
+1. Imagine you are building a customer support chatbot that must provide quick, accurate answers.
+1. Integrate your optimized system prompt and template into the chatbot's code (you can use `optimize-prompt.py` as a starting point).
+1. Test the chatbot with various user queries to ensure it responds efficiently and effectively.
+
+## Conclusion
+
+Prompt optimization is a key skill for reducing costs and improving performance in generative AI applications. By shortening prompts, using templates, and analyzing user interactions, you can create more efficient and scalable solutions.
+
+For further learning, explore advanced prompt engineering techniques or experiment with more complex templates and scenarios.
