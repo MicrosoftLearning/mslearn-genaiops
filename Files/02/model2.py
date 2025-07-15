@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 from mimetypes import guess_type
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
-from azure.ai.projects.models import ConnectionType
 
 # Function to encode a local image into a data URL
 def local_image_to_data_url(image_path):
@@ -22,29 +21,24 @@ def local_image_to_data_url(image_path):
     return f"data:{mime_type};base64,{base64_encoded_data}"
 
 load_dotenv()
+project_endpoint = os.getenv("PROJECT_ENDPOINT")
+model_deployment =  os.getenv("MODEL_DEPLOYMENT2")
 image_path = './imgs/demo.png'
 
 # Convert the local image to a data URL using the local_image_to_data_url function
 data_url = local_image_to_data_url(image_path)
 
 # Initialize the project
-connection_string = os.getenv('PROJECT_CONNECTION_STRING')
-if not connection_string:
-    raise ValueError("PROJECT_CONNECTION_STRING environment variable is not set")
-
-credential = DefaultAzureCredential()
-project = AIProjectClient.from_connection_string(
-    conn_str=connection_string,
-    credential=credential
+project_client = AIProjectClient(            
+    credential=DefaultAzureCredential(
+        exclude_environment_credential=True,
+        exclude_managed_identity_credential=True
+    ),
+    endpoint=project_endpoint,
 )
 
 # Set up the chat completion client
-default_connection = project.connections.get_default(
-    connection_type=ConnectionType.AZURE_OPEN_AI,
-    include_credentials=True,
-)
-chat_client = project.inference.get_azure_openai_client(api_version="2024-10-21")
-model_name = os.environ.get("MODEL_DEPLOYMENT2")
+chat_client = project_client.inference.get_azure_openai_client(api_version="2024-10-21")
 
 # Define the message to send to the model
 messages=[
@@ -53,7 +47,7 @@ messages=[
         "content": [  
             { 
                 "type": "text", 
-                "text": "Create Python code for image, and use plt to save the new picture under imgs/ and name it gpt-4o-mini.jpg." 
+                "text": "Create Python code for image, and use plt to save the new picture under imgs/ and name it gpt-4o.jpg." 
             },
             { 
                 "type": "image_url",
@@ -63,7 +57,7 @@ messages=[
 
 # Generate a chat completion request
 response = chat_client.chat.completions.create(
-  model=model_name,
+  model=model_deployment,
   messages=messages,
   max_tokens=2000
 )
@@ -82,7 +76,7 @@ messages.append({"role": "user", "content": new_prompt})
 
 # Submit the new chat completion requests
 response = chat_client.chat.completions.create(
-    model=model_name,
+    model=model_deployment,
     messages=messages,
     max_tokens=2000 
 )
@@ -92,3 +86,4 @@ result = response.choices[0].message.content
 # Optional - uncomment the lines below if you want to see the response to the new prompt
 #print("\nAI's response:")
 #print(response.choices[0].message.content)
+

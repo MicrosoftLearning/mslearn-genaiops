@@ -7,8 +7,10 @@ model:
   api: chat
   configuration:
     type: azure_openai
+    api_key: ${env:AZURE_OPENAI_API_KEY}
+    api_version: 2023-05-15
+    azure_deployment: ${env:AZURE_OPENAI_CHAT_DEPLOYMENT}
     azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
-    azure_deployment: gpt-4o
   parameters:
     max_tokens: 2000
 sample:
