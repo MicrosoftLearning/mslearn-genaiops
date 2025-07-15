@@ -131,7 +131,7 @@ Minimizing the length of system prompts while maintaining functionality in gener
    code optimize-prompt.py
     ```
 
-The script will execute the `start.prompty` template file that already has a pre-defined system prompt.
+    Review the code and note that the script executes the `start.prompty` template file that already has a pre-defined system prompt.
 
 1. Run `code start.prompty` to review the system prompt. Consider how you might shorten it while keeping its intent clear and effective. For example:
 
@@ -163,7 +163,7 @@ Understanding how users interact with your app helps identify patterns that incr
     - **"Explain quantum entanglement to a 10-year-old."**
     - **"Give me 10 creative ideas for a sci-fi short story."**
 
-For each, identify whether it is likely to result in a **short**, **medium**, or **long/complex** response from the AI.
+    For each, identify whether it is likely to result in a **short**, **medium**, or **long/complex** response from the AI.
 
 1. Review your categorizations. What patterns do you notice? Consider:
 
@@ -171,91 +171,48 @@ For each, identify whether it is likely to result in a **short**, **medium**, or
     - Do **open-ended prompts** tend to be longer?
     - How does **instructional complexity** (e.g., “explain like I’m 10”) influence the response?
 
-1. Run `python optimize-prompt.py` and use some of the samples provided to verify your analysis.
+1. Enter the following command to run the **optimize-prompt** application:
 
-1. Take the following long-form prompt and **redesign it** to encourage a more concise response:
+    ```
+   python optimize-prompt.py
+    ```
 
-> **Original Prompt**:  
-> “Write a comprehensive overview of the history of artificial intelligence, including key milestones, major contributors, and the evolution of machine learning techniques from the 1950s to today.”
+1. Use some of the samples provided above to verify your analysis.
+1. Now use the following long-form prompt and review its output:
 
-Rewrite this prompt to:
+    ```
+   Write a comprehensive overview of the history of artificial intelligence, including key milestones, major contributors, and the evolution of machine learning techniques from the 1950s to today.
+    ```
+
+1. Rewrite this prompt to:
+
     - Limit the scope
     - Set expectations for brevity
     - Use formatting or structure to guide the response
 
+1. Compare the responses to verify that you obtained a more concise answer.
+
+> **NOTE**: You can use `token-count.py` to compare token usage in both responses.
 <br>
 <details>
-<summary><b>Sample answer:</summary><br>
+<summary><b>Example of a rewritten prompt:</b></summary><br>
 <p>“Give a bullet-point summary of 5 key milestones in AI history.”</p>
 </details>
 
-## Scale template for automation
-
-Prompty files can be used as templates to help automate and standardize prompt generation, making it easier to optimize at scale. This is especially useful when you want to scale prompt creation across different use cases while maintaining consistency and optimizing for token usage.
-
-1. Enter the following command to open the prompty file that has been provided:
-
-    ```powershell
-   code start.prompty
-    ```
-
-The only input that the prompty file takes is the user's question, while the system prompt is fixed. However, the template can be modified to receive multiple inputs that can adapt the template to different case scenarios.
-
-1. In the prompty file, modify the system message to the following:
-
-    ```yaml
-   system:
-   You are a {{role}}. Answer questions concisely and accurately.
-    ```
-
-This will allow you to customize your model to assume different roles when providing a response.
-
-1. Run `code optimize-prompt.py` to open the script and replace the code under `@trace` with the following:
-
-    ```python
-   def run(
-         role:Any,    
-         question: Any
-   ) -> str:
-    
-     # execute the prompty file
-     result = prompty.execute(
-       "start.prompty", 
-       inputs={
-         "role": role,
-         "question": question 
-       }
-     )
-    
-     return result
-    
-   if __name__ == "__main__":
-       while True:
-           assistant_role = input("Enter the assistant's role (e.g., 'customer support', 'technical expert', etc.) or type 'quit' to exit: ")
-           if role.strip().lower() == "quit":
-               print("Exiting.")
-               break
-           print(f"Role set to: {role}")
-    
-           # Prompt the user for a question
-           user_question = input("Enter your question (or type 'quit' to exit): ")
-           if user_question.strip().lower() == "quit":
-               print("Exiting.")
-               break
-           result = run(role=assistant_role, question=user_question)
-           print(result) 
-    ```
-
-Normally the role would be defined within the app, but for the purpose of the exercise, it is typed in with the question. You can try repeating questions with different roles and review the different responses.
-
-## [OPTIONAL] Apply your optimizations in a real scenario
+## [**OPTIONAL**] Apply your optimizations in a real scenario
 
 1. Imagine you are building a customer support chatbot that must provide quick, accurate answers.
-1. Integrate your optimized system prompt and template into the chatbot's code (you can use `optimize-prompt.py` as a starting point).
+1. Integrate your optimized system prompt and template into the chatbot's code (*you can use `optimize-prompt.py` as a starting point*).
 1. Test the chatbot with various user queries to ensure it responds efficiently and effectively.
 
 ## Conclusion
 
 Prompt optimization is a key skill for reducing costs and improving performance in generative AI applications. By shortening prompts, using templates, and analyzing user interactions, you can create more efficient and scalable solutions.
 
-For further learning, explore advanced prompt engineering techniques or experiment with more complex templates and scenarios.
+## Clean up
+
+If you've finished exploring Azure AI Services, you should delete the resources you have created in this exercise to avoid incurring unnecessary Azure costs.
+
+1. Return to the browser tab containing the Azure portal (or re-open the [Azure portal](https://portal.azure.com?azure-portal=true) in a new browser tab) and view the contents of the resource group where you deployed the resources used in this exercise.
+1. On the toolbar, select **Delete resource group**.
+1. Enter the resource group name and confirm that you want to delete it.
