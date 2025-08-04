@@ -21,7 +21,7 @@ tracer = trace.get_tracer(__name__)
 SESSION_ID = str(uuid.uuid4())
 
 # Configure the tracer to include session ID in all spans
-os.environ['AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED'] = 'true'
+os.environ['OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT'] = 'true'
 
 # Initialize the project
 project_client = AIProjectClient(            
