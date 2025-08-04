@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
 from azure.ai.inference.tracing import AIInferenceInstrumentor
-from azure.ai.inference.models import SystemMessage, UserMessage
 from azure.ai.projects.models import ConnectionType
 from azure.monitor.opentelemetry import configure_azure_monitor
 from opentelemetry import trace
@@ -39,7 +38,7 @@ configure_azure_monitor(connection_string=application_insights_connection_string
 AIInferenceInstrumentor().instrument()
 
 # Set up the chat completion client
-chat_client = project_client.inference.get_azure_openai_client(api_version="2024-10-21")
+chat_client = project_client.get_openai_client(api_version="2024-10-21")
 
 # Define the message to send to the model
 messages=[
