@@ -3,11 +3,11 @@ import uuid
 from dotenv import load_dotenv
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
-from azure.ai.inference.tracing import AIInferenceInstrumentor
 from azure.ai.projects.models import ConnectionType
 from azure.monitor.opentelemetry import configure_azure_monitor
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
+from opentelemetry.instrumentation.openai_v2 import OpenAIInstrumentor
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -35,7 +35,7 @@ project_client = AIProjectClient(
 # Setup OpenTelemetry observability with Azure Monitor
 application_insights_connection_string = project_client.telemetry.get_application_insights_connection_string()
 configure_azure_monitor(connection_string=application_insights_connection_string)
-AIInferenceInstrumentor().instrument()
+OpenAIInstrumentor().instrument()
 
 # Set up the chat completion client
 chat_client = project_client.get_openai_client(api_version="2024-10-21")
