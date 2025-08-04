@@ -124,16 +124,59 @@ To quickly experiment and iterate, you'll use a set of Python scripts in Cloud S
 
 You'll now run a script that ingests and preprocesses data, creates embeddings, and builds a vector store and index, ultimately enabling you to implement a RAG system effectively.
 
-1. Run the following command to **view the script** that has been provided:
+1. Run the following command to **edit the script** that has been provided:
 
     ```powershell
    code RAG.py
     ```
 
-1. Review the script and notice that it uses a .csv file with hotel reviews as grounding data. You can see the contents of this file by running the command `download app_hotel_reviews.csv` and opening the file.
+1. In the script, locate **# Initialize the components that will be used from LangChain's suite of integrations**. Below this comment, paste the following code:
+
+    ```python
+   # Initialize the components that will be used from LangChain's suite of integrations
+   llm = AzureChatOpenAI(azure_deployment=llm_name)
+   embeddings = AzureOpenAIEmbeddings(azure_deployment=embeddings_name)
+   vector_store = InMemoryVectorStore(embeddings)
+    ```
+
+1. Review the script and notice that it uses a .csv file with hotel reviews as grounding data. You can see the contents of this file by running the command `download app_hotel_reviews.csv` in the command-line pane and opening the file.
+1. Next, locate **# Split the documents into chunks for embedding and vector storage**. Below this comment, paste the following code:
+
+    ```python
+   # Split the documents into chunks for embedding and vector storage
+   text_splitter = RecursiveCharacterTextSplitter(
+       chunk_size=200,
+       chunk_overlap=20,
+       add_start_index=True,
+   )
+   all_splits = text_splitter.split_documents(docs)
+    
+   print(f"Split documents into {len(all_splits)} sub-documents.")
+    ```
+
+    The code above will split a set of large documents into smaller chunks. This is important because many embedding models (like those used for semantic search or vector databases) have a token limit and perform better on shorter texts.
+
+1. Next, locate **# Embed the contents of each text chunk and insert these embeddings into a vector store**. Below this comment, paste the following code:
+
+    ```python
+   # Embed the contents of each text chunk and insert these embeddings into a vector store
+   document_ids = vector_store.add_documents(documents=all_splits)
+    ```
+
+1. Next, locate **# Retrieve relevant documents from the vector store based on user input**. Below this comment, paste the following code, observing proper identation:
+
+    ```python
+   # Retrieve relevant documents from the vector store based on user input
+   retrieved_docs = vector_store.similarity_search(question, k=10)
+   docs_content = "\n\n".join(doc.page_content for doc in retrieved_docs)
+    ```
+
+    The code above searches the vector store for the documents most similar to the user's input question. The question is converted into a vector using the same embedding model used for the documents. The system then compares this vector to all stored vectors and retrieves the most similar ones.
+
+1. Save your changes.
 1. **Run the script** by entering the following command in the command-line:
 
-    ```
+    ```powershell
    python RAG.py
     ```
 
