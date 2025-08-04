@@ -184,11 +184,12 @@ To view data collected from your model interactions, you'll access the dashboard
 ### Navigate to Azure Monitor from the Azure AI Foundry portal
 
 1. Navigate to the tab in your browser with the **Azure AI Foundry portal** open.
-1. Use the menu on the left, select **Tracing**.
-1. Select link at the top, that says **Check out your Insights for Generative AI applications dashboard**. The link will open Azure Monitor in a new tab.
-1. Review the **Overview** providing summarized data of the interactions with your deployed model.
+1. Use the menu on the left, select **Monitoring**.
+1. Select the **Resource usage** and review the summarized data of the interactions with your deployed model.
 
-## Interpret monitoring metrics in Azure Monitor
+> **Note**: You can also select **Azure Monitor metrics explorer** at the bottom of the Monitoring page for a complete view of all available metrics. The link will open Azure Monitor in a new tab.
+
+## Interpret monitoring metrics
 
 Now it's time to dig into the data and begin interpreting what it tells you.
 
@@ -196,45 +197,41 @@ Now it's time to dig into the data and begin interpreting what it tells you.
 
 Focus on the **token usage** section first and review the following metrics:
 
-- **Prompt tokens**: The total number of tokens used in the input (the prompts you sent) across all model calls.
-
-> Think of this as the *cost of asking* the model a question.
-
-- **Completion tokens**: The number of tokens the model returned as output, essentially the length of the responses.
-
-> The generated completion tokens often represent the bulk of token usage and cost, especially for long or verbose answers.
-
-- **Total tokens**: The combined total prompt tokens and completion tokens.
-
-> Most important metric for billing and performance, as it drives latency and cost.
-
-- **Total calls**: The number of separate inference requests, which is how many times the model was called.
+- **Total requests**: The number of separate inference requests, which is how many times the model was called.
 
 > Useful for analyzing throughput and understanding average cost per call.
 
+- **Total token count**: The combined total prompt tokens and completion tokens.
+
+> Most important metric for billing and performance, as it drives latency and cost.
+
+- **Prompt token count**: The total number of tokens used in the input (the prompts you sent) across all model calls.
+
+> Think of this as the *cost of asking* the model a question.
+
+- **Completion token count**: The number of tokens the model returned as output, essentially the length of the responses.
+
+> The generated completion tokens often represent the bulk of token usage and cost, especially for long or verbose answers.
+
 ### Compare the individual prompts
 
-Scroll down to find the **Gen AI Spans**, which is visualized as a table where each prompt is represented as a new row of data. Review and compare the contents of the following columns:
-
-- **Status**: Whether a model call succeeded or failed.
-
-> Use this to identify problematic prompts or configuration errors. The last prompt likely failed because the prompt was too long.
-
-- **Duration**: Shows how long the model took to respond, in milliseconds.
-
-> Compare across rows to explore which prompt patterns result in longer processing times.
+1. Use the menu on the left, select **Tracing**. Expand each **generate_completion** gen AI span to see their child spans. Each prompt is represented as a new row of data. Review and compare the contents of the following columns:
 
 - **Input**: Displays the user message that was sent to the model.
 
 > Use this column to assess which prompt formulations are efficient or problematic.
 
-- **System**: Shows the system message used in the prompt (if there was any).
-
-> Compare entries to evaluate the impact of using or changing system messages.
-
 - **Output**: Contains the model's response.
 
 > Use it to assess verbosity, relevance, and consistency. Especially in relation to token counts and duration.
+
+- **Duration**: Shows how long the model took to respond, in milliseconds.
+
+> Compare across rows to explore which prompt patterns result in longer processing times.
+
+- **Success**: Whether a model call succeeded or failed.
+
+> Use this to identify problematic prompts or configuration errors. The last prompt likely failed because the prompt was too long.
 
 ## (OPTIONAL) Create an alert
 
