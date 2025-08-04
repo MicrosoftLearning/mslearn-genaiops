@@ -38,7 +38,7 @@ project_client = AIProjectClient(
 )
 
 # Set up the chat completion client
-chat_client = project_client.inference.get_azure_openai_client(api_version="2024-10-21")
+chat_client = project_client.get_openai_client(api_version="2024-10-21")
 
 # Define the message to send to the model
 messages=[
