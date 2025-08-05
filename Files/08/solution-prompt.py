@@ -5,10 +5,9 @@ import time
 from dotenv import load_dotenv
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
-from azure.ai.inference.tracing import AIInferenceInstrumentor
-from azure.ai.inference.models import SystemMessage, UserMessage
 from azure.monitor.opentelemetry import configure_azure_monitor
 from opentelemetry import trace
+from opentelemetry.instrumentation.openai_v2 import OpenAIInstrumentor
 
 # Load environment and set session ID
 load_dotenv()
@@ -16,7 +15,7 @@ project_endpoint = os.getenv("PROJECT_ENDPOINT")
 model_deployment =  os.getenv("MODEL_DEPLOYMENT")
 tracer = trace.get_tracer(__name__)
 SESSION_ID = str(uuid.uuid4())
-os.environ['AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED'] = 'true'
+os.environ['OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT'] = 'true'
 
 # Initialize AI Project
 project_client = AIProjectClient(            
@@ -27,12 +26,12 @@ project_client = AIProjectClient(
     endpoint=project_endpoint,
 )
 # Configure telemetry and instrument tracing
-ai_conn_str = project_client.telemetry.get_connection_string()
+ai_conn_str = project_client.telemetry.get_application_insights_connection_string()
 configure_azure_monitor(connection_string=ai_conn_str)
-AIInferenceInstrumentor().instrument()
+OpenAIInstrumentor().instrument()
 
 # Prepare chat client
-chat_client = project_client.inference.get_azure_openai_client(api_version="2024-10-21")
+chat_client = project_client.get_openai_client(api_version="2024-10-21")
 
 # Mock product list
 mock_product_catalog = [

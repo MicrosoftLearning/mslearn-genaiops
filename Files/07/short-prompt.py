@@ -3,12 +3,11 @@ import uuid
 from dotenv import load_dotenv
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
-from azure.ai.inference.tracing import AIInferenceInstrumentor
-from azure.ai.inference.models import SystemMessage, UserMessage
 from azure.ai.projects.models import ConnectionType
 from azure.monitor.opentelemetry import configure_azure_monitor
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
+from opentelemetry.instrumentation.openai_v2 import OpenAIInstrumentor
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -22,7 +21,7 @@ tracer = trace.get_tracer(__name__)
 SESSION_ID = str(uuid.uuid4())
 
 # Configure the tracer to include session ID in all spans
-os.environ['AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED'] = 'true'
+os.environ['OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT'] = 'true'
 
 # Initialize the project
 project_client = AIProjectClient(            
@@ -34,12 +33,12 @@ project_client = AIProjectClient(
 )
 
 # Setup OpenTelemetry observability with Azure Monitor
-application_insights_connection_string = project_client.telemetry.get_connection_string()
+application_insights_connection_string = project_client.telemetry.get_application_insights_connection_string()
 configure_azure_monitor(connection_string=application_insights_connection_string)
-AIInferenceInstrumentor().instrument()
+OpenAIInstrumentor().instrument()
 
 # Set up the chat completion client
-chat_client = project_client.inference.get_azure_openai_client(api_version="2024-10-21")
+chat_client = project_client.get_openai_client(api_version="2024-10-21")
 
 # Define the message to send to the model
 messages=[
