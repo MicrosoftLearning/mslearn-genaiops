@@ -44,13 +44,14 @@ jobs:
 
     - name: Create Azure AI Foundry Resource
       run: |
-        az resource create \
-          --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-          --name ${{ secrets.AZURE_PROJECT_NAME }} \
-          --resource-type "Microsoft.AI/Foundry" \
-          --location ${{ secrets.AZURE_REGION }} \
-          --properties '{}' \
-          --api-version 2024-05-01-preview
+        az rest --method post \
+          --url "https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.AZURE_RESOURCE_GROUP }}/providers/Microsoft.ProjectAI/projects/${{ secrets.AZURE_PROJECT_NAME }}?api-version=2024-05-01-preview" \
+          --body '{
+            "location": "${{ secrets.AZURE_REGION }}",
+            "properties": {
+              "description": "AI Foundry project created via GitHub Actions"
+            }
+          }'
 
     - name: Validate AI Foundry Resource
       run: |
