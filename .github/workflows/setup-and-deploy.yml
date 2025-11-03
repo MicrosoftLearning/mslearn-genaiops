@@ -47,16 +47,19 @@ jobs:
         az resource create \
           --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
           --name ${{ secrets.AZURE_PROJECT_NAME }} \
-          --resource-type "Microsoft.CognitiveServices/accounts" \
+          --resource-type "Microsoft.AI/Foundry" \
           --location ${{ secrets.AZURE_REGION }} \
-          --properties '{}'
+          --properties '{}' \
+          --api-version 2024-05-01-preview
 
     - name: Validate AI Foundry Resource
       run: |
         az resource show \
           --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
           --name ${{ secrets.AZURE_PROJECT_NAME }} \
-          --resource-type "Microsoft.CognitiveServices/accounts" || { echo "AI Foundry resource creation failed"; exit 1; }
+          --resource-type "Microsoft.AI/Foundry" \
+          --api-version 2024-05-01-preview || { echo "AI Foundry resource creation failed"; exit 1; 
+
 
     - name: Deploy GPT-4o Model
       run: |
