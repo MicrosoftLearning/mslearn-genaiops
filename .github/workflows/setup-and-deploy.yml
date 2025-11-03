@@ -1,10 +1,10 @@
-name: Full Azure AI Foundry Setup and Model Deployment with Validation
+name: Deploy GPT-4o to Azure AI Foundry via REST API
 
 on:
   workflow_dispatch:
 
 jobs:
-  setup-and-deploy:
+  deploy-ai-foundry:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,65 +22,48 @@ jobs:
           --password ${{ secrets.AZURE_CLIENT_SECRET }} \
           --tenant ${{ secrets.AZURE_TENANT_ID }}
 
-    - name: Validate Azure Login
+    - name: Get Access Token for AI Foundry
+      id: get-token
       run: |
-        az account show || { echo "Azure login failed"; exit 1; }
+        TOKEN=$(az account get-access-token --resource https://ai.azure.com --query accessToken -o tsv)
+        echo "token=$TOKEN" >> $GITHUB_OUTPUT
 
-    - name: Set subscription
+    - name: Create AI Foundry Project
       run: |
-        az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-    - name: Validate Subscription
-      run: |
-        az account show --query "id" -o tsv | grep ${{ secrets.AZURE_SUBSCRIPTION_ID }} || { echo "Subscription validation failed"; exit 1; }
-
-    - name: Create Resource Group
-      run: |
-        az group create --name ${{ secrets.AZURE_RESOURCE_GROUP }} --location ${{ secrets.AZURE_REGION }}
-
-    - name: Validate Resource Group
-      run: |
-        az group exists --name ${{ secrets.AZURE_RESOURCE_GROUP }} || { echo "Resource group creation failed"; exit 1; }
-
-    - name: Create Azure AI Foundry Resource
-      run: |
-        az rest --method post \
-          --url "https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.AZURE_RESOURCE_GROUP }}/providers/Microsoft.ProjectAI/projects/${{ secrets.AZURE_PROJECT_NAME }}?api-version=2024-05-01-preview" \
-          --body '{
-            "location": "${{ secrets.AZURE_REGION }}",
-            "properties": {
-              "description": "AI Foundry project created via GitHub Actions"
-            }
+        curl -X POST "https://ai.azure.com/api/projects" \
+          -H "Authorization: Bearer ${{ steps.get-token.outputs.token }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "name": "'"${{ secrets.AZURE_PROJECT_NAME }}"'",
+            "location": "'"${{ secrets.AZURE_REGION }}"'",
+            "description": "AI Foundry project created via GitHub Actions"
           }'
-
-    - name: Validate AI Foundry Resource
-      run: |
-        az resource show \
-          --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-          --name ${{ secrets.AZURE_PROJECT_NAME }} \
-          --resource-type "Microsoft.AI/Foundry" \
-          --api-version 2024-05-01-preview || { echo "AI Foundry resource creation failed"; exit 1; 
-
 
     - name: Deploy GPT-4o Model
       run: |
-        az rest --method post \
-          --url "https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.AZURE_RESOURCE_GROUP }}/providers/Microsoft.AI/Foundry/${{ secrets.AZURE_PROJECT_NAME }}/deployments?api-version=2024-05-01-preview" \
-          --body '{
+        curl -X POST "https://ai.azure.com/api/projects/${{ secrets.AZURE_PROJECT_NAME }}/deployments" \
+          -H "Authorization: Bearer ${{ steps.get-token.outputs.token }}" \
+          -H "Content-Type: application/json" \
+          -d '{
             "name": "gpt-4o-deployment",
-            "properties": {
-              "model": "${{ secrets.AZURE_MODEL_NAME }}",
-              "scaleSettings": { "scaleType": "Standard" }
-            }
+            "model": "'"${{ secrets.AZURE_MODEL_NAME }}"'",
+            "scaleSettings": { "scaleType": "Standard" }
           }'
 
     - name: Validate Deployment
       run: |
-        STATUS=$(az rest --method get \
-          --url "https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.AZURE_RESOURCE_GROUP }}/providers/Microsoft.AI/Foundry/${{ secrets.AZURE_PROJECT_NAME }}/deployments?api-version=2024-05-01-preview" \
-          --query "value[0].properties.provisioningState" -o tsv)
+        STATUS=$(curl -s -X GET "https://ai.azure.com/api/projects/${{ secrets.AZURE_PROJECT_NAME }}/deployments/gpt-4o-deployment" \
+          -H "Authorization: Bearer ${{ steps.get-token.outputs.token }}" \
+          | jq -r '.status')
         if [ "$STATUS" != "Succeeded" ]; then
           echo "Deployment failed with status: $STATUS"
           exit 1
         fi
         echo "Deployment succeeded!"
+
+    - name: Get Endpoint
+      run: |
+        ENDPOINT=$(curl -s -X GET "https://ai.azure.com/api/projects/${{ secrets.AZURE_PROJECT_NAME }}" \
+          -H "Authorization: Bearer ${{ steps.get-token.outputs.token }}" \
+          | jq -r '.endpoint')
+        echo "Azure AI Foundry Endpoint: $ENDPOINT"
