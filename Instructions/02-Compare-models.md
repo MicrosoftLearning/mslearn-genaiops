@@ -18,7 +18,7 @@ Imagine you want to build an app to help students learn how to code in Python. I
 
 ![Pie chart showing marks obtained in an exam with sections for maths (34.9%), physics (28.6%), chemistry (20.6%), and English (15.9%)](./images/demo.png)
 
-You need to select a language model that accepts images as input, and is able to generate accurate code. The available models that meet those criteria are GPT-4 Turbo, GPT-4o, and GPT-4o mini.
+You need to select a language model that accepts images as input, and is able to generate accurate code. The available models that meet those criteria are  GPT-4o, and GPT-4o mini.
 
 Let's start by deploying the necessary resources to work with these models in the Azure AI Foundry portal.
 
@@ -52,7 +52,7 @@ You can create an Azure AI hub and project manually through the Azure AI Foundry
 
 1. Once prompted, give the new environment a name as it will be used as basis for giving unique names to all the provisioned resources.
         
-1. Next, enter the following command to run the Starter template. It will provision an AI Hub with dependent resources, AI project, AI Services and an online endpoint. It will also deploy the models GPT-4 Turbo, GPT-4o, and GPT-4o mini.
+1. Next, enter the following command to run the Starter template. It will provision an AI Hub with dependent resources, AI project, AI Services and an online endpoint. It will also deploy the models  GPT-4o, and GPT-4o mini.
 
      ```powershell
     azd up
@@ -92,7 +92,7 @@ You know that there are three models that accept images as input whose inference
 1. Navigate to the **Model catalog** page using the menu on the left.
 1. Select **Compare models** (find the button next to the filters in the search pane).
 1. Remove the selected models.
-1. One by one, add the three models you want to compare: **gpt-4**, **gpt-4o**, and **gpt-4o-mini**. For **gpt-4**, make sure that the selected version is **turbo-2024-04-09**, as it is the only version that accepts images as input.
+1. One by one, add the three models you want to compare:  **gpt-4o**, and **gpt-4o-mini**. For **gpt-4**, make sure that the selected version is **turbo-2024-04-09**, as it is the only version that accepts images as input.
 1. Change the x-axis to **Accuracy**.
 1. Ensure the y-axis is set to **Cost**.
 
