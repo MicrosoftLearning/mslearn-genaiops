@@ -2,6 +2,11 @@ remote_theme: MicrosoftLearning/Jekyll-Theme
 exclude:
   - readme.md
   - .github/
+  - infrastructure/
+  - src/
+  - data/
+include:
+  - docs/
 header_pages:
   - index.html
 author: Microsoft Learning
