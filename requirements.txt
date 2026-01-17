@@ -1,0 +1,52 @@
+# GenAI Operations Dependencies - Trail Guide Agent
+# Adventure Works Outdoor Gear - AI Trail Assistant
+# Updated: 2026-01-16
+
+# Core Azure AI Projects SDK (Latest Versions)
+azure-ai-projects>=1.0.0
+azure-identity>=1.15.0
+azure-core>=1.29.0
+azure-mgmt-resource>=23.0.0
+
+# Evaluation and ML libraries
+pandas>=2.1.0
+numpy>=1.25.0
+scikit-learn>=1.3.0
+
+# Development and testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+black>=23.0.0
+isort>=5.12.0
+flake8>=6.0.0
+mypy>=1.5.0
+
+# Environment and Configuration
+python-dotenv>=1.0.0
+
+# API Integration
+requests>=2.31.0
+httpx>=0.25.0
+
+# Logging and Monitoring
+structlog>=23.1.0
+
+# Jupyter notebook support (optional)
+jupyter>=1.0.0
+ipykernel>=6.25.0
+
+# Data processing and visualization
+openpyxl>=3.1.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Documentation and Reporting
+markdown>=3.5.0
+Jinja2>=3.1.0
+
+# GitHub Actions and automation
+pyyaml>=6.0.0
+
+# Optional: Weather API integration
+openweathermap-api>=1.3.0

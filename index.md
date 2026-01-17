@@ -1,18 +1,18 @@
 ---
-title: GenAIOps exercises
+title: GenAI Operations Exercises  
 permalink: index.html
 layout: home
 ---
 
-# Operationalize generative AI applications
+# GenAI Operations (GenAIOps) Workload Labs
 
-The following quickstart exercises are designed to provide you with a hands-on learning experience in which you'll explore common tasks required to operationalize a generative AI workload on Microsoft Azure.
+The following hands-on exercises provide practical experience with GenAI Operations patterns and practices. You'll learn to deploy infrastructure, manage prompts, implement evaluation workflows, and monitor production GenAI applications using Microsoft Foundry and Azure services.
 
-> **Note**: To complete the exercises, you'll need an Azure subscription in which you have sufficient permissions and quota to provision the necessary Azure resources and generative AI models. If you don't already have one, you can sign up for an [Azure account](https://azure.microsoft.com/free). There's a free trial option for new users that includes credits for the first 30 days.
+> **Note**: To complete the exercises, you'll need an Azure subscription with sufficient permissions and quota to provision Azure AI services and deploy Microsoft Foundry workspaces. If you don't have an Azure subscription, you can sign up for an [Azure account](https://azure.microsoft.com/free) with free credits for new users.
 
 ## Quickstart exercises
 
-{% assign labs = site.pages | where_exp:"page", "page.url contains '/Instructions'" %}
+{% assign labs = site.pages | where_exp:"page", "page.url contains '/docs'" %}
 {% for activity in labs  %}
 <hr>
 ### [{{ activity.lab.title }}]({{ site.github.url }}{{ activity.url }})
