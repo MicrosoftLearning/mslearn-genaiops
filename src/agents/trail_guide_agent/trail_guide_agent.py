@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
@@ -7,11 +8,8 @@ from azure.ai.projects.models import PromptAgentDefinition
 load_dotenv()
 
 # Read instructions from prompt file
-# TODO: Update this line to point to the correct instruction file
-# v1_instructions.txt - Basic trail guide
-# v2_instructions.txt - Enhanced with personalization 
-# v3_instructions.txt - Production-ready with advanced capabilities
-with open('prompts/v1_instructions.txt', 'r') as f:
+prompt_file = Path(__file__).parent / 'prompts' / 'v1_instructions.txt'
+with open(prompt_file, 'r') as f:
     instructions = f.read().strip()
 
 project_client = AIProjectClient(
