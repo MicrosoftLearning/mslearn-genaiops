@@ -1,213 +1,820 @@
 ---
 lab:
-    title: 'Infrastructure as Code for GenAI Workloads'
-    description: 'Deploy Microsoft Foundry workspace and AI services using Bicep templates and automation scripts.'
+    title: 'Deploy Trail Guide Agent with Azure Developer CLI'
+    description: 'Provision Microsoft Foundry infrastructure and deploy the Trail Guide Agent using automated IaC workflows'
 ---
 
-# Infrastructure as Code for GenAI Workloads
+# Lab 01: Deploy Trail Guide Agent infrastructure
 
-Learn how to deploy and manage infrastructure for GenAI operations using Infrastructure as Code (IaC) practices. You'll deploy a Microsoft Foundry workspace, configure AI services, and set up monitoring and networking using Azure Bicep templates.
+Learn how to provision Azure AI infrastructure and deploy a conversational AI agent using Azure Developer CLI (azd) and Infrastructure as Code (IaC) practices.
 
-This exercise will take approximately **45** minutes.
+This exercise will take approximately **20-30** minutes.
 
 ## Scenario
 
-Your organization wants to establish a standardized, repeatable way to deploy GenAI workloads across development, staging, and production environments. You need to implement Infrastructure as Code to ensure consistency, track changes, and enable automated deployments.
+Adventure Works wants to deploy an AI-powered Trail Guide Agent to help customers discover hiking trails and gear recommendations. You'll use Azure Developer CLI to provision a complete AI environment and deploy the agent to Microsoft Foundry.
 
-In this lab, you'll:
+## Learning objectives
 
-![Pie chart showing marks obtained in an exam with sections for maths (34.9%), physics (28.6%), chemistry (20.6%), and English (15.9%)](./images/demo.png)
+By the end of this lab, you will be able to:
 
-You need to select a language model that accepts images as input, and is able to generate accurate code. The available models that meet those criteria are  GPT-4o, and GPT-4o mini.
+- Provision Microsoft Foundry infrastructure using Azure Developer CLI
+- Deploy an AI agent to Microsoft Foundry
+- Configure your local development environment to connect to the deployed agent
+- Understand how Bicep templates define cloud resources
 
-Let's start by deploying the necessary resources to work with these models in the Azure AI Foundry portal.
+## Prerequisites
 
-## Create an Azure AI hub and project
+Before starting this lab, ensure you have:
 
-You can create an Azure AI hub and project manually through the Azure AI Foundry portal, as well as deploy the models used in the exercise. However, you can also automate this process through the use of a template application with [Azure Developer CLI (azd)](https://aka.ms/azd).
+- An active Azure subscription with permissions to create resources
+- Azure CLI installed locally ([Install guide](https://learn.microsoft.com/cli/azure/install-azure-cli))
+- Azure Developer CLI (azd) installed ([Install guide](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd))
+- Visual Studio Code with Python extension installed
+- Python 3.11 or later installed
+- Git and GitHub account
 
-1. In a web browser, open [Azure portal](https://portal.azure.com) at `https://portal.azure.com` and sign in using your Azure credentials.
+## Lab outcomes
 
-1. Use the **[\>_]** button to the right of the search bar at the top of the page to create a new Cloud Shell in the Azure portal, selecting a ***PowerShell*** environment. The cloud shell provides a command line interface in a pane at the bottom of the Azure portal. For more information about using the Azure Cloud Shell, see the [Azure Cloud Shell documentation](https://docs.microsoft.com/azure/cloud-shell/overview).
+**Core Outcome (Required):**
+✅ Successfully provision Azure AI infrastructure and deploy the Trail Guide Agent
 
-    > **Note**: If you have previously created a cloud shell that uses a *Bash* environment, switch it to ***PowerShell***.
+**Core Artifact (Required):**
+📸 Screenshot showing successful agent response in your local CLI
 
-1. In the Cloud Shell toolbar, in the **Settings** menu, select **Go to Classic version**.
+**Stretch Outcome (Optional):**
+✅ Deploy a web chat interface for public access to the agent
 
-    **<font color="red">Ensure you've switched to the Classic version of the Cloud Shell before continuing.</font>**
+**Stretch Artifact (Optional):**
+📸 Screenshot showing web chat interface with successful agent interaction
 
-1. In the PowerShell pane, enter the following commands to clone this exercise's repo:
+---
 
-     ```powershell
-    rm -r mslearn-genaiops -f
-    git clone https://github.com/MicrosoftLearning/mslearn-genaiops
-     ```
+## Lab setup
 
-1. After the repo has been cloned, enter the following commands to initialize the Starter template. 
-   
-     ```powershell
-    cd ./mslearn-genaiops/Starter
+### Create repository from template
+
+To complete this lab, you'll create your own repository from the template to enable proper version control and infrastructure deployment.
+
+1. Navigate to `https://github.com/[your-org]/mslearn-genaiops` in your web browser.
+
+2. Click **Use this template** → **Create a new repository**.
+
+3. Enter a name for your repository such as `mslearn-genaiops`.
+
+4. Set the repository to **Public** or **Private** based on your preference.
+
+5. Click **Create repository**.
+
+6. Open **Visual Studio Code**.
+
+7. Open the **integrated terminal** in VS Code by selecting **Terminal** > **New Terminal** from the menu (or press `` Ctrl+` ``).
+
+8. In the terminal, clone your repository:
+
+   ```bash
+   git clone https://github.com/[your-username]/mslearn-genaiops.git
+   cd mslearn-genaiops
+   ```
+
+9. Open the repository folder in VS Code by selecting **File** > **Open Folder** and choosing the `mslearn-genaiops` folder you just cloned.
+
+**✓ Checkpoint:** You should have the repository open in VS Code.
+
+---
+
+## Task 1: Authenticate with Azure
+
+Before provisioning resources, you need to authenticate with your Azure subscription.
+
+1. In Visual Studio Code, open the **integrated terminal** by selecting **Terminal** > **New Terminal** from the menu (or press `` Ctrl+` ``)
+
+2. Sign in to Azure CLI using device code authentication:
+
+    ```bash
+    az login --use-device-code
+    ```
+
+3. The terminal will display:
+   - A unique device code (e.g., `A1B2C3D4E`)
+   - A URL: `https://microsoft.com/devicelogin`
+
+4. Open your web browser and navigate to the URL
+
+5. Enter the device code displayed in your terminal
+
+6. Sign in with your Azure credentials when prompted
+
+7. Return to your terminal. After successful authentication, you'll see:
+   - "Retrieving tenants and subscriptions for the selection..."
+   - A table showing your available subscriptions
+   - The default subscription is marked with an asterisk (*)
+
+8. **Select a subscription:**
+   - If the default subscription (marked with *) is correct, press **Enter**
+   - If you want to use a different subscription, type its number and press **Enter**
+
+9. Verify your active subscription:
+
+    ```bash
+    az account show --output table
+    ```
+
+**✓ Checkpoint:** You should see your subscription details displayed.
+
+---
+
+## Task 2: Initialize Azure Developer CLI
+
+Azure Developer CLI (azd) will orchestrate the deployment of all required Azure resources.
+
+1. In the VS Code integrated terminal, ensure you're in the repository root:
+
+    ```bash
+    pwd
+    # Should show: /path/to/mslearn-genaiops
+    ```
+
+2. Initialize azd for this project:
+
+    ```bash
     azd init
-     ```
+    ```
 
-1. Once prompted, give the new environment a name as it will be used as basis for giving unique names to all the provisioned resources.
-        
-1. Next, enter the following command to run the Starter template. It will provision an AI Hub with dependent resources, AI project, AI Services and an online endpoint. It will also deploy the models  GPT-4o, and GPT-4o mini.
+3. When prompted:
+   - **Environment name**: Choose a short, unique name (e.g., `trailguide-dev`)
+   - This name will be used as a prefix for all Azure resources
 
-     ```powershell
+**What just happened?**
+- azd created a `.azure` folder in your project
+- This folder stores environment configuration (not committed to git)
+
+**✓ Checkpoint:** You should see a message confirming environment initialization.
+
+---
+
+## Task 3: Provision Azure infrastructure
+
+Now you'll provision all required Azure resources with a single command.
+
+1. Run the provisioning command:
+
+    ```bash
     azd up
-     ```
+    ```
 
-1. When prompted, choose which subscription you want to use and then choose one of the following locations for resource provision:
-   - East US
-   - East US 2
-   - North Central US
-   - South Central US
-   - Sweden Central
-   - West US
-   - West US 3
+2. When prompted, select:
+   - **Azure subscription**: Choose your subscription from the list
+   - **Azure region**: Choose one of these regions:
+     - `eastus2`
+     - `swedencentral`
+     - `westus`
+     
+   > **Why these regions?** These regions have Azure OpenAI capacity for GPT-4 deployments and support Microsoft Foundry features.
+
+3. Wait for provisioning to complete (approximately **8-12 minutes**)
+
+**What's being created?**
+
+The Bicep templates (`infrastructure/bicep/`) define these resources:
+
+- **Microsoft Foundry Hub**: Central workspace for AI projects
+- **Microsoft Foundry Project**: Isolated project environment for the Trail Guide Agent
+- **Azure OpenAI Service**: Hosts GPT-4 model deployment
+- **GPT-4 Model Deployment**: Language model for the agent
+- **Trail Guide Agent**: Pre-configured agent deployed to Foundry
+- **Azure Storage Account**: Stores project artifacts
+- **Azure Key Vault**: Manages secrets securely
+- **Azure Monitor / Application Insights**: Tracks agent performance
+
+4. Monitor the deployment output. You should see:
+   - ✅ Resource group created
+   - ✅ Microsoft Foundry hub provisioned
+   - ✅ Microsoft Foundry project created
+   - ✅ Azure OpenAI service deployed
+   - ✅ GPT-4 model deployed
+   - ✅ Trail Guide Agent deployed to Foundry
+
+**✓ Checkpoint:** Deployment should complete with "SUCCESS" message.
+
+---
+
+## Task 4: Verify deployment in Azure Portal
+
+Let's confirm your resources were created successfully.
+
+1. Open the [Azure Portal](https://portal.azure.com) in your browser
+
+2. Navigate to **Resource Groups**
+
+3. Find your resource group (named similar to `rg-trailguide-dev`)
+
+4. Verify you see these resources:
+   - Microsoft Foundry hub (type: `Microsoft.MachineLearningServices/workspaces`)
+   - Azure OpenAI (type: `Microsoft.CognitiveServices/accounts`)
+   - Storage account
+   - Key Vault
+   - Application Insights
+
+5. Click on the **Microsoft Foundry hub** resource
+
+6. Select **Launch studio** to open Microsoft Foundry portal
+
+7. In Microsoft Foundry portal:
+   - Navigate to **Agents** in the left menu
+   - You should see **Trail Guide Agent** listed
+   - Click on the agent to view its configuration
+
+**✓ Checkpoint:** You should see your Trail Guide Agent in Microsoft Foundry.
+
+---
+
+## Task 5: Configure local development environment
+
+azd automatically generated connection configuration. Now you'll set up your Python environment to use it.
+
+1. In your terminal, verify the `.env` file was created:
+
+    ```bash
+    ls -la .env
+    ```
+
+2. View the generated configuration (don't commit this file!):
+
+    ```bash
+    cat .env
+    ```
+
+   You should see variables like:
+   ```
+   AZURE_PROJECT_CONNECTION_STRING="<connection-string>"
+   AZURE_AGENT_ID="<agent-id>"
+   ```
+
+3. Create a Python virtual environment:
+
+    ```bash
+    python -m venv venv
+    ```
+
+4. Activate the virtual environment:
+
+    **macOS/Linux:**
+    ```bash
+    source venv/bin/activate
+    ```
+
+    **Windows (PowerShell):**
+    ```powershell
+    .\venv\Scripts\Activate.ps1
+    ```
+
+5. Install required Python packages:
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+   This installs:
+   - `azure-ai-projects` (Microsoft Foundry SDK)
+   - `azure-identity` (Authentication)
+   - `python-dotenv` (Environment variable management)
+
+**✓ Checkpoint:** You should see packages installed successfully without errors.
+
+---
+
+## Task 6: Test the Trail Guide Agent locally
+
+Now you'll run the agent from your local machine and verify it connects to the deployed agent in Foundry.
+
+1. Navigate to the agent directory:
+
+    ```bash
+    cd src/agents/trail_guide_agent
+    ```
+
+2. Run the agent:
+
+    ```bash
+    python trail_guide_agent.py
+    ```
+
+3. You should see a welcome message:
+
+    ```
+    ========================================
+    Welcome to the Trail Guide Agent!
+    ========================================
+    I can help you discover hiking trails and recommend gear.
     
-1. Wait for the script to complete - this typically takes around 10 minutes, but in some cases may take longer.
-
-    > **Note**: Azure OpenAI resources are constrained at the tenant level by regional quotas. The listed regions above include default quota for the model type(s) used in this exercise. Randomly choosing a region reduces the risk of a single region reaching its quota limit. In the event of a quota limit being reached, there's a possibility you may need to create another resource group in a different region. Learn more about [model availability per region](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models?tabs=standard%2Cstandard-chat-completions#global-standard-model-availability)
-
-    <details>
-      <summary><b>Troubleshooting tip</b>: No quota available in a given region</summary>
-        <p>If you receive a deployment error for any of the models due to no quota available in the region you chose, try running the following commands:</p>
-        <ul>
-          <pre><code>azd env set AZURE_ENV_NAME new_env_name
-   azd env set AZURE_RESOURCE_GROUP new_rg_name
-   azd env set AZURE_LOCATION new_location
-   azd up</code></pre>
-        Replacing <code>new_env_name</code>, <code>new_rg_name</code>, and <code>new_location</code> with new values. The new location must be one of the regions listed at the beginning of the exercise, e.g <code>eastus2</code>, <code>northcentralus</code>, etc.
-        </ul>
-    </details>
-
-## Compare the models
-
-You know that there are three models that accept images as input whose inference infrastructure is fully managed by Azure. Now, you need to compare them to decide which one is ideal for our use case.
-
-1. In a new browser tab, open [Azure AI Foundry portal](https://ai.azure.com) at `https://ai.azure.com` and sign in using your Azure credentials.
-1. If prompted, select the AI project created earlier.
-1. Navigate to the **Model catalog** page using the menu on the left.
-1. Select **Compare models** (find the button next to the filters in the search pane).
-1. Remove the selected models.
-1. One by one, add the three models you want to compare:  **gpt-4o**, and **gpt-4o-mini**. For **gpt-4**, make sure that the selected version is **turbo-2024-04-09**, as it is the only version that accepts images as input.
-1. Change the x-axis to **Accuracy**.
-1. Ensure the y-axis is set to **Cost**.
-
-Review the plot and try to answer the following questions:
-
-- *Which model is more accurate?*
-- *Which model is cheaper to use?*
-
-The benchmark metric accuracy is calculated based on publicly available generic datasets. From the plot we can already filter out one of the models, as it has the highest cost per token but not the highest accuracy. Before making a decision, let's explore the quality of outputs of the two remaining models specific to your use case.
-
-## Set up your development environment in Cloud Shell
-
-To quickly experiment and iterate, you'll use a set of Python scripts in Cloud Shell.
-
-1. Back in the Azure Portal tab, navigate to the resource group created by the deployment script earlier and select your **Azure AI Foundry** resource.
-1. In the **Overview** page for your resource, select **Click here to view endpoints** and copy the AI Foundry API endpoint.
-1. Save the endpoint in a notepad. You'll use it to connect to your project in a client application.
-1. Back in the Azure Portal tab, open Cloud Shell if you closed it before and run the following command to navigate to the folder with the code files used in this exercise:
-
-     ```powershell
-    cd ~/mslearn-genaiops/Files/02/
-     ```
-
-1. In the Cloud Shell command-line pane, enter the following command to install the libraries you need:
-
-    ```powershell
-   python -m venv labenv
-   ./labenv/bin/Activate.ps1
-   pip install python-dotenv azure-identity azure-ai-projects openai matplotlib
-    ```
-
-1. Enter the following command to open the configuration file that has been provided:
-
-    ```powershell
-   code .env
-    ```
-
-    The file is opened in a code editor.
-
-1. In the code file, replace the **your_project_endpoint** placeholder with the endpoint for your project that you copied earlier. Observe that the first and second model used in the exercise are **gpt-4o** and **gpt-4o-mini** respectively.
-1. *After* you've replaced the placeholder, in the code editor, use the **CTRL+S** command or **Right-click > Save** to save your changes and then use the **CTRL+Q** command or **Right-click > Quit** to close the code editor while keeping the cloud shell command line open.
-
-## Send prompts to your deployed models
-
-You'll now run multiple scripts that send different prompts to your deployed models. These interactions generate data that you can later observe in Azure Monitor.
-
-1. Run the following command to **view the first script** that has been provided:
-
-    ```powershell
-   code model1.py
-    ```
-
-The script will encode the image used in this exercise into a data URL. This URL will be used to embed the image directly in the chat completion request together with the first text prompt. Next, the script will output the model's response and add it to the chat history and then submit a second prompt. The second prompt is submitted and stored for the purpose of making the metrics observed later on more significant, but you can uncomment the optional section of the code to have the second response as an output as well.
-
-1. In the cloud shell command-line pane, enter the following command to sign into Azure.
-
-    ```
-   az login
-    ```
-
-    **<font color="red">You must sign into Azure - even though the cloud shell session is already authenticated.</font>**
-
-    > **Note**: In most scenarios, just using *az login* will be sufficient. However, if you have subscriptions in multiple tenants, you may need to specify the tenant by using the *--tenant* parameter. See [Sign into Azure interactively using the Azure CLI](https://learn.microsoft.com/cli/azure/authenticate-azure-cli-interactively) for details.
+    Type 'exit', 'quit', or 'bye' to end the conversation.
+    ========================================
     
-1. When prompted, follow the instructions to open the sign-in page in a new tab and enter the authentication code provided and your Azure credentials. Then complete the sign in process in the command line, selecting the subscription containing your Azure AI Foundry hub if prompted.
-1. After you have signed in, enter the following command to run the application:
-
-    ```powershell
-   python model1.py
+    You:
     ```
 
-    The model will generate a response, which will be captured with Application Insights for further analysis. Let's use the second model to explore their differences.
+4. Test with a sample query:
 
-1. In the Cloud Shell command-line pane beneath the code editor, enter the following command to run the **second** script:
-
-    ```powershell
-   python model2.py
+    ```
+    I'm a beginner hiker looking for easy trails near Seattle. What do you recommend?
     ```
 
-    Now that you have outputs from both models, are they in any way different?
+5. The agent should respond with trail recommendations.
 
-    > **Note**: Optionally, you can test the scripts given as answers by copying the code blocks, running the command `code your_filename.py`, pasting the code in the editor, saving the file and then running the command `python your_filename.py`. If the script ran successfully, you should have a saved image that can be downloaded with `download imgs/gpt-4o.jpg` or `download imgs/gpt-4o-mini.jpg`.
+6. Test multi-turn conversation (context retention):
 
-## Compare token usage of models
-
-Lastly, you will run a third script that will plot the number of processed tokens over time for each model. This data is obtained from Azure Monitor.
-
-1. Before running the last script, you need to copy the resource ID for your Azure AI Foundry resource from the Azure Portal. Go to the overview page of your Azure AI Foundry resource and select **JSON View**. Copy the Resource ID and replace the `your_resource_id` placeholder in the code file:
-
-    ```powershell
-   code plot.py
+    ```
+    What gear should I bring for the trails you just recommended?
     ```
 
-1. Save your changes.
+7. Verify the agent remembers the previous conversation about Seattle trails.
 
-1. In the Cloud Shell command-line pane beneath the code editor, enter the following command to run the **third** script:
+8. Exit the agent:
 
-    ```powershell
-   python plot.py
+    ```
+    exit
     ```
 
-1. Once the script is finished, enter the following command to download the metrics plot:
+**✓ Checkpoint:** Agent responds appropriately to both queries and maintains conversation context.
 
-    ```powershell
-   download imgs/plot.png
+---
+
+## Task 7: Capture your lab artifact (required)
+
+**Post-Lab Artifact:** Screenshot of successful agent interaction
+
+1. Run the agent again:
+
+    ```bash
+    python trail_guide_agent.py
     ```
 
-## Conclusion
+2. Ask a question about trails or gear
 
-After reviewing the plot and remembering the benchmark values in the Accuracy vs. Cost chart observed before, can you conclude which model is best for your use case? Does the difference in the outputs' accuracy outweight the difference in tokens generated and therefore cost?
+3. Take a screenshot showing:
+   - Your terminal with the agent welcome message
+   - Your question
+   - The agent's response
 
-## Clean up
+4. Save the screenshot as `lab01-artifact-trailguide-response.png`
 
-If you've finished exploring Azure AI Services, you should delete the resources you have created in this exercise to avoid incurring unnecessary Azure costs.
+**This artifact proves you successfully:**
+- ✅ Provisioned Azure infrastructure
+- ✅ Deployed the agent to Microsoft Foundry
+- ✅ Connected your local environment to the cloud agent
+- ✅ Tested the agent's conversational capabilities
 
-1. Return to the browser tab containing the Azure portal (or re-open the [Azure portal](https://portal.azure.com?azure-portal=true) in a new browser tab) and view the contents of the resource group where you deployed the resources used in this exercise.
-1. On the toolbar, select **Delete resource group**.
-1. Enter the resource group name and confirm that you want to delete it.
+---
+
+## Part 2: Deploy web interface (optional stretch)
+
+**Time estimate: 15-20 minutes**
+
+In this optional section, you'll deploy a simple web interface for the Trail Guide Agent, making it accessible via a public URL without requiring command-line access.
+
+### Task 8: Deploy web chat interface
+
+The repository includes a pre-built web chat interface using Azure Static Web Apps. You'll deploy it alongside your agent.
+
+1. Navigate back to the repository root:
+
+    ```bash
+    cd ../../../
+    ```
+
+2. Deploy the web application:
+
+    ```bash
+    azd deploy web
+    ```
+
+   This deploys:
+   - A simple HTML/JavaScript chat interface
+   - Hosted on Azure Static Web Apps
+   - Connected to your deployed agent
+
+3. Wait for deployment to complete (approximately **3-5 minutes**)
+
+4. After deployment completes, azd will display the web app URL:
+
+    ```
+    Deploying web app...
+    SUCCESS: Web app deployed!
+    URL: https://trailguide-dev-abc123.azurestaticapps.net
+    ```
+
+5. Copy the URL and open it in your web browser
+
+**✓ Checkpoint:** You should see a chat interface with the Trail Guide Agent branding.
+
+---
+
+### Task 9: Test the web interface
+
+1. In the web chat interface, type a message:
+
+    ```
+    I'm planning a family hike near Portland. Any suggestions for beginners?
+    ```
+
+2. Verify the agent responds with trail recommendations
+
+3. Test multi-turn conversation by asking a follow-up:
+
+    ```
+    What's the best time of year to visit those trails?
+    ```
+
+4. Verify context is maintained
+
+5. Share the URL with a colleague or friend to test external access (optional)
+
+**✓ Checkpoint:** Web interface successfully communicates with your deployed agent.
+
+---
+
+### Task 10: Review the web app code
+
+Understanding the web interface helps you see how external applications connect to agents in Microsoft Foundry.
+
+1. In VS Code, open the web app files:
+
+    ```
+    src/web/
+    ├── index.html       # Chat UI
+    ├── chat.js          # Agent connection logic
+    └── styles.css       # Styling
+    ```
+
+2. Open `chat.js` and review the key sections:
+
+   **Agent connection:**
+   ```javascript
+   // Uses azure-ai-projects SDK to connect to deployed agent
+   const client = new AIProjectsClient(
+       process.env.AZURE_PROJECT_CONNECTION_STRING
+   );
+   ```
+
+   **Sending messages:**
+   ```javascript
+   // Sends user message and receives agent response
+   const response = await client.agents.createRun(
+       agentId,
+       { message: userMessage }
+   );
+   ```
+
+   **Displaying responses:**
+   ```javascript
+   // Appends agent response to chat history
+   appendMessage('agent', response.content);
+   ```
+
+3. Note how the web app:
+   - Uses the same `.env` configuration as the CLI version
+   - Maintains conversation history in browser session storage
+   - Handles errors gracefully with user-friendly messages
+   - **Matches Adventure Works branding** with outdoor-inspired design
+
+4. Open `styles.css` and observe the Adventure Works styling:
+
+   **Design elements:**
+   - Dark, dramatic background inspired by outdoor imagery
+   - Bold white typography for headings
+   - Clean rounded buttons matching the Adventure Works website
+   - High contrast for readability
+   - Professional outdoor/adventure aesthetic
+
+   **Key CSS variables:**
+   ```css
+   :root {
+       --aw-dark-bg: #1a1a2e;          /* Dark background */
+       --aw-accent: #16213e;           /* Accent panels */
+       --aw-primary: #0f3460;          /* Primary blue */
+       --aw-text-light: #ffffff;       /* White text */
+       --aw-button-bg: #ffffff;        /* White buttons */
+       --aw-button-text: #1a1a2e;      /* Dark button text */
+   }
+   ```
+
+**✓ Checkpoint:** You understand how the web interface connects to the agent and matches Adventure Works branding.
+
+---
+
+### Understanding the web deployment
+
+**What was deployed:**
+
+- **Azure Static Web App**: Hosts the HTML/CSS/JavaScript files
+  - Serverless, scales automatically
+  - Free tier for low traffic
+  - Custom domain support (optional)
+  - HTTPS enabled by default
+
+- **API Backend**: Azure Functions (serverless)
+  - Proxies requests to Microsoft Foundry agent
+  - Handles authentication securely (API keys not exposed to browser)
+  - Auto-scales based on usage
+
+**How it works:**
+
+```
+User Browser
+    ↓
+Azure Static Web App (HTML/JS)
+    ↓
+Azure Functions (API backend)
+    ↓
+Microsoft Foundry Agent
+    ↓
+Azure OpenAI (GPT-4)
+```
+
+**Why this architecture:**
+
+- **Security**: API keys stay on server-side (Functions), not in browser
+- **Simplicity**: Static Web Apps require minimal configuration
+- **Cost**: Free tier suitable for educational use and demos
+- **Speed**: CDN distribution for fast loading worldwide
+
+**Constitutional compliance:**
+
+- ✅ Azure-only (Static Web Apps + Functions)
+- ✅ Minimal approach (simple HTML/JS, no frameworks)
+- ✅ Fast deployment (single azd command)
+- ✅ Uses existing Bicep templates (in `infrastructure/bicep/web.bicep`)
+
+---
+
+### Optional: Customize the web interface
+
+**Stretch activities for advanced learners:**
+
+1. **Personalize the hero section** in `index.html`:
+   - Update the welcome message: "Discover Your Next Adventure"
+   - Add Adventure Works tagline or mission statement
+   - Include outdoor imagery in the header background
+
+2. **Refine Adventure Works styling** in `styles.css`:
+   - Adjust color scheme to match seasonal campaigns
+   - Add custom fonts (Adventure Works uses bold sans-serif + script fonts)
+   - Implement responsive design for mobile devices
+   - Add subtle animations for message send/receive
+
+3. **Add suggested prompts** for common queries:
+   - Create clickable prompt buttons:
+     - "Find beginner trails near me"
+     - "What gear do I need for winter hiking?"
+     - "Recommend trails for families"
+   - Edit `chat.js` to add button click handlers
+   - Style buttons to match Adventure Works call-to-action design
+
+4. **Enhance the user experience**:
+   - Add typing indicators: "Trail Guide is thinking..."
+   - Implement conversation history persistence (localStorage)
+   - Add download conversation transcript feature
+   - Include Adventure Works logo in header
+
+5. **Advanced branding integration**:
+   - Add footer with Adventure Works store locator link
+   - Include navigation to product categories
+   - Embed related product recommendations based on trail difficulty
+   - Link to Adventure Works blog or community resources
+
+**Design inspiration:**
+- Match the dramatic outdoor imagery from adventure-works.com
+- Use high-contrast white text on dark backgrounds
+- Keep buttons clean with rounded corners and white backgrounds
+- Maintain professional outdoor/adventure aesthetic throughout
+
+---
+
+### Web deployment artifact (optional)
+
+**Post-Lab Artifact:** Screenshot of web chat interface
+
+1. In your web browser with the chat interface open, have a conversation with the agent
+
+2. Take a screenshot showing:
+   - The web URL in the browser address bar
+   - The chat interface with your messages
+   - Agent responses
+
+3. Save as `lab01-artifact-web-interface.png`
+
+**This demonstrates:**
+- ✅ Successful web deployment
+- ✅ Public accessibility of the agent
+- ✅ Understanding of multi-tier architecture
+- ✅ Readiness for production-style deployments
+
+---
+
+### Clean up web resources
+
+When cleaning up at the end of the lab, the web app will be deleted automatically:
+
+```bash
+azd down
+```
+
+This removes:
+- Azure Static Web App
+- Azure Functions (API backend)
+- All infrastructure from Part 1
+
+If you want to keep the agent but remove only the web interface:
+
+```bash
+azd deploy web --down
+```
+
+---
+
+## Understanding what you built
+
+### How Bicep and azd work together
+
+**What you ran:**
+```bash
+azd up
+```
+
+**What happened behind the scenes:**
+
+1. **azd reads `azure.yaml`**
+   - Defines this as a Microsoft Foundry project
+   - Points to Bicep templates in `infrastructure/bicep/`
+
+2. **Bicep templates define infrastructure**
+   - `main.bicep`: Creates Microsoft Foundry hub, OpenAI, storage, Key Vault
+   - `agent.bicep`: Defines the Trail Guide Agent configuration
+   - Resources are described declaratively (what, not how)
+
+3. **azd provisions resources**
+   - Compiles Bicep to ARM templates
+   - Deploys to Azure Resource Manager
+   - Creates resources in order based on dependencies
+
+4. **azd deploys the agent**
+   - Uploads agent definition to Microsoft Foundry
+   - Configures system prompt, model settings
+
+5. **azd generates configuration**
+   - Extracts connection strings and IDs
+   - Writes to `.env` file automatically
+
+**Why this matters:**
+- **Repeatable**: Run `azd up` again in a new subscription → identical environment
+- **Version-controlled**: Bicep files in git track infrastructure changes
+- **Fast**: No manual clicking in Portal
+- **Educational**: Students learn modern DevOps practices
+
+### Key files in this project
+
+```
+mslearn-genaiops/
+├── azure.yaml                          ← azd configuration
+├── infrastructure/
+│   └── bicep/
+│       ├── main.bicep                  ← Infrastructure definition
+│       ├── agent.bicep                 ← Agent configuration
+│       └── core/                       ← Reusable Bicep modules
+├── src/
+│   └── agents/
+│       └── trail_guide_agent/
+│           ├── trail_guide_agent.py    ← Python client code
+│           ├── system_prompt.txt       ← Agent instructions
+│           └── README.md
+├── .env                                ← Generated config (DO NOT COMMIT)
+├── .env.example                        ← Template for .env
+└── requirements.txt                    ← Python dependencies
+```
+
+---
+
+## Troubleshooting
+
+### Error: "Quota exceeded for GPT-4"
+
+**Problem:** Your selected region doesn't have GPT-4 capacity.
+
+**Solution:**
+1. Choose a different region:
+   ```bash
+   azd env set AZURE_LOCATION swedencentral
+   azd up
+   ```
+
+2. Or create a new environment:
+   ```bash
+   azd env new trailguide-dev2
+   azd up
+   ```
+
+### Error: "Authentication failed"
+
+**Problem:** Azure CLI session expired.
+
+**Solution:**
+```bash
+az login
+azd up
+```
+
+### Error: ".env file not found"
+
+**Problem:** azd didn't generate .env (deployment may have failed).
+
+**Solution:**
+1. Check azd deployment logs
+2. Re-run: `azd up`
+3. Verify `.env` exists: `ls -la .env`
+
+### Agent doesn't respond / Connection error
+
+**Problem:** Environment variables not loaded or incorrect.
+
+**Solution:**
+1. Verify .env exists and contains values:
+   ```bash
+   cat .env
+   ```
+2. Ensure you activated the virtual environment:
+   ```bash
+   source venv/bin/activate  # or .\venv\Scripts\Activate.ps1 on Windows
+   ```
+3. Reinstall dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+---
+
+## Clean up resources
+
+**Important:** Azure resources incur costs. Clean up when you're done with the lab.
+
+### Option 1: Delete via azd (Recommended)
+
+```bash
+azd down
+```
+
+This deletes:
+- All Azure resources
+- The resource group
+- Local .azure environment files
+
+### Option 2: Delete via Azure Portal
+
+1. Go to [Azure Portal](https://portal.azure.com)
+2. Navigate to **Resource Groups**
+3. Select your resource group (e.g., `rg-trailguide-dev`)
+4. Click **Delete resource group**
+5. Type the resource group name to confirm
+6. Click **Delete**
+
+**✓ Checkpoint:** Resource group and all resources are deleted.
+
+---
+
+## Summary
+
+In this lab, you:
+
+**Part 1: Core deployment**
+✅ **Provisioned Azure AI infrastructure** using Azure Developer CLI  
+✅ **Deployed a Trail Guide Agent** to Microsoft Foundry  
+✅ **Connected your local environment** to the cloud agent  
+✅ **Tested conversational AI** with multi-turn context  
+✅ **Learned IaC practices** with Bicep and azd
+
+**Part 2: Web interface (optional)**
+✅ **Deployed a web chat interface** using Azure Static Web Apps  
+✅ **Published the agent** for public access via URL  
+✅ **Understood multi-tier architecture** (browser → API → agent)  
+✅ **Explored customization options** for production deployments
+
+**Key Takeaways:**
+
+- **azd simplifies deployment**: One command provisions everything
+- **Bicep defines infrastructure**: Version-controlled, repeatable IaC
+- **Microsoft Foundry hosts agents**: Managed platform for AI applications
+- **.env stores secrets**: Auto-generated, never committed to git
+- **Web deployment is simple**: Static Web Apps + Functions = public agent access
+- **GenAIOps starts with infrastructure**: Solid foundation for evaluation, monitoring, deployment
+
+---
+
+## Next steps
+
+Now that your agent is deployed, you're ready to:
+
+- **Lab 02: Prompt Management** — Learn how to version and optimize agent prompts
+- **Lab 03: Manual Evaluation** — Assess agent quality through human review
+- **Lab 04: Automated Evaluation** — Implement metrics for response quality
+
+Continue to the next lab to deepen your GenAIOps skills!
