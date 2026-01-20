@@ -1,10 +1,10 @@
 # GenAI Operations - Trail Guide Agent Workshop
 
-This repository contains a comprehensive workshop and reference implementation for building, evaluating, and deploying GenAI applications using Microsoft Azure AI Foundry. The project demonstrates end-to-end GenAIOps practices including prompt management, manual and automated evaluation, safety testing, deployment, and monitoring.
+This repository contains a comprehensive workshop for building, evaluating, and deploying GenAI applications using Microsoft Foundry. The project demonstrates end-to-end GenAIOps practices including prompt management, manual and automated evaluation, safety testing, deployment, and monitoring.
 
-**Adventure Works Outdoor Gear - AI Trail Assistant**: The central use case demonstrates how to build an intelligent trail guide agent that helps outdoor enthusiasts find and explore hiking trails.
+**Adventure Works Outdoor Gear - AI Trail Assistant**: Build an intelligent trail guide agent that helps outdoor enthusiasts find and explore hiking trails.
 
-[Repository Structure](#repository-structure) • [Getting Started](#getting-started) • [Agents & Applications](#agents--applications) • [Documentation](#documentation)
+[Repository Structure](#repository-structure) • [Getting Started](#getting-started) • [Workshop Labs](#workshop-labs) • [Documentation](#documentation)
 
 ## Repository Structure
 
@@ -14,12 +14,15 @@ mslearn-genaiops/
 │   ├── main.bicep                  # Main infrastructure definition
 │   ├── main.parameters.json        # Infrastructure parameters
 │   └── core/                       # Modular infrastructure components
-│       ├── ai/                     # AI Foundry project & connections
+│       ├── ai/                     # Microsoft Foundry project & connections
 │       └── monitor/                # Application Insights & Log Analytics
 │
 ├── src/
 │   ├── agents/                     # AI Agent implementations
 │   │   ├── trail_guide_agent/      # Main trail recommendation agent
+│   │   │   ├── trail_guide_agent.py
+│   │   │   ├── agent.yaml
+│   │   │   └── prompts/            # Versioned prompt instructions
 │   │   ├── model_comparison/       # Model evaluation & comparison
 │   │   ├── prompt_optimization/    # Prompt engineering workflows
 │   │   └── monitoring_agent/       # Observability demonstrations
@@ -29,7 +32,8 @@ mslearn-genaiops/
 │   │   └── safety_evaluators.py    # Safety & red-teaming evaluators
 │   │
 │   └── tests/                      # Test suites
-│       └── test_trail_guide_agents.py
+│       ├── test_trail_guide_agents.py
+│       └── interact_with_agent.py  # Interactive CLI chat
 │
 ├── data/
 │   └── datasets/                   # Workshop data assets
@@ -37,42 +41,28 @@ mslearn-genaiops/
 │       └── evaluation_rubrics.md   # Evaluation criteria
 │
 ├── docs/                           # Workshop documentation
-│   ├── 01-infrastructure-setup.md
-│   ├── 02-prompt-management.md
-│   ├── 03-manual-evaluation.md
-│   ├── 04-automated-evaluation.md
-│   ├── 05-safety-red-teaming.md
-│   ├── 06-deployment-monitoring.md
+│   ├── 01-infrastructure-setup.md  # Lab 1: Setup
+│   ├── 02-prompt-management.md     # Lab 2: Prompt versioning
+│   ├── 03-manual-evaluation.md     # Lab 3: Manual evaluation
+│   ├── 04-automated-evaluation.md  # Lab 4: Automated testing
+│   ├── 05-safety-red-teaming.md    # Lab 5: Safety testing
+│   ├── 06-deployment-monitoring.md # Lab 6: Deployment & monitoring
 │   ├── scenario.md                 # Use case overview
 │   ├── spec.md                     # Technical specifications
 │   └── modules/                    # Learning modules
 │
 ├── requirements.txt                # Python dependencies
-├── azure.yaml                      # Azure Developer CLI config
-└── README.md                       # This file
-```
-
-## Features
-
-### GenAIOps Practices Demonstrated
-
-* **Prompt Versioning & Management**: Version-controlled prompts with structured iteration (v1, v2, v3)
-* **Manual Evaluation**: Human-in-the-loop evaluation workflows for quality assessment
-* **Automated Evaluation**: Programmatic quality and safety evaluators with metrics
-* **Model Comparison**: Side-by-side comparison of different AI models
-* **Prompt Optimization**: Token optimization and efficiency improvements
-*  Agents & Applications
+├──What You'll Build
 
 ### Trail Guide Agent
-**Location**: `src/agents/trail_guide_agent/`
 
 The main application - an AI agent that provides personalized hiking trail recommendations for Adventure Works Outdoor Gear customers.
 
 **Key Components**:
-- `trail_guide_agent.py`: Main agent implementation using Azure AI Projects SDK
-- `prompts/v1_instructions.txt`: Initial prompt version
-- `prompts/v2_instructions.txt`: Improved prompt iteration
-- `prompts/v3_instructions.txt`: Optimized final version
+- `trail_guide_agent.py`: Agent implementation using Azure AI Projects SDK
+- `agent.yaml`: Agent configuration
+- `prompts/`: Versioned prompt instructions (v1, v2, v3)
+- `interact_with_agent.py`: Interactive CLI for testing
 
 **Capabilities**:
 - Natural language trail queries
@@ -80,55 +70,24 @@ The main application - an AI agent that provides personalized hiking trail recom
 - Safety information and trail conditions
 - Multi-turn conversational interactions
 
-### Model Comparison Agent
-**Location**: `src/agents/model_comparison/`
+## Workshop Labs
 
-Demonstrates comparing different AI models (GPT-4, GPT-4o-mini, etc.) for performance, quality, and cost trade-offs.
+Follow the labs in sequence for a complete GenAIOps learning experience:
 
-**Key Files**:
-- `02-Compare-models.ipynb`: Jupyter notebook for model comparison
-- `06-Optimize-your-model.ipynb`: Model optimization techniques
-- `model1.py`, `model2.py`: Different model configurations
-- `generate_synth_data.py`: Synthetic test data generation
-- `plot.py`: Visualization utilities
+| Lab | Title | Description | Duration |
+|-----|-------|-------------|----------|
+| 1 | [Infrastructure Setup](docs/01-infrastructure-setup.md) | Deploy Microsoft Foundry resources and create your first agent | 20 min |
+| 2 | [Prompt Management](docs/02-prompt-management.md) | Version control and iterate on prompts | 30 min |
+| 3 | [Manual Evaluation](docs/03-manual-evaluation.md) | Human-in-the-loop quality assessment | 30 min |
+| 4 | [Automated Evaluation](docs/04-automated-evaluation.md) | Programmatic testing and metrics | 30 min |
+| 5 | [Safety & Red-teaming](docs/05-safety-red-teaming.md) | Adversarial testing for safety | 30 min |
+| 6 | [Deployment & Monitoring](docs/06-deployment-monitoring.md) | Production deployment with tracing | 30 min |
 
-### Prompt Optimization Agent
-**Location**: `src/agents/prompt_optimization/`
+### Additional Resources
 
-Shows techniques for optimizing prompts for quality, efficiency, and token usage.
-
-**Key Files**:
-- `optimize-prompt.py`: Automated prompt optimization
-- `start.prompty`: Initial prompt template
-- `solution-0.prompty`, `solution-1.prompty`: Optimized versions
-- `token-count.py`: Token usage analysis
-
-### Monitoring Agent
-**Location**: `src/agents/monitoring_agent/`
-
-Demonstrates observability patterns for production AI agents.
-
-**Key Files**:
-- `start-prompt.py`: Initial monitoring setup
-- `error-prompt.py`: Error handling demonstrations
-- `Documentation
-
-The `docs/` directory contains comprehensive workshop materials:
-
-| Document | Description |
-|----------|-------------|
-| [scenario.md](docs/scenario.md) | Adventure Works use case and business context |
-| [spec.md](docs/spec.md) | Technical specifications and requirements |
-| [constitution.md](docs/constitution.md) | AI safety guidelines and principles |
-| [plan.md](docs/plan.md) | Workshop delivery plan |
-| [01-infrastructure-setup.md](docs/01-infrastructure-setup.md) | Azure infrastructure provisioning |
-| [02-prompt-management.md](docs/02-prompt-management.md) | Prompt versioning and iteration |
-| [03-manual-evaluation.md](docs/03-manual-evaluation.md) | Human evaluation workflows |
-| [04-automated-evaluation.md](docs/04-automated-evaluation.md) | Automated testing and metrics |
-| [05-safety-red-teaming.md](docs/05-safety-red-teaming.md) | Adversarial testing |
-| [06-deployment-monitoring.md](docs/06-deployment-monitoring.md) | Production deployment |
-
-### Learning Modules
+- [Scenario](docs/scenario.md): Adventure Works use case and business context
+- [Technical Spec](docs/spec.md): Technical specifications and requirements
+- [Learning Modules](docs/modules/): Standalone learning modules
 
 - `docs/modules/prompt-versioning-microsoft-foundry.md`
 - `docs/modules/manual-evaluation-genai-applications.md`
@@ -138,288 +97,140 @@ The `docs/` directory contains comprehensive workshop materials:
 
 ### Prerequisites
 
-1. **Azure Subscription**: Active Azure subscription with appropriate permissions
-2. **Azure Developer CLI (azd)**: 
-   - Windows: `winget install microsoft.azd`
-   - Linux: `curl -fsSL https://aka.ms/install-azd.sh | bash`
-   - macOS: `brew tap azure/azd && brew install azd`
-3. **Python 3.11+**: Required for running agents
-4. **VS Code** (recommended): For optimal development experience
+- **Azure Subscription**: Active subscription with appropriate permissions
+- **Visual Studio Code**: Recommended IDE for the workshop
+- **Azure Developer CLI (azd)**: 
+  - Windows: `winget install microsoft.azd`
+  - macOS: `brew tap azure/azd && brew install azd`
+  - Linux: `curl -fsSL https://aka.ms/install-azd.sh | bash`
+- **Python 3.9+**: Required for running agents
 
-### Installation
+### Quick Start
 
-1. **Clone the repository**:
-   ```bash
-   Workshop Learning Path
+Follow Lab 1 to get started:
 
-Follow the documentation in sequence for a complete GenAIOps learning experience:
+```powershell
+# Clone your forked repository
+git clone https://github.com/[your-username]/mslearn-genaiops.git
+cd mslearn-genaiops
 
-1. **Setup**: Provision infrastructure and configure environment
-2. **Build**: Create your first agent with prompt management
-3. **Evaluate**: Test manually and with automated evaluators
-4. **Optimize**: Compare models and optimize prompts
-5. **Secure**: Run safety evaluations and red-teaming
-6. **Deploy**: Push to production with monitoring
+# Authenticate with Azure
+azd auth login
+az login
 
-## Data Assets
+# Provision infrastructure
+azd up
 
-### Datasets
-**Location**: `data/datasets/`
+# Generate environment variables
+azd env get-values > .env
 
-- `app_hotel_reviews.csv`: Sample customer review data for evaluation testing
-- `evaluation_rubrics.md`: Grading criteria and quality standards for evaluators
+# Create virtual environment and install dependencies
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
 
-## Testing
+# Add agent configuration to .env
+# AGENT_NAME=trail-guide-v1
+# MODEL_NAME=gpt-4.1
 
-Run the test suite:
-```bash
-pytest src/tests/
+# Create your first agent
+cd src/agents/trail_guide_agent
+python trail_guide_agent.py
+
+# Test the agent interactively
+cd ../../..
+python src\tests\interact_with_agent.py
 ```
 
-Run specific test file:
-```bash
-pytest src/tests/test_trail_guide_agents.py -v
+For detailed instructions, see [Lab 1: Infrastructure Setup](docs/01-infrastructure-setup.md).
+For detailed instructions, see [Lab 1: Infrastructure Setup](docs/01-infrastructure-setup.md).
+
+## Azure Resources Deployed
+
+| Resource | Description |
+|----------|-------------|
+| **Microsoft Foundry Hub & Project** | Collaborative workspace with access to AI models and development tools |
+| **Application Insights** | Application performance monitoring and telemetry |
+| **Log Analytics Workspace** | Centralized logging and monitoring data |
+
+### Architecture
+
+```
+Azure Resource Group
+├── Microsoft Foundry Hub
+│   └── Microsoft Foundry Project (trail-guide)
+├── Application Insights
+└── Log Analytics Workspace
 ```
 
-## Development Workflow
-
-1. **Modify prompts**: Edit files in `src/agents/trail_guide_agent/prompts/`
-2. **Run agent locally**: Test changes with `python src/agents/trail_guide_agent/trail_guide_agent.py`
-3. **Evaluate**: Run evaluators in `src/evaluators/`
-4. **Compare models**: Use notebooks in `src/agents/model_comparison/`
-5. **Deploy**: Use `azd` commands to deploy to Azure
-
-## Guidance
-
-### Region Availability
-
-ChecKey Dependencies
-
-This project uses the following key packages:
+## Key Dependencies
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `azure-ai-projects` | `>=1.0.0b1` | Azure AI Foundry SDK (preview) |
+| `azure-ai-projects` | `>=1.0.0b1` | Microsoft Foundry SDK (preview) |
 | `azure-identity` | `>=1.15.0` | Azure authentication |
 | `pandas` | `>=2.1.0` | Data processing for evaluations |
 | `pytest` | `>=7.4.0` | Testing framework |
 | `python-dotenv` | `>=1.0.0` | Environment configuration |
 
-> **Note**: The preview version (`b1` or later) of `azure-ai-projects` is required for agent functionality.
+> **Note**: This project requires the **preview version** of `azure-ai-projects` for agent functionality.
 
-### Security Guidelines
-Contributing
+## Testing
 
-Contributions are welcome! Please follow these guidelines:
+Run the test suite:
+```powershell
+pytest src/tests/
+```
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Interactive agent testing:
+```powershell
+python src\tests\interact_with_agent.py
+```
+
+## Resource Cleanup
+
+To prevent unnecessary charges, clean up resources after completing the workshop:
+
+```powershell
+azd down
+```
+
+Alternatively, delete the resource group directly from the Azure Portal.
+
+## Cost Considerations
+
+Pricing varies by region and usage. The majority of resources use usage-based pricing:
+
+- **Microsoft Foundry**: Standard tier with Global Standard models (gpt-4.1)
+- **Application Insights**: Pay-as-you-go based on data ingestion
+- **Log Analytics**: Pay-as-you-go based on data ingested
+
+⚠️ Remember to run `azd down` when finished to avoid unnecessary costs.
+
+## Security Best Practices
+
+This project implements Azure security best practices:
+
+- **Managed Identity**: Keyless authentication using DefaultAzureCredential
+- **No hardcoded secrets**: All credentials via environment variables
+- **Principle of least privilege**: Minimal required permissions
+
+For production deployments, consider:
+- Enable [Microsoft Defender for Cloud](https://learn.microsoft.com/azure/defender-for-cloud/)
+- Implement network security controls and private endpoints
+- Enable [Microsoft Purview](https://learn.microsoft.com/azure/purview/) for data governance
 
 ## Support
 
-For issues and questions:
 - **GitHub Issues**: Report bugs or request features
-- **Documentation**: Check the `docs/` directory
-- **Microsoft Learn**: [Azure AI Foundry documentation](https://learn.microsoft.com/azure/ai-foundry/)
+- **Documentation**: See the `docs/` directory
+- **Microsoft Learn**: [Microsoft Foundry documentation](https://learn.microsoft.com/azure/ai-foundry/)
 
 ## License
 
 This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
 
-## 
-This project implements Azure security best practices:
-
-- **Managed Identity**: Keyless authentication between services
-- **No hardcoded secrets**: All credentials via Azure Key Vault or environment variables
-- **GitHub secret scanning**: Enabled for credential detection
-- **Principle of least privilege**: Minimal required permissions
-
-Additional security measures to consider for production:
-
-- Enable [Microsoft Defender for Cloud](https://learn.microsoft.com/azure/defender-for-cloud/)
-- Implement [Virtual Network isolation](https://learn.microsoft.com/azure/container-apps/networking)
-- Configure [Azure Firewall](https://learn.microsoft.com/azure/container-apps/waf-app-gateway)
-- Enable [Microsoft Purview](https://learn.microsoft.com/azure/purview/) for data governance
-
-3. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-   
-   > ⚠️ **Important**: This project requires the **preview version** of `azure-ai-projects` (version 2.0.0b3 or later) to access the `PromptAgentDefinition` class and other agent features.
-
-4. **Set up environment variables**:
-   Create a `.env` file in the root directory:
-   ```bash
-   AZURE_AI_PROJECT_ENDPOINT=https://your-project.api.azureml.ms
-   AGENT_NAME=trail-guide
-   MODEL_NAME=gpt-4o-mini
-   ```
-
-5. **Provision Azure infrastructure**:
-   ```bash
-   azd auth login
-   azd up
-   ```
-
-### Quick Start - Run the Trail Guide Agent
-
-```bash
-python src/agents/trail_guide_agent/trail_guide_agent.py
-```
-
-Expected output:
-```
-Agent created (id: trail-guide:1, name: trail-guide, version: 1)
-```
-| Resource | Description |
-|----------|-------------|
-| [Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry) | Provides a collaborative workspace for AI development with access to models, data, and compute resources |
-| [Application Insights](https://learn.microsoft.com/azure/azure-monitor/app/app-insights-overview) | Provides application performance monitoring, logging, and telemetry for debugging and optimization |
-| [Log Analytics Workspace](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-workspace-overview) | Collects and analyzes telemetry data for monitoring and troubleshooting |
-
-### Architecture Diagram
-
-```mermaid
-graph TB
-    Dev[👤 Agent Developer]
-    Dev -->|1. develop & test<br/>agent locally| Code[Local Agent Code]
-    Dev -->|2. deploy agent| AIFP
-    Dev -->|3. query agent| AIFP
-
-    subgraph "Azure Resource Group"
-        subgraph "Azure AI Foundry Account"
-            AIFP[Azure AI Foundry<br/>Project]
-            Models[Model Deployments]
-        end
-        
-        subgraph "Monitoring"
-            AI[Application Insights]
-            LA[Log Analytics]
-        end
-    end
-    
-    %% Connections
-    AIFP --> Models
-    AIFP --> AI
-    AI --> LA
-    
-    %% Styling
-    classDef primary fill:#0078d4,stroke:#005a9e,stroke-width:2px,color:#fff
-    classDef secondary fill:#00bcf2,stroke:#0099bc,stroke-width:2px,color:#fff
-    classDef monitoring fill:#50e6ff,stroke:#0099bc,stroke-width:1px,color:#000
-    
-    class AIFP,Models primary
-    class AI,LA monitoring
-```
-
-The template is parametrized and can be configured with additional resources:
-
-* Deploy AI models by setting `AI_PROJECT_DEPLOYMENTS` with a list of model deployment configs
-* Enable monitoring with `ENABLE_MONITORING=true` (enabled by default)
-
-## Getting Started
-
-Note: this repository is not meant to be cloned, but to be consumed as a template in your own project:
-
-```bash
-azd init --template Azure-Samples/ai-foundry-starter-basic
-```
-
-### Prerequisites
-
-* Install [azd](https://aka.ms/install-azd)
-  * Windows: `winget install microsoft.azd`
-  * Linux: `curl -fsSL https://aka.ms/install-azd.sh | bash`
-  * MacOS: `brew tap azure/azd && brew install azd`
-
-### Quickstart
-
-1. Bring down the template code:
-
-    ```shell
-    azd init --template Azure-Samples/ai-foundry-starter-basic
-    ```
-
-    This will perform a git clone
-
-2. Sign into your Azure account:
-
-    ```shell
-    azd auth login
-    ```
-
-3. Download a sample agent from GitHub:
-
-    ```shell
-    azd ai agent init -m <repo-path-to-agent.yaml>
-    ```
-
-You'll find agent samples in the [`foundry-samples` repo](https://github.com/azure-ai-foundry/foundry-samples/tree/main/samples/microsoft/python/getting-started-agents/hosted-agents).
-
-## Guidance
-
-### Region Availability
-
-This template does not use specific models. The model deployments are a parameter of the template. Each model may not be available in all Azure regions. Check for [up-to-date region availability of Microsoft Foundry](https://learn.microsoft.com/en-us/azure/ai-foundry/reference/region-support) and in particular the [Agent Service](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/model-region-support?tabs=global-standard).
-
-## Resource Clean-up
-
-To prevent incurring unnecessary charges, it's important to clean up your Azure resources after completing your work with the application.
-
-- **When to Clean Up:**
-  - After you have finished testing or demonstrating the application.
-  - If the application is no longer needed or you have transitioned to a different project or environment.
-  - When you have completed development and are ready to decommission the application.
-
-- **Deleting Resources:**
-  To delete all associated resources and shut down the application, execute the following command:
-  
-    ```bash
-    azd down
-    ```
-
-    Please note that this process may take up to 20 minutes to complete.
-
-⚠️ Alternatively, you can delete the resource group directly from the Azure Portal to clean up resources.
-
-### Costs
-
-Pricing varies per region and usage, so it isn't possible to predict exact costs for your usage.
-The majority of the Azure resources used in this infrastructure are on usage-based pricing tiers.
-
-You can try the [Azure pricing calculator](https://azure.microsoft.com/pricing/calculator) for the resources deployed in this template.
-
-* **Microsoft Foundry**: Standard tier. [Pricing](https://azure.microsoft.com/pricing/details/ai-foundry/)
-* **Azure AI Services**: S0 tier, defaults to gpt-4o-mini. Pricing is based on token count. [Pricing](https://azure.microsoft.com/pricing/details/cognitive-services/)
-* **Log Analytics**: Pay-as-you-go tier. Costs based on data ingested. [Pricing](https://azure.microsoft.com/pricing/details/monitor/)
-* **Application Insights**: Part of Azure Monitor. Pricing based on data ingestion. [Pricing](https://azure.microsoft.com/pricing/details/monitor/)
-
-⚠️ To avoid unnecessary costs, remember to take down your app if it's no longer in use, either by deleting the resource group in the Portal or running `azd down`.
-
-### Security Guidelines
-
-This project implements Azure security best practices:
-
-- **Managed Identity**: Keyless authentication between services for local development and deployment
-- **No hardcoded secrets**: All credentials via Azure Key Vault or environment variables
-- **GitHub secret scanning**: Enabled for credential detection
-- **Principle of least privilege**: Minimal required permissions
-
-Additional security measures to consider for production:
-
-- Enable [Microsoft Defender for Cloud](https://learn.microsoft.com/azure/defender-for-cloud/) to secure your Azure resources
-- Implement network security controls and private endpoints where applicable
-- Enable [Microsoft Purview](https://learn.microsoft.com/azure/purview/) for data governance
-- Review and apply [AI security best practices](https://learn.microsoft.com/azure/ai-foundry/concepts/security)
-
-> **Important Security Notice**  
-> This template has been built to showcase Microsoft Azure specific services and tools. We strongly advise customers not to make this code part of their production environments without implementing additional security features. For a comprehensive list of best practices, [visit our official documentation](https://learn.microsoft.com/azure/ai-foundry/).
-
-## Additional Disclaimers
+## Disclaimers
 
 **Trademarks** This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft’s Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general). Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party’s policies.
 
