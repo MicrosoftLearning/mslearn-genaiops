@@ -8,7 +8,7 @@ lab:
 
 This exercise takes approximately **20 minutes**.
 
-> **Note**: This lab uses a pre-configured lab environment with Visual Studio Code, Azure CLI, and Python already installed.
+> **Note**: This lab assumes a pre-configured lab environment with Visual Studio Code, Azure CLI, and Python already installed.
 
 ## Introduction
 

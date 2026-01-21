@@ -1,195 +1,255 @@
 ---
 lab:
-    title: 'Manual Evaluation Workflows'
-    description: 'Create structured evaluation datasets, conduct quality assessments, and implement collaborative evaluation using GitHub workflows.'
+    title: 'Manual evaluation workflows'
+    description: 'Perform manual quality assessments of AI agents and compare different versions using structured evaluation criteria.'
 ---
 
-## Orchestrate a RAG system
+# Manual evaluation workflows
 
-Retrieval-Augmented Generation (RAG) systems combine the power of large language models with efficient retrieval mechanisms to enhance the accuracy and relevance of generated responses. By leveraging LangChain for orchestration and Azure AI Foundry for AI capabilities, we can create a robust pipeline that retrieves relevant information from a dataset and generates coherent responses. In this exercise, you will go through the steps of setting up your environment, preprocessing data, creating embeddings, and building a index, ultimately enabling you to implement a RAG system effectively.
+This exercise takes approximately **30 minutes**.
 
-This exercise will take approximately **30** minutes.
+> **Note**: This lab assumes a pre-configured lab environment with Visual Studio Code, Azure CLI, and Python already installed.
 
-## Scenario
+## Introduction
 
-Imagine you want to build an app that gives recommendations about hotels in London. In the app, you want an agent that can not only recommend hotels but answer questions that the users might have about them.
+In this exercise, you'll manually evaluate different versions of the Trail Guide Agent to assess their quality, accuracy, and user experience. You'll use structured evaluation criteria to compare agent responses, document your findings, and make data-driven decisions about which version performs best.
 
-You've selected a GPT-4 model to provide generative answers. You now want to put together a RAG system that will provide grounding data to the model based on other users reviews, guiding the chat's behavior into giving personalized recommendations.
+You'll deploy an agent, test it with specific scenarios, evaluate responses against defined criteria, and document your assessment. This will help you understand the importance of manual evaluation in the AI development lifecycle and how to conduct thorough quality assessments.
 
-Let's start by deploying the necessary resources to build this application.
+## Set up the environment
 
-## Create an Azure AI hub and project
+To complete the tasks in this exercise, you need:
 
-You can create an Azure AI hub and project manually through the Azure AI Foundry portal, as well as deploy the models used in the exercise. However, you can also automate this process through the use of a template application with [Azure Developer CLI (azd)](https://aka.ms/azd).
+- Visual Studio Code
+- Azure subscription with Microsoft Foundry access
+- Git and GitHub account
+- Python 3.9 or later
+- Azure CLI and Azure Developer CLI (azd) installed
 
-1. In a web browser, open [Azure portal](https://portal.azure.com) at `https://portal.azure.com` and sign in using your Azure credentials.
+All steps in this lab will be performed using Visual Studio Code and its integrated terminal.
 
-1. Use the **[\>_]** button to the right of the search bar at the top of the page to create a new Cloud Shell in the Azure portal, selecting a ***PowerShell*** environment. The cloud shell provides a command line interface in a pane at the bottom of the Azure portal. For more information about using the Azure Cloud Shell, see the [Azure Cloud Shell documentation](https://docs.microsoft.com/azure/cloud-shell/overview).
+### Create repository from template
 
-    > **Note**: If you have previously created a cloud shell that uses a *Bash* environment, switch it to ***PowerShell***.
+You'll start by creating your own repository from the template to practice realistic workflows.
 
-1. In the Cloud Shell toolbar, in the **Settings** menu, select **Go to Classic version**.
+1. In a web browser, navigate to `https://github.com/MicrosoftLearning/mslearn-genaiops`.
+1. Select **Use this template** > **Create a new repository**.
+1. Enter a name for your repository (e.g., `mslearn-genaiops`).
+1. Set the repository to **Public** or **Private** based on your preference.
+1. Select **Create repository**.
 
-    **<font color="red">Ensure you've switched to the Classic version of the Cloud Shell before continuing.</font>**
+### Clone the repository in Visual Studio Code
 
-1. In the PowerShell pane, enter the following commands to clone this exercise's repo:
+After creating your repository, clone it to your local machine.
+
+1. In Visual Studio Code, open the Command Palette by pressing **Ctrl+Shift+P**.
+1. Type **Git: Clone** and select it.
+1. Enter your repository URL: `https://github.com/[your-username]/mslearn-genaiops.git`
+1. Select a location on your local machine to clone the repository.
+1. When prompted, select **Open** to open the cloned repository in VS Code.
+
+### Deploy Microsoft Foundry resources
+
+Now you'll use the Azure Developer CLI to deploy all required Azure resources.
+
+1. In Visual Studio Code, open a terminal by selecting **Terminal** > **New Terminal** from the menu.
+
+1. Authenticate with Azure Developer CLI:
 
     ```powershell
-   rm -r mslearn-genaiops -f
-   git clone https://github.com/MicrosoftLearning/mslearn-genaiops
+    azd auth login
     ```
 
-1. After the repo has been cloned, enter the following commands to initialize the Starter template. 
+    This opens a browser window for Azure authentication. Sign in with your Azure credentials.
+
+1. Authenticate with Azure CLI:
+
+    ```powershell
+    az login
+    ```
+
+    Sign in with your Azure credentials when prompted.
+
+1. Provision resources:
+
+    ```powershell
+    azd up
+    ```
+
+    When prompted, provide:
+    - **Environment name** (e.g., `dev`, `test`) - Used to name all resources
+    - **Azure subscription** - Where resources will be created
+    - **Location** - Azure region (recommended: Sweden Central)
+
+    The command deploys the infrastructure from the `infra/` folder, creating:
+    - **Resource Group** - Container for all resources
+    - **Foundry (AI Services)** - The hub with access to models like GPT-4.1
+    - **Foundry Project** - Your workspace for creating and managing agents
+    - **Log Analytics Workspace** - Collects logs and telemetry data
+    - **Application Insights** - Monitors agent performance and usage
+
+1. Create a `.env` file with the environment variables:
+
+    ```powershell
+    azd env get-values > .env
+    ```
+
+    This creates a `.env` file in your project root with all the provisioned resource information.
+
+1. Add the agent configuration to your `.env` file:
+
+    ```
+    AGENT_NAME=trail-guide
+    MODEL_NAME=gpt-4.1
+    ```
+
+### Install Python dependencies
+
+With your Azure resources deployed, install the required Python packages to work with Microsoft Foundry.
+
+1. In the VS Code terminal, create and activate a virtual environment:
+
+    ```powershell
+    python -m venv .venv
+    .venv\Scripts\Activate.ps1
+    ```
+
+1. Install the required dependencies:
+
+    ```powershell
+    python -m pip install -r requirements.txt
+    ```
+
+    This installs all necessary dependencies including:
+    - `azure-ai-projects` - SDK for working with AI Foundry agents
+    - `azure-identity` - Azure authentication
+    - `python-dotenv` - Load environment variables
+    - Other evaluation, testing, and development tools
+
+## Deploy trail guide agent
+
+Deploy the first version of the trail guide agent for evaluation.
+
+1. In the VS Code terminal, navigate to the trail guide agent directory:
+
+    ```powershell
+    cd src\agents\trail_guide_agent
+    ```
+
+1. Open the agent creation script (`trail_guide_agent.py`) and locate the line that reads the prompt file:
    
-    ```powershell
-   cd ./mslearn-genaiops/Starter
-   azd init
-    ```
-
-1. Once prompted, give the new environment a name as it will be used as basis for giving unique names to all the provisioned resources.
-        
-1. Next, enter the following command to run the Starter template. It will provision an AI Hub with dependent resources, AI project, AI Services and an online endpoint. It will also deploy the models GPT-4 Turbo, GPT-4o, and GPT-4o mini.
-
-    ```powershell
-   azd up  
-    ```
-
-1. When prompted, choose which subscription you want to use and then choose one of the following locations for resource provision:
-   - East US
-   - East US 2
-   - North Central US
-   - South Central US
-   - Sweden Central
-   - West US
-   - West US 3
-    
-1. Wait for the script to complete - this typically takes around 10 minutes, but in some cases may take longer.
-
-    > **Note**: Azure OpenAI resources are constrained at the tenant level by regional quotas. The listed regions above include default quota for the model type(s) used in this exercise. Randomly choosing a region reduces the risk of a single region reaching its quota limit. In the event of a quota limit being reached, there's a possibility you may need to create another resource group in a different region. Learn more about [model availability per region](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models?tabs=standard%2Cstandard-chat-completions#global-standard-model-availability)
-
-    <details>
-      <summary><b>Troubleshooting tip</b>: No quota available in a given region</summary>
-        <p>If you receive a deployment error for any of the models due to no quota available in the region you chose, try running the following commands:</p>
-        <ul>
-          <pre><code>azd env set AZURE_ENV_NAME new_env_name
-   azd env set AZURE_RESOURCE_GROUP new_rg_name
-   azd env set AZURE_LOCATION new_location
-   azd up</code></pre>
-        Replacing <code>new_env_name</code>, <code>new_rg_name</code>, and <code>new_location</code> with new values. The new location must be one of the regions listed at the beginning of the exercise, e.g <code>eastus2</code>, <code>northcentralus</code>, etc.
-        </ul>
-    </details>
-
-1. Once all resources have been provisioned, use the following commands to fetch the endpoint and access key to your AI Services resource. Note that you must replace `<rg-env_name>` and `<aoai-xxxxxxxxxx>` with the names of your resource group and AI Services resource. Both are printed in the deployment's output.
-
-     ```powershell
-    Get-AzCognitiveServicesAccount -ResourceGroupName <rg-env_name> -Name <aoai-xxxxxxxxxx> | Select-Object -Property endpoint
-     ```
-
-     ```powershell
-    Get-AzCognitiveServicesAccountKey -ResourceGroupName <rg-env_name> -Name <aoai-xxxxxxxxxx> | Select-Object -Property Key1
-     ```
-
-1. Copy these values as they will be used later on.
-
-## Set up your development environment in Cloud Shell
-
-To quickly experiment and iterate, you'll use a set of Python scripts in Cloud Shell.
-
-1. In the Cloud Shell command-line pane, enter the following command to navigate to the folder with the code files used in this exercise:
-
-     ```powershell
-    cd ~/mslearn-genaiops/Files/04/
-     ```
-
-1. Enter the following commands to activate a virtual environment and install the libraries you need:
-
-    ```powershell
-   python -m venv labenv
-   ./labenv/bin/Activate.ps1
-   pip install python-dotenv langchain-text-splitters langchain-community langchain-openai
-    ```
-
-1. Enter the following command to open the configuration file that has been provided:
-
-    ```powershell
-   code .env
-    ```
-
-    The file is opened in a code editor.
-
-1. In the code file, replace the **your_azure_openai_service_endpoint** and **your_azure_openai_service_api_key** placeholders with the endpoint and key values you copied earlier.
-1. *After* you've replaced the placeholders, in the code editor, use the **CTRL+S** command or **Right-click > Save** to save your changes and then use the **CTRL+Q** command or **Right-click > Quit** to close the code editor while keeping the cloud shell command line open.
-
-## Implement RAG
-
-You'll now run a script that ingests and preprocesses data, creates embeddings, and builds a vector store and index, ultimately enabling you to implement a RAG system effectively.
-
-1. Run the following command to **edit the script** that has been provided:
-
-    ```powershell
-   code RAG.py
-    ```
-
-1. In the script, locate **# Initialize the components that will be used from LangChain's suite of integrations**. Below this comment, paste the following code:
-
     ```python
-   # Initialize the components that will be used from LangChain's suite of integrations
-   llm = AzureChatOpenAI(azure_deployment=llm_name)
-   embeddings = AzureOpenAIEmbeddings(azure_deployment=embeddings_name)
-   vector_store = InMemoryVectorStore(embeddings)
+    with open('prompts/v1_instructions.txt', 'r') as f:
+        instructions = f.read().strip()
     ```
 
-1. Review the script and notice that it uses a .csv file with hotel reviews as grounding data. You can see the contents of this file by running the command `download app_hotel_reviews.csv` in the command-line pane and opening the file.
-1. Next, locate **# Split the documents into chunks for embedding and vector storage**. Below this comment, paste the following code:
+    Verify it's configured to read from `v1_instructions.txt`.
 
-    ```python
-   # Split the documents into chunks for embedding and vector storage
-   text_splitter = RecursiveCharacterTextSplitter(
-       chunk_size=200,
-       chunk_overlap=20,
-       add_start_index=True,
-   )
-   all_splits = text_splitter.split_documents(docs)
-    
-   print(f"Split documents into {len(all_splits)} sub-documents.")
-    ```
-
-    The code above will split a set of large documents into smaller chunks. This is important because many embedding models (like those used for semantic search or vector databases) have a token limit and perform better on shorter texts.
-
-1. Next, locate **# Embed the contents of each text chunk and insert these embeddings into a vector store**. Below this comment, paste the following code:
-
-    ```python
-   # Embed the contents of each text chunk and insert these embeddings into a vector store
-   document_ids = vector_store.add_documents(documents=all_splits)
-    ```
-
-1. Next, locate **# Retrieve relevant documents from the vector store based on user input**. Below this comment, paste the following code, observing proper identation:
-
-    ```python
-   # Retrieve relevant documents from the vector store based on user input
-   retrieved_docs = vector_store.similarity_search(question, k=10)
-   docs_content = "\n\n".join(doc.page_content for doc in retrieved_docs)
-    ```
-
-    The code above searches the vector store for the documents most similar to the user's input question. The question is converted into a vector using the same embedding model used for the documents. The system then compares this vector to all stored vectors and retrieves the most similar ones.
-
-1. Save your changes.
-1. **Run the script** by entering the following command in the command-line:
+1. Run the agent creation script:
 
     ```powershell
-   python RAG.py
+    python trail_guide_agent.py
     ```
 
-1. Once the application is running, you can start asking questions such as `Where can I stay in London?` and then follow up with more specific inquiries.
+    You should see output confirming the agent was created:
 
-## Conclusion
+    ```
+    Agent created (id: agent_xxx, name: trail-guide, version: 1)
+    ```
 
-In this exercise you built a typical RAG system with its main components. By using your own documents to inform a model's responses, you provide grounding data used by the LLM when it formulates a response. For an enterprise solution, that means that you can constrain generative AI to your enterprise content.
+    Note the Agent ID for later use.
+
+## Perform manual evaluation
+
+Evaluate the agent's performance using the Microsoft Foundry portal's evaluation features.
+
+### Navigate to the evaluation tab
+
+Access the evaluation interface for your agent.
+
+1. In a web browser, open the [Microsoft Foundry portal](https://ai.azure.com) at `https://ai.azure.com` and sign in using your Azure credentials.
+1. Navigate to **Agents** in the left navigation.
+1. Select your **trail-guide** agent from the list.
+1. Select the **Evaluation** tab at the top of the page.
+1. Select the **Human Evaluation** tab.
+1. Select **Create** to start a new evaluation.
+
+### Create evaluation template
+
+Configure an evaluation template with scoring criteria.
+
+1. In the **Create human evaluation template** dialog, enter the following details:
+   - **Name**: `Trail Guide Quality Assessment`
+   - **Version**: `1`
+   - **Description**: `Evaluation template for trail guide agent responses`
+
+1. Configure the scoring criteria using the **slider** method. Select **Add** under "Scoring method: slider" and add the following three criteria:
+
+   **Criterion 1:**
+   - Question: `Intent resolution: Does the response address what the user was asking for?`
+   - Scale: `1 - 5`
+
+   **Criterion 2:**
+   - Question: `Relevance: How well does the response address the query?`
+   - Scale: `1 - 5`
+
+   **Criterion 3:**
+   - Question: `Groundedness: Does the response stick to factual information?`
+   - Scale: `1 - 5`
+
+1. Add a free-form question for additional feedback. Select **Add** under "Scoring method: free form question":
+   - Question: `Additional comments`
+
+1. Select **Create** to save the evaluation template.
+
+### Create evaluation scenarios
+
+Set up test scenarios to evaluate your agent's responses.
+
+1. Create a new evaluation session using your template.
+1. Add the following test scenarios:
+
+   **Scenario 1: Basic trail recommendation**
+   - Question: *"I'm planning a weekend hiking trip near Seattle. What should I know?"*
+
+   **Scenario 2: Gear recommendations**
+   - Question: *"What gear do I need for a day hike in summer?"*
+
+   **Scenario 3: Safety information**
+   - Question: *"What safety precautions should I take when hiking alone?"*
+
+### Run evaluations
+
+Execute your evaluation scenarios and review the agent's responses.
+
+1. For each scenario, run the agent and observe the response.
+1. Rate each response using the 1-5 slider scale for all three criteria.
+1. Add any relevant observations in the additional comments field.
+1. Complete the evaluation for all three scenarios.
+
+### Review evaluation results
+
+Analyze the evaluation data in the portal.
+
+1. Review the evaluation summary showing average scores across all criteria.
+1. Identify patterns in the agent's performance.
+1. Note specific areas where the agent excels or needs improvement.
+1. Download the evaluation results for future comparison with automated evaluations.
 
 ## Clean up
 
-If you've finished exploring Azure AI Services, you should delete the resources you have created in this exercise to avoid incurring unnecessary Azure costs.
+To avoid incurring unnecessary Azure costs, delete the resources you created in this exercise.
 
-1. Return to the browser tab containing the Azure portal (or re-open the [Azure portal](https://portal.azure.com?azure-portal=true) in a new browser tab) and view the contents of the resource group where you deployed the resources used in this exercise.
-1. On the toolbar, select **Delete resource group**.
-1. Enter the resource group name and confirm that you want to delete it.
+1. In the VS Code terminal, run the following command:
+
+    ```powershell
+    azd down
+    ```
+
+1. When prompted, confirm that you want to delete the resources.
+
+## Next steps
+
+Continue your learning journey by exploring automated evaluation techniques.
+
+In the next lab, you'll learn to automate evaluation processes using scripts and metrics, enabling scalable quality assessment across multiple agent versions.
