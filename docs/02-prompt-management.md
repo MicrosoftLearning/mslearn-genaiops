@@ -1,352 +1,328 @@
 ---
 lab:
     title: 'Develop prompt and agent versions'
-    description: 'Learn to manage agent versions with incremental improvements and Git workflows'
+    description: 'Create and deploy multiple versions of AI agents using prompt engineering and version management in Microsoft Foundry.'
 ---
 
 # Develop prompt and agent versions
 
-## Learning objective
+This exercise takes approximately **30 minutes**.
 
-Learn to manage generative AI agents through version control, implementing incremental improvements from basic functionality to advanced personalization while maintaining traceability between code and deployed systems.
+> **Note**: This lab uses a pre-configured lab environment with Visual Studio Code, Azure CLI, and Python already installed.
 
-## Scenario
+## Introduction
 
-As part of Adventure Works' AI initiative, you're tasked with developing an intelligent trail guide agent that helps hikers plan outdoor adventures. The agent needs to evolve from basic functionality to advanced personalization while maintaining excellent user experience.
+In this exercise, you'll deploy multiple versions of a Trail Guide Agent to Microsoft Foundry, each with progressively enhanced capabilities. You'll use Python scripts to create agents with different system prompts, test their behavior in the portal, and run automated tests to compare their performance.
 
-Starting with basic trail and accommodation assistance, you'll progressively enhance the agent with sentiment analysis for hiker satisfaction, expertise in safety and weather conditions, and personalization features for returning customers. Each version must be tracked, tested, and deployed independently while maintaining the ability to rollback or compare performance across different user segments.
+You'll modify a single Python script to deploy three agent versions (V1, V2, and V3), review each deployment in the Microsoft Foundry portal, and analyze how prompt evolution affects agent behavior. This will help you understand version management strategies and the relationship between programmatic deployment and portal-based agent management.
 
-*Reference the [business scenario](scenario.md) for complete context about Adventure Works' objectives and customer needs.*
+## Set up the environment
 
-## Overview
+To complete the tasks in this exercise, you need:
 
-This lab demonstrates version management and iterative development of AI agents using Microsoft Foundry. You'll work with Python scripts to deploy different versions of a Trail Guide Agent, then navigate to the portal to review your deployments and understand the relationship between programmatic deployment and portal management.
-
-## Lab structure
-
-1. **Deploy agent versions using single Python script** - Modify script to deploy V1, V2, and V3 versions
-2. **Review deployments in Microsoft Foundry portal** - Navigate to portal to see your agents
-3. **Compare prompt evolution** - Understand how prompts evolved across versions
-4. **Run comprehensive tests** - Validate agent performance across versions
-5. **Compare version improvements** - Analyze evolution from V1 → V2 → V3
-
-## Prerequisites
-
-- Python 3.9 or later
 - Visual Studio Code
-- Git and GitHub account  
 - Azure subscription with Microsoft Foundry access
-- Basic understanding of Python and Git workflows
+- Git and GitHub account
+- Python 3.9 or later
+- Azure CLI and Azure Developer CLI (azd) installed
 
-## Lab setup
+All steps in this lab will be performed using Visual Studio Code and its integrated terminal.
 
 ### Create repository from template
 
-To complete the tasks in this exercise, you'll create your own repository from the template to practice realistic version control workflows.
+You'll start by creating your own repository from the template to practice realistic workflows.
 
-1. Navigate to `https://github.com/[your-org]/mslearn-genaiops` in your web browser.
-1. Click **Use this template** → **Create a new repository**.
-1. Enter a name for your repository such as `mslearn-genaiops`.
+1. In a web browser, navigate to `https://github.com/MicrosoftLearning/mslearn-genaiops`.
+1. Select **Use this template** > **Create a new repository**.
+1. Enter a name for your repository (e.g., `mslearn-genaiops`).
 1. Set the repository to **Public** or **Private** based on your preference.
-1. Click **Create repository**.
-1. Open your terminal and clone the repository:
+1. Select **Create repository**.
 
-   ```bash
-   git clone https://github.com/[your-username]/mslearn-genaiops.git
-   cd mslearn-genaiops
-   ```
+### Clone the repository in Visual Studio Code
 
-1. Open the repository in Visual Studio Code:
+After creating your repository, clone it to your local machine.
 
-   ```bash
-   code .
-   ```
+1. In Visual Studio Code, open the Command Palette by pressing **Ctrl+Shift+P**.
+1. Type **Git: Clone** and select it.
+1. Enter your repository URL: `https://github.com/[your-username]/mslearn-genaiops.git`
+1. Select a location on your local machine to clone the repository.
+1. When prompted, select **Open** to open the cloned repository in VS Code.
 
-4. **Configure your environment variables** by editing the `.env` file with your Azure AI Projects details:
-   ```bash
-   PROJECT_ENDPOINT=https://your-project-endpoint.cognitiveservices.azure.com
-   AGENT_NAME=trail-guide-v1
-   MODEL_DEPLOYMENT_NAME=gpt-4o-mini
-   ```
+### Deploy Microsoft Foundry resources
 
-5. **Install the required Python dependencies**:
+Now you'll use the Azure Developer CLI to deploy all required Azure resources.
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+1. In Visual Studio Code, open a terminal by selecting **Terminal** > **New Terminal** from the menu.
 
-   This command installs the Azure AI Projects SDK and all required dependencies.
+1. Authenticate with Azure Developer CLI:
 
-## Deploy and review agent versions
+    ```powershell
+    azd auth login
+    ```
 
-You'll deploy two agent versions using Python scripts, then review them in the Microsoft Foundry portal.
+    This opens a browser window for Azure authentication. Sign in with your Azure credentials.
 
-### Deploy Trail Guide Agent V1
+1. Authenticate with Azure CLI:
 
-1. Navigate to the trail guide agent directory:
+    ```powershell
+    az login
+    ```
 
-   ```bash
-   cd src/agents/trail_guide_agent
-   ```
+    Sign in with your Azure credentials when prompted.
 
-1. **Review the agent creation script** (`trail_guide_agent.py`) to understand the pattern:
-   ```python
-   # Read instructions from prompt file
-   # TODO: Update this line to point to the correct instruction file
-   # v1_instructions.txt - Basic trail guide
-   # v2_instructions.txt - Enhanced with personalization 
-   # v3_instructions.txt - Production-ready with advanced capabilities
-   with open('prompts/v1_instructions.txt', 'r') as f:
-       instructions = f.read().strip()
-   ```
+1. Provision resources:
 
-1. **Verify the script is configured for V1** by ensuring it reads from `v1_instructions.txt`.
+    ```powershell
+    azd up
+    ```
+
+    When prompted, provide:
+    - **Environment name** (e.g., `dev`, `test`) - Used to name all resources
+    - **Azure subscription** - Where resources will be created
+    - **Location** - Azure region (recommended: Sweden Central)
+
+    The command deploys the infrastructure from the `infra/` folder, creating:
+    - **Resource Group** - Container for all resources
+    - **Foundry (AI Services)** - The hub with access to models like GPT-4.1
+    - **Foundry Project** - Your workspace for creating and managing agents
+    - **Log Analytics Workspace** - Collects logs and telemetry data
+    - **Application Insights** - Monitors agent performance and usage
+
+1. Create a `.env` file with the environment variables:
+
+    ```powershell
+    azd env get-values > .env
+    ```
+
+    This creates a `.env` file in your project root with all the provisioned resource information.
+
+1. Add the agent configuration to your `.env` file:
+
+    ```
+    AGENT_NAME=trail-guide
+    MODEL_NAME=gpt-4.1
+    ```
+
+### Install Python dependencies
+
+With your Azure resources deployed, install the required Python packages to work with Microsoft Foundry.
+
+1. In the VS Code terminal, create and activate a virtual environment:
+
+    ```powershell
+    python -m venv .venv
+    .venv\Scripts\Activate.ps1
+    ```
+
+1. Install the required dependencies:
+
+    ```powershell
+    python -m pip install -r requirements.txt
+    ```
+
+    This installs all necessary dependencies including:
+    - `azure-ai-projects` - SDK for working with AI Foundry agents
+    - `azure-identity` - Azure authentication
+    - `python-dotenv` - Load environment variables
+    - Other evaluation, testing, and development tools
+
+## Deploy and test agent versions
+
+You'll deploy three versions of the Trail Guide Agent, each with different system prompts that progressively enhance capabilities.
+
+### Deploy trail guide agent V1
+
+Start by deploying the first version of the trail guide agent.
+
+1. In the VS Code terminal, navigate to the trail guide agent directory:
+
+    ```powershell
+    cd src\agents\trail_guide_agent
+    ```
+
+1. Open the agent creation script (`trail_guide_agent.py`) and locate the line that reads the prompt file:
+   
+    ```python
+    with open('prompts/v1_instructions.txt', 'r') as f:
+        instructions = f.read().strip()
+    ```
+
+    Verify it's configured to read from `v1_instructions.txt`.
 
 1. Run the agent creation script:
 
-   ```bash
-   python trail_guide_agent.py
-   ```
+    ```powershell
+    python trail_guide_agent.py
+    ```
 
-1. **Observe the deployment output** and note the following information:
-   - The Agent ID that gets generated
-   - The agent name and version number
-   - The simple creation pattern used
+    You should see output confirming the agent was created:
 
-1. **Navigate to the Azure AI Foundry portal** at `https://ai.azure.com/build/agents`.
-1. **Find your agent** in the list and click on it to explore:
-   - The system instructions (currently from v1_instructions.txt)
-   - The model configuration
-   - The deployment parameters
+    ```
+    Agent created (id: agent_xxx, name: trail-guide, version: 1)
+    ```
 
-1. **Test the agent interactively** in the portal by asking it questions like:
+    Note the Agent ID for later use.
+
+1. Commit your changes and tag the version:
+
+    ```powershell
+    git add trail_guide_agent.py
+    git commit -m "Deploy trail guide agent V1"
+    git tag v1
+    ```
+
+### Test agent V1
+
+Verify your agent is working by testing it in the Microsoft Foundry portal.
+
+1. In a web browser, open the [Microsoft Foundry portal](https://ai.azure.com) at `https://ai.azure.com` and sign in using your Azure credentials.
+1. Navigate to **Agents** in the left navigation.
+1. Select your trail-guide agent from the list.
+1. Test the agent by asking questions like:
    - "What gear do I need for a day hike?"
    - "Recommend a trail near Seattle for beginners"
 
-### Deploy Trail Guide Agent V2
+### Deploy trail guide agent V2
 
-1. **Copy the Agent ID from V1** for comparison:
-   - Note the Agent ID from the V1 output
-   - Set it as an environment variable:
-   ```bash
-   export V1_AGENT_ID="your-v1-agent-id-here"
-   ```
+Next, deploy a second version with enhanced capabilities.
 
-1. **Update your environment variables** for V2:
-   ```bash
-   AGENT_NAME=trail-guide-v2
-   ```
-
-1. **Modify the script** to use V2 instructions by editing `trail_guide_agent.py`:
+1. Open `trail_guide_agent.py` and update the prompt file path:
    
-   **Find this line:**
+   Change:
    ```python
    with open('prompts/v1_instructions.txt', 'r') as f:
    ```
    
-   **Change it to:**
+   To:
    ```python
    with open('prompts/v2_instructions.txt', 'r') as f:
    ```
 
 1. Run the agent creation script:
 
-   ```bash
-   python trail_guide_agent.py
-   ```
+    ```powershell
+    python trail_guide_agent.py
+    ```
 
-1. **Navigate to both agents in the portal** and compare their configurations side-by-side.
-1. **Notice the enhanced features in V2** by comparing the instructions:
-   - More detailed and nuanced system prompt
-   - Personalization capabilities
-   - Enhanced response quality and detail
+    You should see output confirming the agent was created:
 
-## Review prompt evolution
+    ```
+    Agent created (id: agent_yyy, name: trail-guide, version: 2)
+    ```
 
-Now examine how the prompts evolved across versions to understand the progression from basic to advanced capabilities.
+    Note the Agent ID for later use.
 
-### Create V3 agent
+1. Commit your changes and tag the version:
 
-1. **Update your environment variables** for V3:
-   ```bash
-   AGENT_NAME=trail-guide-v3
-   ```
+    ```powershell
+    git add trail_guide_agent.py
+    git commit -m "Deploy trail guide agent V2 with enhanced capabilities"
+    git tag v2
+    ```
 
-1. **Modify the script** to use V3 instructions by editing `trail_guide_agent.py`:
+### Deploy trail guide agent V3
+
+Finally, deploy the third version with production-ready features.
+
+1. Open `trail_guide_agent.py` and update the prompt file path:
    
-   **Find this line:**
+   Change:
    ```python
    with open('prompts/v2_instructions.txt', 'r') as f:
    ```
    
-   **Change it to:**
+   To:
    ```python
    with open('prompts/v3_instructions.txt', 'r') as f:
    ```
 
 1. Run the agent creation script:
 
-   ```bash
-   python trail_guide_agent.py
-   ```
+    ```powershell
+    python trail_guide_agent.py
+    ```
 
-1. **Set the Agent ID as an environment variable:**
+    You should see output confirming the agent was created:
 
-   ```bash
-   export V3_AGENT_ID="your-v3-agent-id-here"
-   ```
+    ```
+    Agent created (id: agent_zzz, name: trail-guide, version: 3)
+    ```
 
-### Compare prompt evolution
+    Note the Agent ID for later use.
 
-1. **Review the prompt files** in the `prompts/` directory:
+1. Commit your changes and tag the version:
+
+    ```powershell
+    git add trail_guide_agent.py
+    git commit -m "Deploy trail guide agent V3 with production features"
+    git tag v3
+    ```
+
+## Compare agent versions
+
+Now that you have three agent versions deployed, compare their behavior and prompt evolution.
+
+### Review version history
+
+Examine your Git tags to see the version history.
+
+1. View all version tags:
+
+    ```powershell
+    git tag
+    ```
+
+    You should see:
+    ```
+    v1
+    v2
+    v3
+    ```
+
+1. View the commit history with tags:
+
+    ```powershell
+    git log --oneline --decorate
+    ```
+
+    This shows each deployment milestone marked with its corresponding tag.
+
+### Review prompt differences
+
+Examine the prompt files to understand how each version evolved.
+
+1. In VS Code, open the three prompt files in the `prompts/` directory:
    - `v1_instructions.txt` - Basic trail guide functionality
    - `v2_instructions.txt` - Enhanced with personalization
    - `v3_instructions.txt` - Production-ready with advanced capabilities
 
-1. **Compare the instruction content** and notice:
-   - **V1 → V2**: Added personalization factors and knowledge base references
+1. Notice the evolution:
+   - **V1 → V2**: Added personalization and enhanced guidance
    - **V2 → V3**: Added structured framework and enterprise features
-   - **Progression**: From simple to comprehensive guidance
 
-1. **Test each agent version** in the Azure AI Foundry portal to see how the different prompts affect behavior.
-
-### Why this workflow matters
-
-- **Consistency**: Single script prevents version drift
-- **Maintainability**: Prompt changes don't require code updates
-- **Learning**: Students understand which prompt creates which agent
-- **Version control**: Clear tracking of prompt evolution
-- **Testing integration**: Portal agents can be included in automated tests
-
-## Run comprehensive tests
-
-Use the automated test suite to validate all agent versions and compare their performance.
-
-### Set up all agent IDs
-
-1. Configure environment variables with the Agent IDs from your deployed agents:
-
-   ```bash
-   export V1_AGENT_ID="your-v1-agent-id"
-   export V2_AGENT_ID="your-v2-agent-id" 
-   export V3_AGENT_ID="your-v3-agent-id"
-   ```
-
-### Execute comprehensive tests
-
-1. Navigate to the tests directory:
-
-   ```bash
-   cd src/tests
-   ```
-
-1. Run the comprehensive test suite:
-
-   ```bash
-   python test_trail_guide_agents.py
-   ```
-
-1. **Review the test results** which include:
-   - **Functional tests**: Validate basic functionality across all versions
-   - **Performance tests**: Measure response times and quality metrics
-   - **Regression tests**: Compare versions to ensure improvements
-   - **Feature validation**: Verify expected capabilities are working correctly
-
-### Analyze test outputs
-
-The test suite generates several types of output:
-
-- **Individual results**: `test_results/functional-v1-[timestamp].json`
-- **Performance metrics**: `test_results/performance-v2-[timestamp].json`
-- **Version comparisons**: `test_results/regression-[timestamp].json`
-- **Summary report**: `test_results/test-report-[timestamp].md`
-
-### Key metrics to observe
-
-- **Success rate**: Percentage of tests passing per version
-- **Response time**: Average time for agent responses
-- **Feature coverage**: Which capabilities are working in each version
-- **Quality indicators**: Relevance and completeness of responses
-
-## Analyze version management insights
-
-Analyze the evolution from V1 → V2 → V3 and understand different development workflows.
-
-### Compare development approaches
-
-1. **V1 & V2**: Script-based deployment
-   - **Advantages**: Version controlled, repeatable, testable
-   - **Use case**: Initial development, experimentation
-   - **Workflow**: Code → Deploy → Test → Iterate
-
-2. **V3**: Portal-created with documentation
-   - **Advantages**: Visual interface, rapid prototyping, business user friendly
-   - **Use case**: Production configuration, stakeholder collaboration
-   - **Workflow**: Portal → Document → Test → Maintain
-
-### Analyze version evolution
-
-1. Navigate back to the trail guide agent directory:
-
-   ```bash
-   cd src/agents/trail_guide_agent
-   ```
-
-1. Run a comparison test by switching between agent versions:
-
-   **Test V1:**
-   ```bash
-   # Update script to use v1_instructions.txt
-   python trail_guide_agent.py
-   ```
+1. In the Microsoft Foundry portal, test each agent version with the same question to observe behavior differences.
    
-   **Test V2:**
-   ```bash
-   # Update script to use v2_instructions.txt  
-   python trail_guide_agent.py
-   ```
+   Try this question: *"I'm planning a weekend hiking trip near Seattle. What should I know?"*
    
-   **Test V3:**
-   ```bash
-   # Update script to use v3_instructions.txt
-   python trail_guide_agent.py
-   ```
+   Observe how each version responds:
+   - **V1**: Provides basic trail recommendations and general advice
+   - **V2**: Adds personalized suggestions based on experience level and preferences
+   - **V3**: Includes comprehensive guidance with safety considerations, weather factors, and detailed planning steps
 
-1. **Review the key improvements** across versions:
-   - **V1 → V2**: Enhanced prompts, tool integration, knowledge base connectivity
-   - **V2 → V3**: Multi-modal capabilities, enterprise features, real-time data access
-   - **Performance metrics**: Response times, accuracy scores, feature coverage
+## Clean up
 
-1. **Examine the comparison results** saved in the `comparisons/` folder.
+To avoid incurring unnecessary Azure costs, delete the resources you created in this exercise.
 
-### Best practices learned
+1. In the VS Code terminal, run the following command:
 
-1. **Hybrid workflow**:
-   - Use scripts for initial development and testing
-   - Use portal for production configuration and stakeholder review
-   - Always document portal changes in version control
+    ```powershell
+    azd down
+    ```
 
-2. **Testing integration**:
-   - Automated tests work with both script-deployed and portal-created agents
-   - Maintain test coverage across all versions
-   - Use regression tests to prevent capability loss
-
-3. **Traceability**:
-   - Keep deployment records in `deployments/` folder
-   - Document portal changes with configuration scripts
-   - Maintain test results for compliance and analysis
-
-## Key takeaways
-
-You've successfully implemented a comprehensive prompt management system that provides:
-
-✅ **Script-based deployment**: V1 and V2 agents deployed programmatically  
-✅ **Portal integration**: V3 agent created via UI with documentation workflow  
-✅ **Version traceability**: All agents documented in version control  
-✅ **Automated testing**: Comprehensive test suite across all versions  
-✅ **Performance comparison**: Metrics and analytics for version evolution  
-✅ **Hybrid workflow**: Best practices for code + portal development  
+1. When prompted, confirm that you want to delete the resources.
 
 ## Next steps
+
+Continue your learning journey by exploring agent evaluation techniques.
 
 In the next lab, you'll learn to evaluate these agent versions using manual testing processes to determine which performs better for different scenarios and customer segments.
