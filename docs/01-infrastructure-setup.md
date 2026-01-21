@@ -68,7 +68,7 @@ You'll use the Azure Developer CLI to deploy all required Azure resources using 
     ```
 
     When prompted, provide:
-    - **Environment name** (e.g., `dev`, `test`) - Used to name all resources
+    - **Environment name** (e.g., `dev-trail-guide`) - Used to name all resources
     - **Azure subscription** - Where resources will be created
     - **Location** - Azure region (recommended: Sweden Central)
 
