@@ -183,6 +183,11 @@ Configure an evaluation template with scoring criteria.
    - **Version**: `1`
    - **Description**: `Evaluation template for trail guide agent responses`
 
+1. Remove the default thumb up/down scoring criteria:
+   - Locate the **Scoring method: thumb up/down** section
+   - Select the trash icon next to **Groundedness** to remove it
+   - Select the trash icon next to **Fluency** to remove it
+
 1. Configure the scoring criteria using the **slider** method. Select **Add** under "Scoring method: slider" and add the following three criteria:
 
    **Criterion 1:**
@@ -197,44 +202,77 @@ Configure an evaluation template with scoring criteria.
    - Question: `Groundedness: Does the response stick to factual information?`
    - Scale: `1 - 5`
 
+1. Remove the default multiple choice evaluation:
+   - Locate the **Scoring method: multiple choice** section
+   - Select the trash icon next to **How would you rate the quality of this response?** to remove it
+
 1. Add a free-form question for additional feedback. Select **Add** under "Scoring method: free form question":
    - Question: `Additional comments`
 
 1. Select **Create** to save the evaluation template.
 
-### Create evaluation scenarios
+1. Set the template as active:
+   - Locate your **Trail Guide Quality Assessment** template in the template table
+   - Select **Set as active** to enable it for evaluation
 
-Set up test scenarios to evaluate your agent's responses.
+### Test agent and conduct evaluations
 
-1. Create a new evaluation session using your template.
-1. Add the following test scenarios:
+Test the agent with specific scenarios and evaluate each response.
 
-   **Scenario 1: Basic trail recommendation**
-   - Question: *"I'm planning a weekend hiking trip near Seattle. What should I know?"*
+1. Select **Preview** in the top-right corner of the agent builder experience to open the agent in a web app interface.
+
+1. Test **Scenario 1: Basic trail recommendation**
+   - Enter: *"I'm planning a weekend hiking trip near Seattle. What should I know?"*
+   - Select **Send** to trigger the agent run
+   - After the agent responds, select the **Feedback** button
+
+1. A side panel appears displaying the evaluation template you configured earlier. Evaluate the response:
+   - Use the slider to rate **Intent resolution: Does the response address what the user was asking for?** (1-5 scale)
+   - Use the slider to rate **Relevance: How well does the response address the query?** (1-5 scale)
+   - Use the slider to rate **Groundedness: Does the response stick to factual information?** (1-5 scale)
+   - Add any relevant observations in the **Additional comments** field
+   - Select **Save** to store the evaluation data
+
+1. Repeat the test and evaluation process for the remaining scenarios:
 
    **Scenario 2: Gear recommendations**
-   - Question: *"What gear do I need for a day hike in summer?"*
+   - Enter: *"What gear do I need for a day hike in summer?"*
+   - Select **Send**, then **Feedback** after the response
+   - Complete all three rating criteria and add comments
+   - Select **Save**
 
    **Scenario 3: Safety information**
-   - Question: *"What safety precautions should I take when hiking alone?"*
-
-### Run evaluations
-
-Execute your evaluation scenarios and review the agent's responses.
-
-1. For each scenario, run the agent and observe the response.
-1. Rate each response using the 1-5 slider scale for all three criteria.
-1. Add any relevant observations in the additional comments field.
-1. Complete the evaluation for all three scenarios.
+   - Enter: *"What safety precautions should I take when hiking alone?"*
+   - Select **Send**, then **Feedback** after the response
+   - Complete all three rating criteria and add comments
+   - Select **Save**
 
 ### Review evaluation results
 
 Analyze the evaluation data in the portal.
 
-1. Review the evaluation summary showing average scores across all criteria.
-1. Identify patterns in the agent's performance.
-1. Note specific areas where the agent excels or needs improvement.
-1. Download the evaluation results for future comparison with automated evaluations.
+1. Navigate to the template table within the **Human Evaluation** tab.
+
+1. Select your **Trail Guide Quality Assessment** template to review results.
+
+1. All evaluation results appear under the **Evaluation Results** section, with each instance displayed with its timestamp.
+
+1. Select an evaluation instance to view its JSON summary in the **JSON Output** section, which includes:
+   - Timestamp
+   - User prompt
+   - Agent response
+   - Questions from the evaluation template
+   - Reviewer answers
+
+1. To download all evaluation results:
+   - Ensure your template is selected
+   - Select **Download Results**
+   - The results are exported as a CSV file containing all evaluation data
+
+1. Review the evaluation summary to:
+   - Identify average scores across all criteria
+   - Identify patterns in the agent's performance
+   - Note specific areas where the agent excels or needs improvement
 
 ## Clean up
 

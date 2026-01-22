@@ -1,3 +1,0 @@
-name: trail-guide-v1
-model: gpt-4.1
-instructions_file: prompts/v2_instructions.txt
