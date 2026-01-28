@@ -213,128 +213,29 @@ Now create a token-efficient version that preserves core functionality.
 
     ```powershell
     git add .
-    git commit -m "Optimize token usage in trail guide prompt
-
-- Reduced verbose role description
-- Condensed capabilities into action items  
-- Simplified framework to essential steps
-- Measured with Foundry Responses API for accurate token counts"
+    git commit -m "Optimize token usage in trail guide prompt" -m "Reduced verbose instructions while preserving core functionality. Measured 54% token reduction using Foundry Responses API."
     git tag experiment-1-token-optimization
     ```
 
-    > **Tip**: Clear commit messages help reviewers understand what changed and why. Document that you used Foundry's API for accurate token measurement.
+    > **Tip**: Good commit messages include a clear title and brief context about the change and how it was validated.
 
 ### Compare token usage
 
-Create a script to measure and compare token counts using the Foundry Responses API.
+Use the provided test script to measure and compare token counts using the Foundry Responses API.
 
-1. Create a comparison script `compare_token_efficiency.py`:
+1. Navigate to the tests folder:
 
-    ```python
-    import os
-    from pathlib import Path
-    from dotenv import load_dotenv
-    from azure.identity import DefaultAzureCredential
-    from azure.ai.projects import AIProjectClient
-
-    # Load environment
-    load_dotenv(Path(__file__).parent.parent.parent.parent / '.env')
-
-    # Load prompts
-    baseline = Path("baseline_prompt.txt").read_text().strip()
-    optimized = Path("optimized_prompt.txt").read_text().strip()
-
-    # Create project client
-    client = AIProjectClient(
-        endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
-        credential=DefaultAzureCredential(),
-    )
-
-    # Test question to measure token usage
-    test_question = "What essential gear do I need for a summer day hike?"
-
-    print("=" * 80)
-    print("TOKEN EFFICIENCY COMPARISON")
-    print("=" * 80)
-
-    results = {}
-
-    for prompt_name, instructions in [("baseline", baseline), ("optimized", optimized)]:
-        # Create agent with this prompt
-        agent = client.agents.create_agent(
-            model=os.getenv("MODEL_NAME", "gpt-4.1"),
-            name=f"token-test-{prompt_name}",
-            instructions=instructions,
-        )
-        
-        # Create thread and message
-        thread = client.agents.create_thread()
-        message = client.agents.create_message(
-            thread_id=thread.id,
-            role="user",
-            content=test_question,
-        )
-        
-        # Run agent and get token usage
-        run = client.agents.create_and_process_run(
-            thread_id=thread.id,
-            assistant_id=agent.id,
-        )
-        
-        # Get token usage from run
-        prompt_tokens = run.usage.prompt_tokens
-        completion_tokens = run.usage.completion_tokens
-        total_tokens = run.usage.total_tokens
-        
-        results[prompt_name] = {
-            "prompt_tokens": prompt_tokens,
-            "completion_tokens": completion_tokens,
-            "total_tokens": total_tokens,
-            "characters": len(instructions)
-        }
-        
-        # Cleanup
-        client.agents.delete_agent(agent.id)
-
-    # Display comparison
-    print(f"\nBaseline prompt:")
-    print(f"  Prompt tokens: {results['baseline']['prompt_tokens']}")
-    print(f"  Completion tokens: {results['baseline']['completion_tokens']}")
-    print(f"  Total tokens: {results['baseline']['total_tokens']}")
-    print(f"  Characters: {results['baseline']['characters']}")
-    
-    print(f"\nOptimized prompt:")
-    print(f"  Prompt tokens: {results['optimized']['prompt_tokens']}")
-    print(f"  Completion tokens: {results['optimized']['completion_tokens']}")
-    print(f"  Total tokens: {results['optimized']['total_tokens']}")
-    print(f"  Characters: {results['optimized']['characters']}")
-    
-    # Calculate reduction
-    prompt_reduction = results['baseline']['prompt_tokens'] - results['optimized']['prompt_tokens']
-    prompt_reduction_pct = (prompt_reduction / results['baseline']['prompt_tokens']) * 100
-    
-    print(f"\nReduction:")
-    print(f"  {prompt_reduction} prompt tokens ({prompt_reduction_pct:.1f}% reduction)")
-    
-    # Cost impact (example pricing)
-    cost_per_1m_prompt = 5  # Example: $5 per 1M tokens
-    baseline_cost = (results['baseline']['prompt_tokens'] / 1_000_000) * cost_per_1m_prompt
-    optimized_cost = (results['optimized']['prompt_tokens'] / 1_000_000) * cost_per_1m_prompt
-    
-    print(f"\nCost impact (per 1M tokens at ${cost_per_1m_prompt}/1M):")
-    print(f"  Baseline: ${baseline_cost:.6f} per call")
-    print(f"  Optimized: ${optimized_cost:.6f} per call")
-    print(f"  Savings: ${(baseline_cost - optimized_cost):.6f} per call")
-    print("=" * 80)
+    ```powershell
+    cd ..\..\..\tests
     ```
 
-    > **Note**: This script uses the Foundry Responses API to get actual token usage from real agent runs, providing accurate measurements rather than estimates.
-
-1. Run the comparison:
+1. Run the token comparison script:
 
     ```powershell
     python compare_token_efficiency.py
     ```
+
+    > **Note**: This script uses the Foundry Responses API to get actual token usage from real agent runs, providing accurate measurements rather than estimates.
 
     You'll see output showing the actual token counts from the Foundry API, including:
     - Prompt tokens (your system prompt + user message)
