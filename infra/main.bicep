@@ -129,10 +129,8 @@ module aiProject 'core/ai/ai-project.bicep' = {
   }
 }
 
-// ==============================================================================================
-// CRITICAL FIX: Explicitly create the OpenAI Connection
-// This ensures that 'azd up' automatically wires the Project to the Inference Endpoint.
-// ==============================================================================================
+// --- ADDED SECTION START ---
+// This resource manually forces the connection to be created using the outputs from the module above.
 resource aoaiConnection 'Microsoft.MachineLearningServices/workspaces/connections@2024-04-01-preview' = {
   name: '${aiProject.outputs.projectName}/aoai-connection'
   scope: rg
@@ -147,7 +145,7 @@ resource aoaiConnection 'Microsoft.MachineLearningServices/workspaces/connection
     }
   }
 }
-// ==============================================================================================
+// --- ADDED SECTION END ---
 
 // Resources
 output AZURE_RESOURCE_GROUP string = resourceGroupName
