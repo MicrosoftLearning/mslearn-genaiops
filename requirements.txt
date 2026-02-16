@@ -3,7 +3,7 @@
 # Updated: 2026-01-16
 
 # Core Azure AI Projects SDK (Latest Versions)
-azure-ai-projects>=1.0.0b1
+azure-ai-projects==1.0.0b5
 azure-identity>=1.15.0
 azure-core>=1.29.0
 azure-mgmt-resource>=23.0.0
