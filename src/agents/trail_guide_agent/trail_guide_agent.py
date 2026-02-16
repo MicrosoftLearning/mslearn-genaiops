@@ -6,7 +6,7 @@ from azure.ai.projects import AIProjectClient
 from azure.ai.projects.models import PromptAgentDefinition
 
 # Load environment variables from repository root
-repo_root = Path(__file__).parent.parent.parent
+repo_root = Path(__file__).parent.parent.parent.parent
 env_file = repo_root / '.env'
 load_dotenv(env_file)
 
