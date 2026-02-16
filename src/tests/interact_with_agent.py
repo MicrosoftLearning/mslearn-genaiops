@@ -1,5 +1,7 @@
 import os
 import sys
+import subprocess
+import json
 from pathlib import Path
 from dotenv import load_dotenv
 from azure.identity import AzureDeveloperCliCredential, DefaultAzureCredential
@@ -10,119 +12,140 @@ repo_root = Path(__file__).parent.parent.parent
 env_file = repo_root / '.env'
 load_dotenv(env_file)
 
-def get_authenticated_client():
-    """Robust client creation for both local and VM environments."""
-    endpoint = os.environ.get("AZURE_AI_PROJECT_ENDPOINT")
-    
-    # Try 'azd' credential first (best for lab VMs)
+def get_real_project_name(rg_name):
+    """Auto-detects the actual AI Project name from Azure."""
     try:
-        return AIProjectClient(
-            endpoint=endpoint,
-            credential=AzureDeveloperCliCredential(),
-        )
+        cmd = [
+            "az", "resource", "list", "-g", rg_name,
+            "--resource-type", "Microsoft.MachineLearningServices/workspaces",
+            "--query", "[0].name", "-o", "tsv"
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
     except Exception:
-        # Fallback to default (local debugging, etc.)
-        return AIProjectClient(
-            endpoint=endpoint,
-            credential=DefaultAzureCredential(),
-        )
+        pass
+    return os.environ.get("AZURE_AI_PROJECT_NAME")
 
-def find_openai_connection(project_client):
-    """
-    Auto-discovers the Azure OpenAI connection.
-    This ensures the script works regardless of what 'azd' names the connection.
-    """
+def ensure_connection_exists(rg_name, project_name):
+    """Checks for an OpenAI connection and creates it if missing."""
+    print("Verifying OpenAI connection...")
+    
+    # 1. Check existing connections
     try:
-        connections = project_client.connections.list()
-        for conn in connections:
-            # Check for standard OpenAI connection types
-            if "AzureOpenAI" in str(conn) or (hasattr(conn, 'type') and conn.type == "AzureOpenAI"):
-                return conn.name
+        cmd = [
+            "az", "rest", "--method", "get",
+            "--url", f"https://management.azure.com/subscriptions/{os.environ.get('AZURE_SUBSCRIPTION_ID')}/resourceGroups/{rg_name}/providers/Microsoft.MachineLearningServices/workspaces/{project_name}/connections?api-version=2024-04-01-preview"
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode == 0:
+            connections = json.loads(result.stdout)
+            for conn in connections.get('value', []):
+                if conn['properties']['category'] == 'AzureOpenAI':
+                    print(f"Found existing connection: {conn['name']}")
+                    return conn['name']
+    except Exception:
+        pass
+
+    # 2. If missing, find OpenAI Resource ID and Create
+    print("Connection missing. Attempting auto-fix...")
+    try:
+        # Find OpenAI ID
+        cmd = ["az", "resource", "list", "-g", rg_name, "--resource-type", "Microsoft.CognitiveServices/accounts", "--query", "[0].id", "-o", "tsv"]
+        openai_id = subprocess.run(cmd, capture_output=True, text=True).stdout.strip()
+        
+        if not openai_id:
+            print("Error: No OpenAI resource found.")
+            return None
+
+        # Create Connection
+        body = {
+            "properties": {
+                "authType": "ApiKey",
+                "category": "AI",
+                "target": openai_id,
+                "isSharedToAll": True,
+                "metadata": {"ApiType": "Azure", "ResourceId": openai_id}
+            }
+        }
+        
+        url = f"https://management.azure.com/subscriptions/{os.environ.get('AZURE_SUBSCRIPTION_ID')}/resourceGroups/{rg_name}/providers/Microsoft.MachineLearningServices/workspaces/{project_name}/connections/aoai-connection?api-version=2024-04-01-preview"
+        
+        subprocess.run(
+            ["az", "rest", "--method", "put", "--url", url, "--body", json.dumps(body)],
+            capture_output=True, text=True
+        )
+        print("Success: Created 'aoai-connection'")
+        return "aoai-connection"
     except Exception as e:
-        print(f"Warning: Could not list connections: {e}")
-    return None
+        print(f"Auto-fix failed: {e}")
+        return None
 
 def interact_with_agent():
     print(f"\n{'='*60}")
     print(f"Trail Guide Agent - Interactive Chat")
     print(f"{'='*60}")
+
+    # 1. Resolve Resources
+    rg_name = os.environ.get("AZURE_RESOURCE_GROUP")
+    project_name = get_real_project_name(rg_name)
     
-    # 1. Initialize Client
+    print(f"Project: {project_name}")
+    print(f"Resource Group: {rg_name}")
+
+    # 2. Ensure Connection Exists (Self-Healing)
+    connection_name = ensure_connection_exists(rg_name, project_name)
+
+    # 3. Initialize Client
     try:
-        project_client = get_authenticated_client()
+        project_client = AIProjectClient(
+            endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
+            credential=AzureDeveloperCliCredential(),
+        )
     except Exception as e:
-        print(f"Error connecting to project: {e}")
-        print("Tip: Run 'azd auth login' if running locally.")
+        print(f"Error connecting: {e}")
         return
 
-    # 2. Find Agent ID
+    # 4. Find Agent
     agent_name = os.getenv("AGENT_NAME", "trail-guide")
     agent_id = None
-    
-    print(f"Connecting to Agent: {agent_name}...")
     try:
         agents = project_client.agents.list()
         for agent in agents:
             if agent.name == agent_name:
                 agent_id = agent.id
                 break
-        
         if not agent_id:
-            print(f"Error: Agent '{agent_name}' not found.")
-            print("Did you run 'python src/trail_guide_agent.py' to create it?")
+            print(f"Agent '{agent_name}' not found.")
             return
-
-        print(f"Success! Found Agent ID: {agent_id}")
-
-    except Exception as e:
-        print(f"Error listing agents: {e}")
+        print(f"Agent ID: {agent_id}")
+    except Exception:
+        print("Error listing agents.")
         return
 
-    # 3. Find Connection (The 'Magic' Step)
-    connection_name = find_openai_connection(project_client)
-    
-    if not connection_name:
-        # Fallback: Try the one we manually created, just in case
-        connection_name = "aoai-connection"
-        print(f"Warning: Auto-discovery failed. Trying fallback name: '{connection_name}'")
-    else:
-        print(f"Auto-detected Inference Connection: '{connection_name}'")
-
-    # 4. Chat Loop
+    # 5. Chat Loop
     print("\nInitializing Chat Runtime...")
-    
     try:
-        # Use the discovered connection name
+        # Use simple get_openai_client (v2 standard)
+        # The auto-fix above ensures the default connection now exists!
         with project_client.get_openai_client() as openai_client:
-            
             thread = openai_client.beta.threads.create()
-            print(f"Session Started (Thread ID: {thread.id})\n")
-            print("Type your questions. Type 'exit' to quit.\n")
+            print(f"Session Started (Thread: {thread.id})\n")
             
             while True:
                 user_input = input("You: ").strip()
+                if user_input.lower() in ['exit', 'quit', 'q']: break
                 if not user_input: continue
-                if user_input.lower() in ['exit', 'quit', 'q']:
-                    break
 
-                # Send
                 openai_client.beta.threads.messages.create(
-                    thread_id=thread.id,
-                    role="user",
-                    content=user_input
+                    thread_id=thread.id, role="user", content=user_input
                 )
-
-                # Run
                 run = openai_client.beta.threads.runs.create_and_poll(
-                    thread_id=thread.id,
-                    assistant_id=agent_id
+                    thread_id=thread.id, assistant_id=agent_id
                 )
 
-                # Receive
                 if run.status == 'completed':
-                    messages = openai_client.beta.threads.messages.list(
-                        thread_id=thread.id
-                    )
+                    messages = openai_client.beta.threads.messages.list(thread_id=thread.id)
                     for msg in messages:
                         if msg.role == "assistant":
                             for content in msg.content:
@@ -130,14 +153,10 @@ def interact_with_agent():
                                     print(f"\nAgent: {content.text.value}\n")
                             break
                 else:
-                    print(f"Run status: {run.status}")
+                    print(f"Run failed: {run.status}")
 
     except Exception as e:
         print(f"\nRuntime Error: {e}")
-        if "404" in str(e):
-            print("\nTroubleshooting 404:")
-            print("1. The project does not have a connection to Azure OpenAI.")
-            print("2. Verify 'azd up' completed successfully.")
 
 if __name__ == "__main__":
     interact_with_agent()
