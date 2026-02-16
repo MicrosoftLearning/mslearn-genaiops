@@ -129,24 +129,6 @@ module aiProject 'core/ai/ai-project.bicep' = {
   }
 }
 
-// --- ADDED SECTION START ---
-// This resource manually forces the connection to be created using the outputs from the module above.
-resource aoaiConnection 'Microsoft.MachineLearningServices/workspaces/connections@2024-04-01-preview' = {
-  name: '${aiProject.outputs.projectName}/aoai-connection'
-  scope: rg
-  properties: {
-    category: 'AzureOpenAI'
-    target: aiProject.outputs.accountId
-    authType: 'ApiKey'
-    isSharedToAll: true
-    metadata: {
-      ApiType: 'Azure'
-      ResourceId: aiProject.outputs.accountId
-    }
-  }
-}
-// --- ADDED SECTION END ---
-
 // Resources
 output AZURE_RESOURCE_GROUP string = resourceGroupName
 output AZURE_AI_ACCOUNT_ID string = aiProject.outputs.accountId
