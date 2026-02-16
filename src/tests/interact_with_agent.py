@@ -93,7 +93,7 @@ def interact_with_agent():
     
     try:
         # Use the discovered connection name
-        with project_client.get_openai_client(connection_name=connection_name) as openai_client:
+        with project_client.get_openai_client() as openai_client:
             
             thread = openai_client.beta.threads.create()
             print(f"Session Started (Thread ID: {thread.id})\n")
