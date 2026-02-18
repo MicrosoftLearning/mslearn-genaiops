@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 from dotenv import load_dotenv
 from azure.identity import DefaultAzureCredential
-from azure.ai.agents import AgentsClient
+from azure.ai.projects import AIProjectClient
 
 # Load environment variables from repository root
 repo_root = Path(__file__).parent.parent.parent
@@ -18,18 +18,11 @@ def interact_with_agent():
     """Start an interactive chat session with the Trail Guide Agent."""
     
     # Initialize project client
-    project_client = AgentsClient(
+    project_client = AIProjectClient(
         endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
         credential=DefaultAzureCredential(),
     )
     
-    agent_Id = None
-    
-    for agent in project_client.list_agents():
-        if getattr(agent, "name", None) == "trail-guide":
-            agent_Id = agent.id
-            break
-
     # Get agent name from environment or use default
     agent_name = os.getenv("AGENT_NAME", "trail-guide-v1")
     
@@ -40,7 +33,7 @@ def interact_with_agent():
     print("\nType your questions or requests. Type 'exit' or 'quit' to end the session.\n")
     
     # Create a thread for the conversation
-    thread = project_client.threads.create()
+    thread = project_client.agents.create_thread()
     print(f"Started conversation (Thread ID: {thread.id})\n")
     
     try:
@@ -56,20 +49,20 @@ def interact_with_agent():
                 break
             
             # Send message to agent
-            project_client.messages.create(
+            project_client.agents.create_message(
                 thread_id=thread.id,
                 role="user",
                 content=user_input
             )
             
             # Run the agent
-            run = project_client.runs.create_and_process(
+            run = project_client.agents.create_and_process_run(
                 thread_id=thread.id,
-                agent_id=agent_Id
+                agent_name=agent_name
             )
             
             # Get the assistant's response
-            messages = project_client.messages.list(thread_id=thread.id)
+            messages = project_client.agents.list_messages(thread_id=thread.id)
             
             # Find the latest assistant message
             for message in messages:
@@ -85,7 +78,7 @@ def interact_with_agent():
     finally:
         # Clean up thread
         try:
-            project_client.threads.delete(thread.id)
+            project_client.agents.delete_thread(thread.id)
             print(f"Conversation thread cleaned up.")
         except:
             pass
