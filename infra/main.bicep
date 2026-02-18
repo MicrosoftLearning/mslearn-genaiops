@@ -71,11 +71,12 @@ param aiProjectDeploymentsJson string = '''
   {
     "name": "gpt41-deploy",
     "model": {
-      "provider": "OpenAI",
+      "format": "OpenAI",
       "name": "gpt-4.1"
     },
     "sku": {
-      "name": "GlobalStandard"
+      "name": "GlobalStandard",
+      "capacity": 10
     }
   }
 ]
