@@ -50,13 +50,25 @@ def interact_with_agent():
                 print("\nEnding session. Goodbye!")
                 break
             
-            # Send message to agent
-            response = openai_client.responses.create(
+            # 1) Add the user message to the conversation as an item
+            openai_client.conversations.items.create(
                 conversation_id=conversation.id,
+                items=[{
+                    "type": "message",
+                    "role": "user",
+                    "content": user_input
+                }]
+            )
+
+            # 2) Ask the agent to respond
+            response = openai_client.responses.create(
+                # NOTE: the sample uses `conversation=...` (not conversation_id)
+                conversation=conversation.id,
                 extra_body={"agent": {"name": agent_name, "type": "agent_reference"}},
-                input=user_input,
-                )
-            print(f"Response output: {response.output_text}")
+                input="",  # sample keeps this empty because the message is already in the conversation items
+            )
+
+            print(f"Agent: {response.output_text}")
                     
     except KeyboardInterrupt:
         print("\n\nSession interrupted. Goodbye!")
