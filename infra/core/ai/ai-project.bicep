@@ -316,7 +316,6 @@ output dependentResources object = {
 
 // Add simple confirmation outputs (so main.bicep can surface them)
 output openAiDeploymentNames array = [for dep in (deployments ?? []): dep.name]
-output openAiDeploymentIds array = [for dep in (deployments ?? []): resourceId('Microsoft.CognitiveServices/accounts/deployments', aiAccount.name, dep.name)]
 
 // Replace the deploymentsType definition with a concrete schema
 type deploymentsType = {
