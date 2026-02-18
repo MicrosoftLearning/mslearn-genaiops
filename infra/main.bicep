@@ -48,7 +48,7 @@ param location string
 @metadata({azd: {
   type: 'location'
   usageName: [
-    'OpenAI.GlobalStandard.gpt-4o-mini,10'
+    'OpenAI.GlobalStandard.gpt-4.1,10'
   ]}
 })
 param aiDeploymentsLocation string
@@ -69,10 +69,10 @@ param aiFoundryProjectName string = 'ai-project-${environmentName}'
 param aiProjectDeploymentsJson string = '''
 [
   {
-    "name": "gpt4o-mini-deploy",
+    "name": "gpt41-deploy",
     "model": {
       "provider": "OpenAI",
-      "name": "gpt-4o-mini"
+      "name": "gpt-4.1"
     },
     "sku": {
       "name": "GlobalStandard"
