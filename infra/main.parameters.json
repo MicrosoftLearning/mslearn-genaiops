@@ -26,9 +26,6 @@
       "principalType": {
         "value": "${AZURE_PRINCIPAL_TYPE}"
       },
-      "aiProjectDeploymentsJson": {
-        "value": "${AI_PROJECT_DEPLOYMENTS=[]}"
-      },
       "aiProjectConnectionsJson": {
         "value": "${AI_PROJECT_CONNECTIONS=[]}"
       },
