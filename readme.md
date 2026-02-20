@@ -1,12 +1,140 @@
-# Microsoft Foundry `azd` bicep starter kit (basic)
+# GenAIOps Learning Path with Microsoft Foundry
 
-This Azure Developer CLI (azd) template provides a streamlined way to provision and deploy Microsoft Foundry resources for building and running AI agents. It includes infrastructure-as-code definitions and sample application code to help you quickly get started with Microsoft Foundry's agent capabilities, including model deployments, workspace configuration, and supporting services like storage and container hosting.
+This repository provides hands-on labs for implementing GenAIOps practices using Microsoft Foundry. Learn to build, evaluate, deploy, and monitor production-ready generative AI applications through practical exercises covering the complete AI development lifecycle.
 
-This template does **not** include agent code or application code. You will find samples in other repositories such as [foundry-samples](https://github.com/azure-ai-foundry/foundry-samples):
-- [hosted agents samples (python)](https://github.com/azure-ai-foundry/foundry-samples/tree/main/samples/python/hosted-agents)
-- [hosted agents samples (C#)](https://github.com/azure-ai-foundry/foundry-samples/tree/main/samples/csharp/hosted-agents)
+## 📚 Learning Paths
+
+This repository contains two complementary learning paths that can be completed independently or together:
+
+---
+
+## Learning Path 1: Operationalize Generative AI Applications (GenAIOps)
+
+Build, evaluate, and deploy production-ready generative AI applications with systematic workflows.
+
+1. **[Plan and prepare a GenAIOps solution](docs/01-infrastructure-setup.md)** - Establish foundational infrastructure and development workflows for AI applications
+2. **[Manage agent artifacts with GitHub](docs/02-prompt-management.md)** - Organize and version control agents, prompts, models, and other AI artifacts using GitHub
+3. **[Design and optimize prompts](docs/03-design-optimize-prompts.md)** - Learn systematic prompt engineering, iteration techniques, and optimization strategies
+4. **Optimize RAG solutions for GenAI** *(Coming soon)* - Implement retrieval-augmented generation patterns for context-aware AI
+5. **Create custom fine-tuning workflows for GenAI** *(Coming soon)* - Build automated pipelines for model customization
+6. **Deploy GenAI apps and agents with CI/CD integration** *(Coming soon)* - Automate deployment pipelines for continuous delivery
+
+---
+
+## Learning Path 2: Implement Observability for GenAI Applications and Agents
+
+Monitor, trace, debug, and optimize AI applications in production with comprehensive observability practices.
+
+1. **Plan and prepare an observability strategy** *(Coming soon)* - Design comprehensive monitoring approaches for AI systems
+2. **Evaluate model risks with simulated inputs** *(Coming soon)* - Test production models against edge cases and adversarial scenarios
+3. **Build evaluation pipelines** *(Coming soon)* - Automate quality gates and performance benchmarks in deployment workflows
+4. **Build and run red-team pipelines for generative AI security** *(Coming soon)* - Implement automated security testing and adversarial evaluation
+5. **[Monitor your generative AI application](docs/06-deployment-monitoring.md)** - Deploy agents and configure Application Insights, Log Analytics, and telemetry collection
+6. **Analyze and debug your generative AI app with tracing** *(Coming soon)* - Use distributed tracing to diagnose AI application issues and understand agent behavior
+7. **Optimize performance and costs** *(Coming soon)* - Reduce latency and token consumption while maintaining quality
+8. **Implement security and governance for GenAI apps** *(Coming soon)* - Apply enterprise security controls and compliance requirements
+
+---
+
+## 📚 Foundational Labs
+
+These labs provide essential skills for both learning paths and can be completed independently:
+
+- **[Plan and prepare a GenAIOps solution](docs/01-infrastructure-setup.md)** - Deploy Microsoft Foundry resources and configure your development environment (prerequisite for both paths)
+- **[Manual evaluation](docs/03-manual-evaluation.md)** - Conduct human-in-the-loop assessments of agent responses
+- **[Automated evaluation](docs/04-automated-evaluation.md)** - Build evaluation pipelines with simulated inputs and AI-assisted grading
+- **[Safety and red-teaming](docs/05-safety-red-teaming.md)** - Test AI systems for security risks and adversarial scenarios
+
+---
+
+## 🎯 What You'll Build
+
+Throughout these learning paths, you'll work with a realistic scenario: **Adventure Works Trail Guide Agent** - an AI-powered assistant that helps hikers plan trail adventures, get gear recommendations, and receive real-time support.
+
+### Learning Path 1 Outcomes
+- ✅ Plan and prepare GenAIOps solutions for production AI applications
+- ✅ Organize and version control agent artifacts with GitHub
+- ✅ Design and optimize prompts using systematic engineering techniques
+- ✅ Implement retrieval-augmented generation (RAG) patterns
+- ✅ Create custom fine-tuning workflows for model optimization
+- ✅ Automate deployments with CI/CD pipelines
+
+### Learning Path 2 Outcomes
+- ✅ Design comprehensive observability strategies for AI systems
+- ✅ Configure monitoring infrastructure with Application Insights
+- ✅ Trace and debug agent conversations and API calls
+- ✅ Evaluate model behavior with simulated production scenarios
+- ✅ Optimize costs and performance while maintaining quality
+- ✅ Implement security controls and governance policies
 
 [Features](#features) • [Getting Started](#getting-started) • [Guidance](#guidance)
+
+## 🧪 Sample Agents and Tools
+
+This repository includes several sample agents and tools to support the learning labs:
+
+### Agents
+
+- **Trail guide agent** (`src/agents/trail_guide_agent/`) - Multi-version agent demonstrating prompt evolution and version management
+  - V1: Basic trail recommendations
+  - V2: Enhanced with accommodation and gear suggestions
+  - V3: Advanced with safety monitoring and personalization
+
+- **Monitoring agent** (`src/agents/monitoring_agent/`) - Examples for error handling, prompt optimization, and observability patterns
+
+### Tools and utilities
+
+- **Model comparison** (`src/agents/model_comparison/`) - Compare performance across different model configurations
+  - Interactive notebooks for benchmarking
+  - Visualization tools for model analysis
+
+- **Prompt optimization** (`src/agents/prompt_optimization/`) - Tools for iterating and improving prompts
+  - Token counting utilities
+  - A/B testing frameworks
+
+- **Evaluators** (`src/evaluators/`) - Quality and safety evaluation modules
+  - Quality evaluators for response accuracy
+  - Safety evaluators for adversarial testing
+
+- **Tests** (`src/tests/`) - Automated test suites for agent behavior validation
+
+## 📋 Prerequisites
+
+Before starting the labs, ensure you have:
+
+- **Azure Subscription** with Microsoft Foundry access
+- **Visual Studio Code** with Python extension
+- **Python 3.9 or later**
+- **Azure CLI** (`az`) - [Install](https://learn.microsoft.com/cli/azure/install-azure-cli)
+- **Azure Developer CLI** (`azd`) - [Install](https://aka.ms/install-azd)
+- **Git** and **GitHub account**
+
+---
+
+## 🚀 Suggested Additional Labs
+
+Based on the existing code in this repository and the new Microsoft Foundry experience, here are recommended labs to add:
+
+### Learning Path 1: GenAIOps extensions
+- **RAG with grounding**: Use the existing Bing Search and Azure AI Search infrastructure to build retrieval-augmented generation patterns
+- **Model comparison lab**: Leverage `src/agents/model_comparison/` notebooks to systematically compare GPT-4, GPT-4o, and other models
+- **Prompt engineering deep-dive**: Use `src/agents/prompt_optimization/` to teach systematic prompt iteration and token optimization
+- **Custom evaluators**: Build domain-specific evaluators extending `src/evaluators/quality_evaluators.py`
+- **Synthetic data generation**: Use the existing `generate_synth_data.py` for creating evaluation datasets
+- **Multi-agent testing**: Test interactions between trail guide agent and other specialized agents
+
+### Learning Path 2: Observability extensions
+- **Foundry tracing UI**: Use built-in observability features for debugging agent conversations
+- **Cost analysis dashboard**: Build custom monitoring views to track and optimize spending
+- **A/B testing in production**: Deploy multiple agent versions and compare live performance metrics
+- **Incident response playbook**: Use `src/agents/monitoring_agent/` error handling patterns to build runbooks
+- **Performance profiling**: Identify and optimize slow LLM calls and data operations
+- **Anomaly detection**: Set up automated alerts for unusual usage patterns or quality degradation
+
+### Cross-path labs
+- **Project management and collaboration**: Multi-user workflows, sharing agents, and permission management
+- **Agent tools and functions**: Extend agents with custom tools and API integrations
+- **Deployment slots**: Blue-green deployments and safe rollout strategies
 
 This template, the application code and configuration it contains, has been built to showcase Microsoft Azure specific services and tools. We strongly advise our customers not to make this code part of their production environments without implementing or enabling additional security features.
 
@@ -14,12 +142,21 @@ With any AI solutions you create using these templates, you are responsible 
 
 ## Features
 
-This project framework provides the following features:
+This learning repository provides:
 
-* **Microsoft Foundry Project**: Complete setup of Microsoft Foundry workspace with project configuration
-* **Foundry Model Deployments**: Automatic deployment of AI models for agent capabilities
-* **Azure Container Registry**: Container image storage and management for agent deployments
-* **Managed Identity**: Built-in Azure Managed Identity for keyless authentication between services
+### Infrastructure as code
+* **Microsoft Foundry project**: Complete setup with project configuration and model deployments
+* **Azure Container Registry**: Container image storage for agent deployments
+* **Monitoring stack**: Application Insights and Log Analytics for observability
+* **Managed identity**: Keyless authentication between services
+
+### GenAIOps capabilities
+* **Prompt versioning**: Manage prompts as code with version control integration
+* **Multi-model testing**: Compare performance across model configurations
+* **Automated evaluation**: AI-assisted grading and quality assessment pipelines
+* **Safety testing**: Red-teaming and adversarial scenario testing
+* **Production monitoring**: Tracing, logging, and performance optimization
+* **CI/CD integration**: Automated deployment and testing workflows
 
 ### Architecture Diagram
 
@@ -73,42 +210,37 @@ The template is parametrized so that it can be configured with additional resour
 
 ## Getting Started
 
-Note: this repository is not meant to be cloned, but to be consumed as a template in your own project:
+### For Learning Path Participants
+
+**Learning Path 1: Operationalize generative AI applications (GenAIOps)**
+- Complete [Plan and prepare a GenAIOps solution](docs/01-infrastructure-setup.md) as prerequisite
+- Start with Module 2: [Manage agent artifacts with GitHub](docs/02-prompt-management.md)
+- Follow all 6 modules in sequence
+- Each lab builds on previous work with the Trail Guide Agent
+
+**Learning Path 2: Implement observability for GenAI applications**
+- Can be started independently or after Learning Path 1
+- Begin with planning your observability strategy
+- Module 5: [Monitor your generative AI application](docs/06-deployment-monitoring.md) covers deployment and monitoring setup
+- Requires an existing AI application (use Trail Guide Agent from Learning Path 1, or bring your own)
+
+Both paths include:
+- Clear learning objectives
+- Step-by-step instructions
+- Verification checkpoints
+- Hands-on exercises
+
+### For Template Users
+
+This repository also serves as an `azd` template for bootstrapping new Microsoft Foundry projects:
 
 ```bash
 azd init --template Azure-Samples/ai-foundry-starter-basic
 ```
 
+This will provision the infrastructure without the learning materials.
+
 ### Prerequisites
-
-* Install [azd](https://aka.ms/install-azd)
-  * Windows: `winget install microsoft.azd`
-  * Linux: `curl -fsSL https://aka.ms/install-azd.sh | bash`
-  * MacOS: `brew tap azure/azd && brew install azd`
-
-### Quickstart
-
-1. Bring down the template code:
-
-    ```shell
-    azd init --template Azure-Samples/ai-foundry-starter-basic
-    ```
-
-    This will perform a git clone
-
-2. Sign into your Azure account:
-
-    ```shell
-    azd auth login
-    ```
-
-3. Download a sample agent from GitHub:
-
-    ```shell
-    azd ai agent init -m <repo-path-to-agent.yaml>
-    ```
-
-You'll find agent samples in the [`foundry-samples` repo](https://github.com/azure-ai-foundry/foundry-samples/tree/main/samples/microsoft/python/getting-started-agents/hosted-agents).
 
 ## Guidance
 
