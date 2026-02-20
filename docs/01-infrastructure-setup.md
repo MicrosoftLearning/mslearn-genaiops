@@ -61,6 +61,13 @@ You'll use the Azure Developer CLI to deploy all required Azure resources using 
 
     Sign in with your Azure credentials when prompted. This authentication is needed for the Python SDK and other Azure operations in subsequent labs.
 
+    > ⚠️ **Important **
+    > In some environments, the VS Code integrated terminal may crash or close during the interactive login flow.
+    > If this happens, authenticate using explicit credentials instead:
+    > ```powershell
+    > az login --username <your-username> --password <your-password>
+    > ```
+
 1. Provision resources:
 
     ```powershell
@@ -96,6 +103,16 @@ You'll use the Azure Developer CLI to deploy all required Azure resources using 
     ```powershell
     azd env get-values > .env
     ```
+    
+    > ⚠️ **Important – File Encoding**
+    >
+    > After generating the `.env` file, make sure it is saved using **UTF-8** encoding.
+    >
+    > In editors like **VS Code**, check the encoding indicator in the bottom-right corner.  
+    > If it shows **UTF-16 LE** (or any encoding other than UTF-8), click it, choose **Save with Encoding**, and select **UTF-8**.
+    >
+    > Using the wrong encoding may cause environment variables to be read incorrectly
+
 
     This creates a `.env` file in your project root with all the provisioned resource information:
     - Resource names and IDs
@@ -182,15 +199,17 @@ Interact with your deployed agent from the terminal to verify it's working corre
 1. When prompted, ask the agent a question about hiking, for example:
 
     ```
-    You: I want to go hiking this weekend near Seattle. Any suggestions?
+    I want to go hiking this weekend near Seattle. Any suggestions?
     ```
 
 1. The agent will respond with trail recommendations. Continue the conversation or type `exit` to quit.
 
     ```
     Agent: I'd recommend checking out Rattlesnake Ledge Trail...
-    
-    You: exit
+    ```
+
+    ```
+    exit
     ```
 
 ## Verify your deployment
