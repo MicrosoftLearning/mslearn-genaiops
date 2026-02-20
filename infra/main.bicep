@@ -48,7 +48,7 @@ param location string
 @metadata({azd: {
   type: 'location'
   usageName: [
-    'OpenAI.GlobalStandard.gpt-4.1,10'
+    'OpenAI.GlobalStandard.gpt-4o-mini,10'
   ]}
 })
 param aiDeploymentsLocation string
@@ -69,10 +69,10 @@ param aiFoundryProjectName string = 'ai-project-${environmentName}'
 param aiProjectDeploymentsJson string = '''
 [
   {
-    "name": "gpt4o-mini-deploy",
+    "name": "gpt-4_1-mini-deploy",
     "model": {
       "format": "OpenAI",
-      "name": "gpt-4o-mini"
+      "name": "gpt-4.1-mini"
     },
     "sku": {
       "name": "GlobalStandard",
@@ -179,3 +179,6 @@ output AZURE_AI_SEARCH_SERVICE_NAME string = aiProject.outputs.dependentResource
 // Azure Storage
 output AZURE_STORAGE_CONNECTION_NAME string = aiProject.outputs.dependentResources.storage.connectionName
 output AZURE_STORAGE_ACCOUNT_NAME string = aiProject.outputs.dependentResources.storage.accountName
+
+// OpenAI Deployments
+output AZURE_OPENAI_DEPLOYMENT_NAMES array = aiProject.outputs.openAiDeploymentNames
