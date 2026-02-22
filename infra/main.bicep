@@ -66,7 +66,33 @@ param aiFoundryResourceName string = ''
 param aiFoundryProjectName string = 'ai-project-${environmentName}'
 
 @description('List of model deployments')
-param aiProjectDeploymentsJson string = '[]'
+param aiProjectDeploymentsJson string = '''
+[
+  {
+    "name": "gpt-4.1-mini",
+    "model": {
+      "format": "OpenAI",
+      "name": "gpt-4.1-mini"
+    },
+    "sku": {
+      "name": "GlobalStandard",
+      "capacity": 10
+    }
+  },
+  {
+    "name": "gpt-4.1",
+    "model": {
+      "format": "OpenAI",
+      "name": "gpt-4.1"
+    },
+    "sku": {
+      "name": "GlobalStandard",
+      "capacity": 10
+    }
+  }
+
+]
+'''
 
 @description('List of connections')
 param aiProjectConnectionsJson string = '[]'
@@ -166,3 +192,5 @@ output AZURE_AI_SEARCH_SERVICE_NAME string = aiProject.outputs.dependentResource
 output AZURE_STORAGE_CONNECTION_NAME string = aiProject.outputs.dependentResources.storage.connectionName
 output AZURE_STORAGE_ACCOUNT_NAME string = aiProject.outputs.dependentResources.storage.accountName
 
+// OpenAI Deployments
+output AZURE_OPENAI_DEPLOYMENT_NAMES array = aiProject.outputs.openAiDeploymentNames

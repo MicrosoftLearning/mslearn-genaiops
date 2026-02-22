@@ -98,12 +98,12 @@ resource aiAccount 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
   
   @batchSize(1)
   resource seqDeployments 'deployments' = [
-    for dep in (deployments??[]): {
+    for dep in (deployments ?? []): {
       name: dep.name
+      sku: dep.sku
       properties: {
         model: dep.model
       }
-      sku: dep.sku
     }
   ]
 
@@ -314,28 +314,27 @@ output dependentResources object = {
   }
 }
 
+// Add simple confirmation outputs (so main.bicep can surface them)
+output openAiDeploymentNames array = [for dep in (deployments ?? []): dep.name]
+
+// Replace the deploymentsType definition with a concrete schema
 type deploymentsType = {
-  @description('Specify the name of cognitive service account deployment.')
+  @description('Deployment name')
   name: string
 
-  @description('Required. Properties of Cognitive Services account deployment model.')
+  @description('Model definition for the deployment')
   model: {
-    @description('Required. The name of Cognitive Services account deployment model.')
-    name: string
-
-    @description('Required. The format of Cognitive Services account deployment model.')
+    @description('Model format, e.g. OpenAI')
     format: string
-
-    @description('Required. The version of Cognitive Services account deployment model.')
-    version: string
+    @description('Model name, e.g. gpt-4.1')
+    name: string
+    @description('Optional model version')
+    version: string?
   }
 
-  @description('The resource model definition representing SKU.')
+  @description('SKU for the deployment')
   sku: {
-    @description('Required. The name of the resource model definition representing SKU.')
     name: string
-
-    @description('The capacity of the resource model definition representing SKU.')
     capacity: int
   }
 }[]?

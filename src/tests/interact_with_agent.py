@@ -25,6 +25,8 @@ def interact_with_agent():
     
     # Get agent name from environment or use default
     agent_name = os.getenv("AGENT_NAME", "trail-guide-v1")
+
+    openai_client = project_client.get_openai_client()
     
     print(f"\n{'='*60}")
     print(f"Trail Guide Agent - Interactive Chat")
@@ -33,8 +35,8 @@ def interact_with_agent():
     print("\nType your questions or requests. Type 'exit' or 'quit' to end the session.\n")
     
     # Create a thread for the conversation
-    thread = project_client.agents.create_thread()
-    print(f"Started conversation (Thread ID: {thread.id})\n")
+    conversation = openai_client.conversations.create()
+    print(f"Started conversation (Conversation ID: {conversation.id})\n")
     
     try:
         while True:
@@ -48,27 +50,25 @@ def interact_with_agent():
                 print("\nEnding session. Goodbye!")
                 break
             
-            # Send message to agent
-            project_client.agents.create_message(
-                thread_id=thread.id,
-                role="user",
-                content=user_input
+            # 1) Add the user message to the conversation as an item
+            openai_client.conversations.items.create(
+                conversation_id=conversation.id,
+                items=[{
+                    "type": "message",
+                    "role": "user",
+                    "content": user_input
+                }]
             )
-            
-            # Run the agent
-            run = project_client.agents.create_and_process_run(
-                thread_id=thread.id,
-                agent_name=agent_name
+
+            # 2) Ask the agent to respond
+            response = openai_client.responses.create(
+                # NOTE: the sample uses `conversation=...` (not conversation_id)
+                conversation=conversation.id,
+                extra_body={"agent": {"name": agent_name, "type": "agent_reference"}},
+                input="",  # sample keeps this empty because the message is already in the conversation items
             )
-            
-            # Get the assistant's response
-            messages = project_client.agents.list_messages(thread_id=thread.id)
-            
-            # Find the latest assistant message
-            for message in messages:
-                if message.role == "assistant":
-                    print(f"\nAgent: {message.content[0].text.value}\n")
-                    break
+
+            print(f"Agent: {response.output_text}")
                     
     except KeyboardInterrupt:
         print("\n\nSession interrupted. Goodbye!")
@@ -78,7 +78,7 @@ def interact_with_agent():
     finally:
         # Clean up thread
         try:
-            project_client.agents.delete_thread(thread.id)
+            openai_client.conversations.delete(conversation.id)
             print(f"Conversation thread cleaned up.")
         except:
             pass
