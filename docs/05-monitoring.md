@@ -1,7 +1,9 @@
 ---
 lab:
-    title: 'Safety Testing and Red Teaming'
-    description: 'Implement automated safety monitoring systems, configure red teaming agents, and set up incident response procedures.'
+    title: 'Application Monitoring with Azure Monitor'
+    description: 'Enable monitoring for generative AI applications, view performance metrics in Azure Monitor, and configure alerts for model optimization.'
+    level: 400
+    duration: 30 minutes
 ---
 
 # Monitor your generative AI application

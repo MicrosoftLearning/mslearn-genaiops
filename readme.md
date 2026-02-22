@@ -88,9 +88,10 @@ This repository includes several sample agents and tools to support the learning
   - Interactive notebooks for benchmarking
   - Visualization tools for model analysis
 
-- **Prompt optimization** (`src/agents/prompt_optimization/`) - Tools for iterating and improving prompts
-  - Token counting utilities
-  - A/B testing frameworks
+- **Prompt experimentation** (Git-based workflow) - Systematic prompt optimization using branches
+  - Batch testing utilities (`src/tests/run_batch_tests.py`)
+  - CSV-based evaluation framework
+  - Test prompt library (`src/tests/test-prompts/`)
 
 - **Evaluators** (`src/evaluators/`) - Quality and safety evaluation modules
   - Quality evaluators for response accuracy
@@ -118,7 +119,7 @@ Based on the existing code in this repository and the new Microsoft Foundry expe
 ### Learning Path 1: GenAIOps extensions
 - **RAG with grounding**: Use the existing Bing Search and Azure AI Search infrastructure to build retrieval-augmented generation patterns
 - **Model comparison lab**: Leverage `src/agents/model_comparison/` notebooks to systematically compare GPT-4, GPT-4o, and other models
-- **Prompt engineering deep-dive**: Use `src/agents/prompt_optimization/` to teach systematic prompt iteration and token optimization
+- **Prompt engineering deep-dive**: Use Git-based experimentation workflow (Lab 3) to teach systematic prompt iteration, token optimization, and evidence-based decision making
 - **Custom evaluators**: Build domain-specific evaluators extending `src/evaluators/quality_evaluators.py`
 - **Synthetic data generation**: Use the existing `generate_synth_data.py` for creating evaluation datasets
 - **Multi-agent testing**: Test interactions between trail guide agent and other specialized agents

@@ -2,6 +2,8 @@
 lab:
     title: 'Develop prompt and agent versions'
     description: 'Create and deploy multiple versions of AI agents using prompt engineering and version management in Microsoft Foundry.'
+    level: 200
+    duration: 30 minutes
 ---
 
 # Develop prompt and agent versions
@@ -113,7 +115,7 @@ With your Azure resources deployed, install the required Python packages to work
 
     ```powershell
     python -m venv .venv
-    .venv\Scripts\Activate.ps1
+    .venv/Scripts/Activate.ps1
     ```
 
 1. Install the required dependencies:
@@ -139,7 +141,7 @@ Start by deploying the first version of the trail guide agent.
 1. In the VS Code terminal, navigate to the trail guide agent directory:
 
     ```powershell
-    cd src\agents\trail_guide_agent
+    cd src/agents/trail_guide_agent
     ```
 
 1. Open the agent creation script (`trail_guide_agent.py`) and locate the line that reads the prompt file:

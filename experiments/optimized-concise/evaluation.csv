@@ -1,0 +1,6 @@
+test_prompt,agent_response_excerpt,intent_resolution,relevance,groundedness,token_reduction,comments
+day-hike-gear,"Essential gear for summer moderate terrain day hikes includes...",5,5,4,45%,Maintains quality with significantly reduced verbosity
+overnight-camping,"First overnight camping essentials: shelter, sleeping, cooking...",4,5,5,42%,More direct communication while preserving safety focus
+three-day-backpacking,"October mountain backpacking safety priorities: weather prep, gear redundancy...",5,5,5,38%,Excellent concise safety guidance without losing detail
+winter-hiking,"Winter additions: insulation layers, backup heat, avalanche gear...",5,4,4,47%,Clear comparison without excess explanation
+trail-difficulty,"Beginner trail difficulty assessment factors: distance, elevation gain, technical skill...",5,5,5,40%,Helpful and immediately actionable guidance

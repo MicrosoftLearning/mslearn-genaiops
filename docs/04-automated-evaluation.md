@@ -2,6 +2,8 @@
 lab:
     title: 'Automated Evaluation Pipelines'
     description: 'Set up automated evaluation using Microsoft Foundry SDK and configure GitHub Actions for continuous evaluation.'
+    level: 300
+    duration: 30 minutes
 ---
 
 ## Optimize your model using a synthetic dataset

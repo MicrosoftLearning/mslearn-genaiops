@@ -1,7 +1,9 @@
 ---
 lab:
-    title: 'Production Deployment and Monitoring'
-    description: 'Deploy agents to production environments, implement observability and alerting, and configure deployment strategies.'
+    title: 'Application Tracing and Debugging'
+    description: 'Analyze and debug generative AI applications using distributed tracing, view trace data in Application Insights, and optimize application performance.'
+    level: 400
+    duration: 30 minutes
 ---
 
 # Analyze and debug your generative AI app with tracing
@@ -12,9 +14,9 @@ This exercise takes approximately **30 minutes**.
 
 ## Introduction
 
-In this exercise, you’ll run a multi-step generative AI assistant that recommends hiking trips and suggests outdoor gear. You’ll use the Azure AI Inference SDK’s tracing features to analyze how your application executes and identify key decision points made by the model and surrounding logic.
+In this exercise, you'll run a multi-step generative AI assistant that recommends hiking trips and suggests outdoor gear. You'll use the Azure AI Inference SDK's tracing features to analyze how your application executes and identify key decision points made by the model and surrounding logic.
 
-You’ll interact with a deployed model to simulate a real user journey, trace each stage of the application from user input to model response to post-processing, and view the trace data in Azure AI Foundry. This will help you understand how tracing enhances observability, simplifies debugging, and supports performance optimization of generative AI applications.
+You'll interact with a deployed model to simulate a real user journey, trace each stage of the application from user input to model response to post-processing, and view the trace data in Azure AI Foundry. This will help you understand how tracing enhances observability, simplifies debugging, and supports performance optimization of generative AI applications.
 
 ## Set up the environment
 
@@ -232,7 +234,7 @@ You will add these three parts to a starting script.
 
 ## View traces data in the Azure AI Foundry portal
 
-After running the script, you captured a trace of your AI application’s execution. Now you'll explore it using Application Insights in Azure AI Foundry.
+After running the script, you captured a trace of your AI application's execution. Now you'll explore it using Application Insights in Azure AI Foundry.
 
 > **Note:** Later, you'll run the code again, and view the traces in the Azure AI Foundry portal again. Let's first explore where to find the traces to visualize them.
 
@@ -252,7 +254,7 @@ This view shows the trace for one full session of the Trail Guide AI Assistant.
     This is the parent span. It represents the entire execution of your assistant from start to finish.
 
 - **Nested child spans**:
-    Each indented line represents a nested operation. You’ll find:
+    Each indented line represents a nested operation. You'll find:
 
     - **recommend_hike** which captures your logic to decide on a hike.
     - **recommend_model_call** which is the span created by call_model() inside recommend_hike.

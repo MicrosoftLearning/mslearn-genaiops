@@ -2,6 +2,8 @@
 lab:
     title: 'Infrastructure Setup'
     description: 'Deploy Microsoft Foundry resources and configure your development environment for building generative AI applications.'
+    level: 200
+    duration: 20 minutes
 ---
 
 # Set up your Microsoft Foundry project
@@ -129,7 +131,7 @@ Install the required Python packages to work with Microsoft Foundry in your appl
 
     ```powershell
     python -m venv .venv
-    .venv\Scripts\Activate.ps1
+    .venv/Scripts/Activate.ps1
     ```
 
 1. Install the required dependencies:
@@ -187,13 +189,13 @@ Interact with your deployed agent from the terminal to verify it's working corre
 1. In the VS Code terminal, navigate back to the repository root:
 
     ```powershell
-    cd ..\..\..
+    cd ../../..
     ```
 
 1. Run the interactive test script:
 
     ```powershell
-    python src\tests\interact_with_agent.py
+    python src/tests/interact_with_agent.py
     ```
 
 1. When prompted, ask the agent a question about hiking, for example:
