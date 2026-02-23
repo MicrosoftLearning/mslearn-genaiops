@@ -343,6 +343,9 @@ paket-files/
 **/__pycache__/
 *.pyc
 
+# Evaluation state file (local only)
+.evaluation_state
+
 # Cake - Uncomment if you are using it
 #tools/**
 #!tools/packages.config

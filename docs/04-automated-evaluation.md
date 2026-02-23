@@ -1,290 +1,589 @@
 ---
 lab:
-    title: 'Automated Evaluation Pipelines'
-    description: 'Set up automated evaluation using Microsoft Foundry SDK and configure GitHub Actions for continuous evaluation.'
+    title: 'Automated evaluation with cloud evaluators'
+    description: 'Scale quality testing with automated cloud evaluators for systematic evaluation of AI agents'
     level: 300
-    duration: 30 minutes
+    duration: 40 minutes
 ---
 
-## Optimize your model using a synthetic dataset
+# Automated evaluation with cloud evaluators
 
-Optimizing a generative AI application involves leveraging datasets to enhance the model's performance and reliability. By using synthetic data, developers can simulate a wide range of scenarios and edge cases that might not be present in real-world data. Furthermore, the evaluation of the model's outputs is crucial to obtain high-quality and reliable AI applications. The entire optimization and evaluation process can be efficiently managed using the Azure AI Evaluation SDK, which provides robust tools and frameworks to streamline these tasks.
+This exercise takes approximately **40 minutes**.
 
-This exercise will take approximately **30** minutes\*
+> **Note**: This lab assumes a pre-configured lab environment with Visual Studio Code, Azure CLI, and Python already installed.
 
-> \* This estimate does not include the optional task at the end of the exercise.
-## Scenario
+## Introduction
 
-Imagine you want to build an AI-powered smart guide app to enhance visitors' experiences in a museum. The app aims to answer questions about historical figures. To evaluate the responses from the app, you need to create a comprehensive synthetic question-answer dataset that covers various aspects of these personalities and their work.
+In this exercise, you'll use Microsoft Foundry's cloud evaluators to automatically assess quality at scale for the Adventure Works Trail Guide Agent. You'll run evaluations against a large test dataset (200 query-response pairs) to validate quality metrics and establish an automated evaluation pipeline for future changes.
 
-You've selected a GPT-4 model to provide generative answers. You now want to put together a simulator that generates contextually relevant interactions, evaluating the AI's performance across different scenarios.
+**Scenario**: You're operating the Adventure Works Trail Guide Agent. You want to evaluate it against a large test dataset (200 query-response pairs) to validate quality metrics and establish an automated evaluation pipeline that can scale as your agent evolves.
 
-Let's start by deploying the necessary resources to build this application.
+You'll use the following evaluation criteria—automated at scale:
 
-## Create an Azure AI hub and project
+- **Intent Resolution**: Does the response fully address what the user asked?
+- **Relevance**: Is the response appropriate and on-topic for the query?
+- **Groundedness**: Are the claims factually accurate and based on domain knowledge?
 
-You can create an Azure AI hub and project manually through the Azure AI Foundry portal, as well as deploy the models used in the exercise. However, you can also automate this process through the use of a template application with [Azure Developer CLI (azd)](https://aka.ms/azd).
+## Set up the environment
 
-1. In a web browser, open [Azure portal](https://portal.azure.com) at `https://portal.azure.com` and sign in using your Azure credentials.
+To complete the tasks in this exercise, you need:
 
-1. Use the **[\>_]** button to the right of the search bar at the top of the page to create a new Cloud Shell in the Azure portal, selecting a ***PowerShell*** environment. The cloud shell provides a command line interface in a pane at the bottom of the Azure portal. For more information about using the Azure Cloud Shell, see the [Azure Cloud Shell documentation](https://docs.microsoft.com/azure/cloud-shell/overview).
+- Visual Studio Code
+- Azure subscription with Microsoft Foundry access
+- Git and [GitHub](https://github.com) account
+- Python 3.9 or later
+- Azure CLI and Azure Developer CLI (azd) installed
 
-    > **Note**: If you have previously created a cloud shell that uses a *Bash* environment, switch it to ***PowerShell***.
+> **Tip**: If you haven't installed these prerequisites yet, see [Lab 00: Prerequisites](00-prerequisites.md) for installation instructions and links.
 
-1. In the Cloud Shell toolbar, in the **Settings** menu, select **Go to Classic version**.
+All steps in this lab will be performed using Visual Studio Code and its integrated terminal.
 
-    **<font color="red">Ensure you've switched to the Classic version of the Cloud Shell before continuing.</font>**
+### Create repository from template
 
-1. In the PowerShell pane, enter the following commands to clone this exercise's repo:
+You'll start by creating your own repository from the template to practice realistic workflows.
+
+1. In a web browser, navigate to the template repository on [GitHub](https://github.com) at `https://github.com/MicrosoftLearning/mslearn-genaiops`.
+1. Select **Use this template** > **Create a new repository**.
+1. Enter a name for your repository (e.g., `mslearn-genaiops`).
+1. Set the repository to **Public** or **Private** based on your preference.
+1. Select **Create repository**.
+
+### Clone the repository in Visual Studio Code
+
+After creating your repository, clone it to your local machine.
+
+1. In Visual Studio Code, open the Command Palette by pressing **Ctrl+Shift+P**.
+1. Type **Git: Clone** and select it.
+1. Enter your repository URL: `https://github.com/[your-username]/mslearn-genaiops.git`
+1. Select a location on your local machine to clone the repository.
+1. When prompted, select **Open** to open the cloned repository in VS Code.
+
+### Deploy Microsoft Foundry resources
+
+Now you'll use the Azure Developer CLI to deploy all required Azure resources.
+
+1. In Visual Studio Code, open a terminal by selecting **Terminal** > **New Terminal** from the menu.
+
+1. Authenticate with Azure Developer CLI:
 
     ```powershell
-   rm -r mslearn-genaiops -f
-   git clone https://github.com/MicrosoftLearning/mslearn-genaiops
+    azd auth login
     ```
 
-1. After the repo has been cloned, enter the following commands to initialize the Starter template. 
-   
-    ```powershell
-   cd ./mslearn-genaiops/Starter
-   azd init
-    ```
+    This opens a browser window for Azure authentication. Sign in with your Azure credentials.
 
-1. Once prompted, give the new environment a name as it will be used as basis for giving unique names to all the provisioned resources.
-        
-1. Next, enter the following command to run the Starter template. It will provision an AI Hub with dependent resources, AI project, AI Services and an online endpoint. It will also deploy the models GPT-4 Turbo, GPT-4o, and GPT-4o mini.
+1. Authenticate with Azure CLI:
 
     ```powershell
-   azd up  
+    az login
     ```
 
-1. When prompted, choose which subscription you want to use and then choose one of the following locations for resource provision:
-   - East US
-   - East US 2
-   - North Central US
-   - South Central US
-   - Sweden Central
-   - West US
-   - West US 3
+    Sign in with your Azure credentials when prompted.
+
+1. Provision resources:
+
+    ```powershell
+    azd up
+    ```
+
+    When prompted, provide:
+    - **Environment name** (e.g., `dev`, `test`) - Used to name all resources
+    - **Azure subscription** - Where resources will be created
+    - **Location** - Azure region (recommended: Sweden Central)
+
+    The command deploys the infrastructure from the `infra\` folder, creating:
+    - **Resource Group** - Container for all resources
+    - **Foundry (AI Services)** - The hub with access to models like GPT-4.1
+    - **Foundry Project** - Your workspace for creating and managing prompts
+    - **Log Analytics Workspace** - Collects logs and telemetry data
+    - **Application Insights** - Monitors performance and usage
+
+1. Create a `.env` file with the environment variables:
+
+    ```powershell
+    azd env get-values > .env
+    ```
+
+    This creates a `.env` file in your project root with all the provisioned resource information.
+
+### Install Python dependencies
+
+With your Azure resources deployed, install the required Python packages.
+
+1. In the VS Code terminal, create and activate a virtual environment:
+
+    ```powershell
+    python -m venv .venv
+    .venv\Scripts\Activate.ps1
+    ```
+
+1. Install the required dependencies:
+
+    ```powershell
+    python -m pip install -r requirements.txt
+    ```
+
+    This installs necessary dependencies including:
+    - `azure-ai-projects` - SDK for working with AI Foundry
+    - `azure-identity` - Azure authentication
+    - `python-dotenv` - Load environment variables
+
+1. Add the agent configuration to your `.env` file:
+
+    Open the `.env` file in your repository root and add:
+
+    ```
+    AGENT_NAME=trail-guide
+    MODEL_NAME=gpt-4.1
+    ```
+
+## Understand the evaluation workflow
+
+Cloud evaluation follows a structured workflow:
+
+```text
+1. Prepare Dataset
+   ↓
+2. Define Evaluation Criteria (Evaluators)
+   ↓
+3. Create Evaluation Definition
+   ↓
+4. Run Evaluation against Dataset
+   ↓
+5. Poll for Completion
+   ↓
+6. Retrieve & Interpret Results
+   ↓
+7. Analyze and Document Findings
+```
+
+### Dataset preparation
+
+The repository includes `data/datasets/trail_guide_evaluation_dataset.jsonl` with 200 pre-generated query-response pairs covering diverse hiking scenarios. Each entry includes:
+
+- `query`: User question
+- `response`: Agent-generated answer
+- `ground_truth`: Reference answer for accuracy comparison
+
+### Evaluators
+
+You'll use Microsoft Foundry's built-in quality evaluators:
+
+| Evaluator | Measures | Output | Use Case |
+|-----------|----------|--------|----------|
+| **Intent Resolution** | Query intent addressed | 1-5 score | Ensure user needs are met |
+| **Relevance** | Response addresses query | 1-5 score | Validate query-response alignment |
+| **Groundedness** | Factual accuracy | 1-5 score | Ensure reliable information |
+
+All evaluators use GPT-4.1 as an LLM judge and return:
+
+- **Score**: 1-5 scale (5 = excellent)
+- **Label**: Pass/Fail based on threshold (default: 3)
+- **Reason**: Explanation of the score
+- **Threshold**: Configurable pass/fail cutoff
+
+## Run cloud evaluation
+
+### Verify the evaluation dataset
+
+First, examine the prepared dataset structure.
+
+1. View the first few entries in the dataset:
+
+    ```powershell
+    Get-Content data/datasets/trail_guide_evaluation_dataset.jsonl -Head 3
+    ```
+
+    Output:
+    ```json
+    {"query": "What essential gear do I need for a summer day hike?", "response": "For a summer day hike, essential gear includes: proper hiking boots with good ankle support, moisture-wicking clothing in layers, a daypack (20-30L), 2 liters of water, high-energy snacks, sun protection (hat, sunglasses, sunscreen SPF 30+), a basic first aid kit, map and compass or GPS device, headlamp with extra batteries, and a whistle for emergencies...", "ground_truth": "Essential day hike gear includes footwear, water, food, sun protection, navigation tools, first aid, and emergency supplies."}
+    {"query": "How much water should I bring on a 5-mile hike?", "response": "For a 5-mile hike, plan to bring at least 1-2 liters of water...", "ground_truth": "Bring 1-2 liters of water for a 5-mile hike, adjusting for weather and terrain."}
+    ```
+
+1. Count total entries in the dataset:
+
+    ```powershell
+    (Get-Content data/datasets/trail_guide_evaluation_dataset.jsonl).Count
+    ```
+
+    Expected: 200 entries
+
+### Understand the evaluation pipeline
+
+The repository includes a complete evaluation script that handles the entire cloud evaluation workflow. This all-in-one approach simplifies both local execution and CI/CD automation.
+
+**Script: Complete Evaluation** (`src/evaluators/evaluate_agent.py`)
+
+The script performs all evaluation steps automatically:
+
+1. **Upload Dataset** - Uploads the JSONL dataset to Microsoft Foundry
+2. **Define Evaluation** - Creates evaluation definition with quality evaluators (Intent Resolution, Relevance, Groundedness)
+3. **Run Evaluation** - Starts the cloud evaluation run
+4. **Poll for Completion** - Waits for evaluation to complete (5-10 minutes for 200 items)
+5. **Display Results** - Retrieves and shows scoring statistics
+
+This single-script approach makes it easy to run evaluations both locally during development and automatically in CI/CD pipelines.
+
+### Run cloud evaluation
+
+Execute the complete evaluation pipeline with one command.
+
+1. **Run the evaluation**
+
+    Run the evaluation script to execute the complete evaluation pipeline:
+
+    ```powershell
+    python src/evaluators/evaluate_agent.py
+    ```
+
+    Expected output:
+
+    ```
+    ================================================================================
+     Trail Guide Agent - Cloud Evaluation
+    ================================================================================
+
+    Configuration:
+      Project: https://<account>.services.ai.azure.com/api/projects/<project>
+      Model: gpt-4.1
+      Dataset: trail-guide-evaluation-dataset (v1)
+
+    ================================================================================
+    Step 1: Uploading evaluation dataset
+    ================================================================================
+
+    Dataset: trail_guide_evaluation_dataset.jsonl
+    Uploading...
+
+    ✓ Dataset uploaded successfully
+      Dataset ID: file-abc123xyz
+
+    ================================================================================
+    Step 2: Creating evaluation definition
+    ================================================================================
+
+    Configuration:
+      Judge Model: gpt-4.1
+      Evaluators: Intent Resolution, Relevance, Groundedness
+
+    Creating evaluation...
+
+    ✓ Evaluation definition created
+      Evaluation ID: eval-def456uvw
+
+    ================================================================================
+    Step 3: Running cloud evaluation
+    ================================================================================
+
+    ✓ Evaluation run started
+      Run ID: run-ghi789rst
+      Status: running
+
+    This may take 5-10 minutes for 200 items...
+
+    ================================================================================
+    Step 4: Polling for completion
+    ================================================================================
+      [487s] Status: running
+
+    ✓ Evaluation completed successfully
+      Total time: 512 seconds
+
+    ================================================================================
+    Step 5: Retrieving results
+    ================================================================================
+
+    Evaluation Summary
+      Report URL: https://<account>.services.ai.azure.com/projects/<project>/evaluations/...
+
+    Average Scores (1-5 scale, threshold: 3)
+      Intent Resolution: 4.52 (n=200)
+      Relevance:         4.41 (n=200)
+      Groundedness:      4.18 (n=200)
+
+    Pass Rates (score >= 3)
+      Intent Resolution: 96.0%
+      Relevance:         95.5%
+      Groundedness:      91.0%
+
+    ================================================================================
+    Cloud evaluation complete
+    ================================================================================
+
+    Next steps:
+      1. Review detailed results in Azure AI Foundry portal
+      2. Analyze patterns in successful and failed evaluations
+      3. Document key findings and recommendations
+    ```
+
+    > **Note**: Evaluation runtime varies based on dataset size and model capacity. 200 items typically takes 5-15 minutes.
+
+### Automate with GitHub Actions
+
+The evaluation script integrates seamlessly into GitHub Actions for automated PR evaluations.
+
+1. **Configure GitHub Secrets**
+
+    Add these secrets to your repository (Settings → Secrets and variables → Actions):
+
+    | Secret Name             | Description                          | Example Value                    |
+    |-------------------------|--------------------------------------|----------------------------------|
+    | `AZURE_CLIENT_ID`       | Service principal client ID          | `12345678-1234-1234-1234-...`    |
+    | `AZURE_TENANT_ID`       | Azure tenant ID                      | `87654321-4321-4321-4321-...`    |
+    | `AZURE_SUBSCRIPTION_ID` | Azure subscription ID                | `abcdef12-abcd-abcd-abcd-...`    |
+    | `PROJECT_ENDPOINT`      | Microsoft Foundry project endpoint   | `https://...ai.azure.com/...`    |
+
+    **Optional Variables:**
+    - `MODEL_NAME`: Judge model deployment name (default: gpt-4.1)
+
+1. **Configure Azure authentication**
+
+    Create a service principal with Foundry project access:
+
+    ```powershell
+    # Create service principal
+    az ad sp create-for-rbac --name "github-agent-evaluator" `
+      --role "Azure AI Developer" `
+      --scopes /subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.MachineLearningServices/workspaces/<workspace> `
+      --sdk-auth
+    ```
+
+    Configure federated identity for GitHub OIDC:
+
+    ```powershell
+    az ad app federated-credential create `
+      --id <app-id> `
+      --parameters '{
+        "name": "github-actions",
+        "issuer": "https://token.actions.githubusercontent.com",
+        "subject": "repo:<your-org>/<your-repo>:ref:refs/heads/main",
+        "audiences": ["api://AzureADTokenExchange"]
+      }'
+    ```
+
+1. **Review the PR evaluation workflow**
+
+    ```powershell
+    code .github/workflows/evaluate-agent.yml
+    ```
+
+    The workflow:
+    - Triggers on PRs that modify agent code
+    - Runs the complete evaluation script
+    - Shows results in workflow logs
+    - Comments results directly on the PR
+
+1. **Test the workflow**
+
+    Push a change to an agent prompt and open a PR to trigger evaluation:
+
+    ```powershell
+    # Make a small change to test
+    code src/agents/trail_guide_agent/prompts/v1_instructions.txt
     
-1. Wait for the script to complete - this typically takes around 10 minutes, but in some cases may take longer.
+    # Commit and push
+    git add .
+    git commit -m "test: Trigger evaluation workflow"
+    git push origin main
+    ```
 
-    > **Note**: Azure OpenAI resources are constrained at the tenant level by regional quotas. The listed regions above include default quota for the model type(s) used in this exercise. Randomly choosing a region reduces the risk of a single region reaching its quota limit. In the event of a quota limit being reached, there's a possibility you may need to create another resource group in a different region. Learn more about [model availability per region](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models?tabs=standard%2Cstandard-chat-completions#global-standard-model-availability)
+1. **View results in PR**
 
-    <details>
-      <summary><b>Troubleshooting tip</b>: No quota available in a given region</summary>
-        <p>If you receive a deployment error for any of the models due to no quota available in the region you chose, try running the following commands:</p>
-        <ul>
-          <pre><code>azd env set AZURE_ENV_NAME new_env_name
-   azd env set AZURE_RESOURCE_GROUP new_rg_name
-   azd env set AZURE_LOCATION new_location
-   azd up</code></pre>
-        Replacing <code>new_env_name</code>, <code>new_rg_name</code>, and <code>new_location</code> with new values. The new location must be one of the regions listed at the beginning of the exercise, e.g <code>eastus2</code>, <code>northcentralus</code>, etc.
-        </ul>
-    </details>
+    Once the workflow completes, a comment will be posted to your PR with:
+    - Summary of evaluation scores
+    - Pass rates for each criterion
+    - Link to detailed results in Azure AI Foundry portal
 
-1. Once all resources have been provisioned, use the following commands to fetch the endpoint and access key to your AI Services resource. Note that you must replace `<rg-env_name>` and `<aoai-xxxxxxxxxx>` with the names of your resource group and AI Services resource. Both are printed in the deployment's output.
+### Review results in Azure portal
 
-     ```powershell
-    Get-AzCognitiveServicesAccount -ResourceGroupName <rg-env_name> -Name <aoai-xxxxxxxxxx> | Select-Object -Property endpoint
-     ```
+Examine detailed evaluation results in the Foundry portal.
 
-     ```powershell
-    Get-AzCognitiveServicesAccountKey -ResourceGroupName <rg-env_name> -Name <aoai-xxxxxxxxxx> | Select-Object -Property Key1
-     ```
+1. Open the Report URL printed in the script output in your browser.
 
-1. Copy these values as they will be used later on.
+1. In the Azure AI Foundry portal, view:
+   - **Aggregate metrics**: Overall pass rates and score distributions
+   - **Individual test results**: Score, label (pass/fail), and reasoning for each query-response pair
+   - **Evaluator details**: How each evaluator scored each response
 
-## Set up your development environment in Cloud Shell
+1. Filter results:
+   - View only failed items (score < 3)
+   - Sort by specific evaluators
+   - Search for specific queries
 
-To quickly experiment and iterate, you'll use a set of Python scripts in Cloud Shell.
+1. Identify patterns:
+   - Which types of queries score lowest?
+   - Are there consistent reasoning themes in failures?
+   - Do certain evaluators flag more issues than others?
 
-1. In the Cloud Shell command-line pane, enter the following command to navigate to the folder with the code files used in this exercise:
+### Analyze evaluation results
 
-     ```powershell
-    cd ~/mslearn-genaiops/Files/06/
-     ```
+Document your findings and create an analysis report.
 
-1. Enter the following commands to activate a virtual environment and install the libraries you need:
+1. Create a results directory:
 
     ```powershell
-   python -m venv labenv
-   ./labenv/bin/Activate.ps1
-   pip install python-dotenv azure-ai-evaluation azure-ai-projects promptflow wikipedia aiohttp openai==1.77.0
+    New-Item -ItemType Directory -Path experiments/automated -Force
+    New-Item -ItemType File -Path experiments/automated/evaluation_analysis.md
     ```
 
-1. Enter the following command to open the configuration file that has been provided:
+1. Add your evaluation analysis:
+
+    ```markdown
+    # Cloud Evaluation Analysis: Trail Guide Agent
+    
+    ## Evaluation Summary
+    
+    Evaluated: 200 test cases  
+    Time: ~10 minutes  
+    Scoring: GPT-4.1 as LLM judge (1-5 scale)
+    
+    | Evaluator | Average Score | Pass Rate | Assessment |
+    |-----------|---------------|-----------|------------|
+    | Intent Resolution | 4.52 | 96.0% | Excellent intent understanding |
+    | Relevance | 4.41 | 95.5% | High query-response alignment |
+    | Groundedness | 4.18 | 91.0% | Good factual accuracy |
+    | **Average** | **4.37** | **94.2%** | **High Quality Overall** |
+    
+    ## Key Findings
+    
+    ### Strengths
+    
+    - High average scores across all quality dimensions (>4.0)
+    - Excellent intent resolution shows queries are well understood
+    - Strong relevance indicates appropriate query-response alignment
+    - Pass rates above 90% demonstrate consistent quality
+    
+    ### Areas for Improvement
+    
+    - Groundedness slightly lower than other metrics (4.18)
+    - Review failed cases (5-10%) to identify common patterns
+    - Consider if certain query types need prompt refinement
+    
+    ### Failed Evaluations Analysis
+    
+    Review the 5-10% of responses that scored below threshold:
+    
+    - **Common failure patterns**: [Document patterns you observe]
+    - **Query types affected**: [Identify if certain topics are problematic]
+    - **Recommended improvements**: [Suggest prompt or agent changes]
+    
+    ## Automated Evaluation Benefits
+    
+    - **Scales** to hundreds/thousands of items efficiently
+    - **Consistent** scoring criteria across all evaluations
+    - **Fast** turnaround (10 minutes for 200 items)
+    - **Repeatable** and trackable over time
+    - **CI/CD ready** for integration into deployment pipelines
+    - **Detailed reasoning** provided for each score
+    
+    ## Recommended Use Cases
+    
+    | Scenario | Recommended Approach | Rationale |
+    |----------|---------------------|-----------|
+    | Testing new prompts (50+ queries) | **Automated** | Scale, speed, consistency |
+    | Continuous integration testing | **Automated** | Fast feedback in pipelines |
+    | Baseline establishment | **Automated** | Quantifiable metrics at scale |
+    | Production monitoring (ongoing) | **Automated** | Continuous quality tracking |
+    | Investigating edge cases | **Manual review** | Deep dive into specific failures |
+    
+    ## Next Steps
+    
+    1. Use automated evaluation as primary quality gate for agent changes
+    2. Set up automated evaluation in CI/CD pipeline
+    3. Establish alerting thresholds (e.g., intent_resolution < 4.0 fails deployment)
+    4. Schedule regular evaluations to track quality over time
+    5. Investigate and address patterns in failed evaluations
+    ```
+
+1. Save the file and commit your analysis:
 
     ```powershell
-   code .env
+    git add experiments/automated/
+    git commit -m "Complete automated evaluation analysis"
     ```
 
-    The file is opened in a code editor.
+## Compare evaluation configurations (Optional)
 
-1. In the code file, replace the **your_azure_openai_service_endpoint** and **your_azure_openai_service_api_key** placeholders with the endpoint and key values you copied earlier.
-1. *After* you've replaced the placeholders, in the code editor, use the **CTRL+S** command or **Right-click > Save** to save your changes and then use the **CTRL+Q** command or **Right-click > Quit** to close the code editor while keeping the cloud shell command line open.
+### Investigation goal
 
-## Generate synthetic data
+Explore how different evaluator configurations affect scoring and identify optimal thresholds for pass/fail decisions.
 
-You'll now run a script that generates a synthetic dataset and uses it to evaluate the quality of your pre-trained model.
+### Experiment with threshold adjustments
 
-1. Run the following command to **edit the script** that has been provided:
+1. Modify `run_cloud_evaluation.py` to test different pass/fail thresholds.
 
-    ```powershell
-   code generate_synth_data.py
-    ```
+1. Rerun evaluation with stricter thresholds (e.g., 4.0 instead of 3.0).
 
-1. In the script, locate **# Define callback function**.
-1. Below this comment, paste the following code:
+1. Document impact on pass rates and false positive/negative tradeoffs.
 
-    ```
-    async def callback(
-        messages: List[Dict],
-        stream: bool = False,
-        session_state: Any = None,  # noqa: ANN401
-        context: Optional[Dict[str, Any]] = None,
-    ) -> dict:
-        messages_list = messages["messages"]
-        # Get the last message
-        latest_message = messages_list[-1]
-        query = latest_message["content"]
-        context = text
-        # Call your endpoint or AI application here
-        current_dir = os.getcwd()
-        prompty_path = os.path.join(current_dir, "application.prompty")
-        _flow = load_flow(source=prompty_path)
-        response = _flow(query=query, context=context, conversation_history=messages_list)
-        # Format the response to follow the OpenAI chat protocol
-        formatted_response = {
-            "content": response,
-            "role": "assistant",
-            "context": context,
-        }
-        messages["messages"].append(formatted_response)
-        return {
-            "messages": messages["messages"],
-            "stream": stream,
-            "session_state": session_state,
-            "context": context
-        }
-    ```
+Create `experiments/automated/threshold_analysis.md` with:
 
-    You can bring any application endpoint to simulate against by specifying a target callback function. In this case, you will use an application that is an LLM with a Prompty file `application.prompty`. The callback function above processes each message generated by the simulator by performing the following tasks:
-    * Retrieves the latest user message.
-    * Loads a prompt flow from application.prompty.
-    * Generates a response using the prompt flow.
-    * Formats the response to adhere to the OpenAI chat protocol.
-    * Appends the assistant's response to the messages list.
+- Pass rate comparison at different thresholds
+- Recommendation for production threshold settings
+- Justification based on risk tolerance
 
-    >**Note**: For more information about using Prompty, see [Prompty's documentation](https://www.prompty.ai/docs).
+## Evaluate model comparison (Optional)
 
-1. Next, locate **# Run the simulator**.
-1. Below this comment, paste the following code:
+### Investigation goal
 
-    ```
-    model_config = {
-        "azure_endpoint": os.getenv("AZURE_OPENAI_ENDPOINT"),
-        "api_key": os.getenv("AZURE_OPENAI_API_KEY"),
-        "azure_deployment": os.getenv("AZURE_OPENAI_DEPLOYMENT"),
-    }
-    
-    simulator = Simulator(model_config=model_config)
-    
-    outputs = asyncio.run(simulator(
-        target=callback,
-        text=text,
-        num_queries=1,  # Minimal number of queries
-    ))
-    
-    output_file = "simulation_output.jsonl"
-    with open(output_file, "w") as file:
-        for output in outputs:
-            file.write(output.to_eval_qr_json_lines())
-    ```
+Compare evaluation results between GPT-4.1 and GPT-4.1-mini to understand quality-cost tradeoffs for your specific use case.
 
-   The code above will initialize the simulator and run it to generate synthetic conversations based on a text previously extracted from Wikipedia.
+### Run evaluation on GPT-4.1-mini responses
 
-1. Next, locate **# Evaluate the model**.
-1. Below this comment, paste the following code:
+1. Generate 200 responses from GPT-4.1-mini for the same queries.
 
-    ```
-    groundedness_evaluator = GroundednessEvaluator(model_config=model_config)
-    eval_output = evaluate(
-        data=output_file,
-        evaluators={
-            "groundedness": groundedness_evaluator
-        },
-        output_path="groundedness_eval_output.json"
-    )
-    ```
+1. Run cloud evaluation on both sets.
 
-    Now that you have a dataset, you can evaluate the quality and effectiveness of your generative AI application. In the code above, you will use groundedness as your quality metric.
+1. Compare quality scores to quantify the quality-cost tradeoff.
 
-1. Save your changes.
-1. In the Cloud Shell command-line pane beneath the code editor, enter the following command to **run the script**:
+Create `experiments/automated/model_comparison.md` with:
 
-    ```
-   python generate_synth_data.py
-    ```
+- Side-by-side quality score comparison
+- Cost analysis (estimate based on token usage)
+- Validated recommendation: Which model for which use cases
 
-    Once the script is finished, you can download the output files by running `download simulation_output.jsonl` and `download groundedness_eval_output.json` and review their contents. If the groundedness metric isn't close to 3.0, you can change the LLM parameters such as `temperature`, `top_p`, `presence_penalty` or `frequency_penalty` in the `application.prompty` file and re-run the script to generate a new dataset for evaluation. You can also change the `wiki_search_term` to obtain a synthetic dataset based on a different context.
+## Troubleshooting
 
-## (OPTIONAL) Fine-tune your model
+### Evaluation taking longer than expected
 
-If you have extra time, you can use the generated dataset to fine-tune your model in Azure AI Foundry. Fine-tuning is dependent on cloud infrastructure resources, which can take a variable amount of time to provision depending on data center capacity and concurrent demand.
+**Symptom**: Evaluation runs for 20+ minutes or appears stuck.
 
-1. Open a new browser tab and navigate to [Azure AI Foundry portal](https://ai.azure.com) at `https://ai.azure.com` and sign in using your Azure credentials.
-1. In the AI Foundry's home page, select the project you created at the beginning of the exercise.
-1. Navigate to the **Fine-tuning** page under the **Build and customize** section, using the menu on the left.
-1. Select the button to add a new fine-tune model, select the **gpt-4o** model and then select **Next**.
-1. **Fine-tune** the model using the following configuration:
-    - **Model version**: *Select the default version*
-    - **Method of customization**: Supervised
-    - **Model suffix**: `ft-travel`
-    - **Connected AI resource**: *Select the connection that was created when you created your hub. Should be selected by default.*
-    - **Training data**: Upload files
+**Resolution**:
+- Check Azure OpenAI quota and rate limits in Azure portal
+- Reduce dataset size for initial testing (e.g., first 50 entries)
+- Verify model deployment has sufficient capacity
+- If timeout occurs, cancel and restart with smaller batch
 
-    <details>  
-    <summary><b>Troubleshooting tip</b>: Permissions error</summary>
-    <p>If you receive a permissions error, try the following to troubleshoot:</p>
-    <ul>
-        <li>In the Azure portal, select the AI Services resource.</li>
-        <li>Under Resource Management, in the Identity tab, confirm that it's system assigned managed identity.</li>
-        <li>Navigate to the associated Storage Account. On the IAM page, add the role assignment <em>Storage Blob Data Owner</em>.</li>
-        <li>Under <strong>Assign access to</strong>, choose <strong>Managed Identity</strong>, <strong>+ Select members</strong>, select the <strong>All system-assigned managed identities</strong>, and select your Azure AI services resource.</li>
-        <li>Review and assign to save the new settings and retry the previous step.</li>
-    </ul>
-    </details>
+### Authentication errors
 
-    - **Upload file**: Select the JSONL file you downloaded in a previous step.
-    - **Validation data**: None
-    - **Task parameters**: *Keep the default settings*
-1. Fine-tuning will start and may take some time to complete.
+**Symptom**: `401 Unauthorized` or `403 Forbidden` errors.
 
-    > **Note**: Fine-tuning and deployment can take a significant amount of time (30 minutes or longer), so you may need to check back periodically. You can see more details of the progress so far by selecting the fine-tuning model job and viewing its **Logs** tab.
+**Resolution**:
+- Run `az login` to refresh Azure credentials
+- Verify you have **Azure AI User** role on the Foundry project
+- Check `PROJECT_ENDPOINT` in `.env` file is correct and includes `/api/projects/<project>`
 
-## (OPTIONAL) Deploy the fine-tuned model
+### Evaluator scoring seems inconsistent
 
-When fine-tuning has successfully completed, you can deploy the fine-tuned model.
+**Symptom**: Automated scores differ significantly from expected manual scores.
 
-1. Select the fine-tuning job link to open its details page. Then, select the **Metrics** tab and explore the fine-tune metrics.
-1. Deploy the fine-tuned model with the following configurations:
-    - **Deployment name**: *A valid name for your model deployment*
-    - **Deployment type**: Standard
-    - **Tokens per Minute Rate Limit (thousands)**: 5K *(or the maximum available in your subscription if less than 5K)
-    - **Content filter**: Default
-1. Wait for the deployment to be complete before you can test it, this might take a while. Check the **Provisioning state** until it has succeeded (you may need to refresh the browser to see the updated status).
-1. When the deployment is ready, navigate to the fine-tuned model and select **Open in playground**.
+**Resolution**:
+- Review evaluator reasoning in Azure portal to understand scoring logic
+- Check if query-response pairs have sufficient context for evaluation
+- Verify `ground_truth` field provides appropriate factual reference
+- Consider that LLM judges may prioritize different aspects than humans
 
-    Now that you deployed your fine-tuned model, you can test it in the Chat playground like you would with any base model.
+### Rate limit errors during evaluation
 
-## Conclusion
+**Symptom**: Evaluation fails with `429 Too Many Requests` errors.
 
-In this exercise you created a synthetic dataset simulating a conversation between an user and a chat completion app. By using this dataset, you can evaluate the quality of your app's responses and fine-tune it to achieve the desired results.
+**Resolution**:
+- Check Azure OpenAI deployment tokens-per-minute (TPM) quota
+- Increase quota in Azure portal if needed
+- Split large datasets into smaller batches
+- Add retry logic with exponential backoff
 
-## Clean up
+## Next steps
 
-If you've finished exploring Azure AI Services, you should delete the resources you have created in this exercise to avoid incurring unnecessary Azure costs.
-
-1. Return to the browser tab containing the Azure portal (or re-open the [Azure portal](https://portal.azure.com?azure-portal=true) in a new browser tab) and view the contents of the resource group where you deployed the resources used in this exercise.
-1. On the toolbar, select **Delete resource group**.
-1. Enter the resource group name and confirm that you want to delete it.
+- Continue to [Lab 05: Monitoring](05-monitoring.md) to track production agent performance with Application Insights
+- Explore [Lab 06: Tracing](06-tracing.md) to debug and optimize agent behavior using distributed tracing
