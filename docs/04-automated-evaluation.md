@@ -336,6 +336,32 @@ The evaluation script integrates seamlessly into GitHub Actions for automated PR
     **Optional Variables:**
     - `MODEL_NAME`: Judge model deployment name (default: gpt-4.1)
 
+1. **Enable automatic PR evaluations**
+
+    The workflow is disabled by default. To enable automatic evaluation on pull requests:
+
+    1. Open `.github/workflows/evaluate-agent.yml` in your repository
+    2. Uncomment the `pull_request` trigger (lines 4-7):
+
+        ```yaml
+        on:
+          pull_request:
+            branches: [main]
+            paths:
+              - 'src/agents/trail_guide_agent/**'
+          workflow_dispatch:
+        ```
+
+    3. Commit and push the change:
+
+        ```powershell
+        git add .github/workflows/evaluate-agent.yml
+        git commit -m "Enable automated PR evaluations"
+        git push origin main
+        ```
+
+    Now the workflow will run automatically whenever you modify agent code in a PR.
+
 1. **Configure Azure authentication**
 
     Create a service principal with Foundry project access:
@@ -368,12 +394,24 @@ The evaluation script integrates seamlessly into GitHub Actions for automated PR
     ```
 
     The workflow:
-    - Triggers on PRs that modify agent code
+    - Disabled by default (requires uncommenting the PR trigger)
+    - Can be triggered manually via workflow_dispatch
     - Runs the complete evaluation script
     - Shows results in workflow logs
     - Comments results directly on the PR
 
-1. **Test the workflow**
+1. **Test the workflow manually**
+
+    Before enabling automatic PR evaluations, test the workflow manually:
+
+    1. Go to your repository on GitHub
+    2. Navigate to Actions → Evaluate Trail Guide Agent
+    3. Click "Run workflow"
+    4. Select the branch and run
+
+    This tests the workflow without requiring a PR.
+
+1. **Test with a PR (after enabling)**
 
     Push a change to an agent prompt and open a PR to trigger evaluation:
 
@@ -393,6 +431,8 @@ The evaluation script integrates seamlessly into GitHub Actions for automated PR
     - Summary of evaluation scores
     - Pass rates for each criterion
     - Link to detailed results in Azure AI Foundry portal
+
+    > **Note**: If you haven't enabled automatic PR evaluations, you can still manually trigger the workflow from the Actions tab.
 
 ### Review results in Azure portal
 

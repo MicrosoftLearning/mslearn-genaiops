@@ -1,10 +1,11 @@
 name: Evaluate Trail Guide Agent
 
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - 'src/agents/trail_guide_agent/**'
+  # Uncomment the lines below to enable automatic evaluation on pull requests
+  # pull_request:
+  #   branches: [main]
+  #   paths:
+  #     - 'src/agents/trail_guide_agent/**'
   workflow_dispatch:
 
 permissions:
