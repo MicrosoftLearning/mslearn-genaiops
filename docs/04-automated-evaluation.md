@@ -159,7 +159,7 @@ Cloud evaluation follows a structured workflow:
 
 ### Dataset preparation
 
-The repository includes `data/datasets/trail_guide_evaluation_dataset.jsonl` with 200 pre-generated query-response pairs covering diverse hiking scenarios. Each entry includes:
+The repository includes `data/trail_guide_evaluation_dataset.jsonl` with 200 pre-generated query-response pairs covering diverse hiking scenarios. Each entry includes:
 
 - `query`: User question
 - `response`: Agent-generated answer
@@ -191,7 +191,7 @@ First, examine the prepared dataset structure.
 1. View the first few entries in the dataset:
 
     ```powershell
-    Get-Content data/datasets/trail_guide_evaluation_dataset.jsonl -Head 3
+    Get-Content data/trail_guide_evaluation_dataset.jsonl -Head 3
     ```
 
     Output:
@@ -203,7 +203,7 @@ First, examine the prepared dataset structure.
 1. Count total entries in the dataset:
 
     ```powershell
-    (Get-Content data/datasets/trail_guide_evaluation_dataset.jsonl).Count
+    (Get-Content data/trail_guide_evaluation_dataset.jsonl).Count
     ```
 
     Expected: 200 entries
@@ -326,12 +326,12 @@ The evaluation script integrates seamlessly into GitHub Actions for automated PR
 
     Add these secrets to your repository (Settings → Secrets and variables → Actions):
 
-    | Secret Name             | Description                          | Example Value                    |
-    |-------------------------|--------------------------------------|----------------------------------|
-    | `AZURE_CLIENT_ID`       | Service principal client ID          | `12345678-1234-1234-1234-...`    |
-    | `AZURE_TENANT_ID`       | Azure tenant ID                      | `87654321-4321-4321-4321-...`    |
-    | `AZURE_SUBSCRIPTION_ID` | Azure subscription ID                | `abcdef12-abcd-abcd-abcd-...`    |
-    | `PROJECT_ENDPOINT`      | Microsoft Foundry project endpoint   | `https://...ai.azure.com/...`    |
+    | Secret Name                    | Description                          | Example Value                    |
+    |--------------------------------|--------------------------------------|----------------------------------|
+    | `AZURE_CLIENT_ID`              | Service principal client ID          | `12345678-1234-1234-1234-...`    |
+    | `AZURE_TENANT_ID`              | Azure tenant ID                      | `87654321-4321-4321-4321-...`    |
+    | `AZURE_SUBSCRIPTION_ID`        | Azure subscription ID                | `abcdef12-abcd-abcd-abcd-...`    |
+    | `AZURE_AI_PROJECT_ENDPOINT`    | Microsoft Foundry project endpoint   | `https://...ai.azure.com/...`    |
 
     **Optional Variables:**
     - `MODEL_NAME`: Judge model deployment name (default: gpt-4.1)
@@ -601,7 +601,7 @@ Create `experiments/automated/model_comparison.md` with:
 **Resolution**:
 - Run `az login` to refresh Azure credentials
 - Verify you have **Azure AI User** role on the Foundry project
-- Check `PROJECT_ENDPOINT` in `.env` file is correct and includes `/api/projects/<project>`
+- Check `AZURE_AI_PROJECT_ENDPOINT` in `.env` file is correct and includes `/api/projects/<project>`
 
 ### Evaluator scoring seems inconsistent
 

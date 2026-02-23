@@ -25,13 +25,13 @@ from openai.types.evals.create_eval_jsonl_run_data_source_param import (
 
 # Load environment variables
 load_dotenv()
-endpoint = os.environ.get("PROJECT_ENDPOINT")
+endpoint = os.environ.get("AZURE_AI_PROJECT_ENDPOINT")
 model_deployment_name = os.environ.get("MODEL_NAME", "gpt-4.1")
 dataset_name = "trail-guide-evaluation-dataset"
 dataset_version = "1"
 
 if not endpoint:
-    print("Error: PROJECT_ENDPOINT environment variable not set")
+    print("Error: AZURE_AI_PROJECT_ENDPOINT environment variable not set")
     sys.exit(1)
 
 # Initialize project client
@@ -49,7 +49,7 @@ def upload_dataset():
     print("Step 1: Uploading evaluation dataset")
     print("=" * 80)
     
-    dataset_path = Path(__file__).parent.parent.parent / "data" / "datasets" / "trail_guide_evaluation_dataset.jsonl"
+    dataset_path = Path(__file__).parent.parent.parent / "data" / "trail_guide_evaluation_dataset.jsonl"
     
     if not dataset_path.exists():
         raise FileNotFoundError(f"Dataset not found at {dataset_path}")
@@ -300,7 +300,7 @@ def main():
     except Exception as e:
         print(f"\nError: {e}")
         print(f"\nTroubleshooting:")
-        print(f"  - Verify PROJECT_ENDPOINT in .env file")
+        print(f"  - Verify AZURE_AI_PROJECT_ENDPOINT in .env file")
         print(f"  - Check Azure credentials: az login")
         print(f"  - Ensure GPT-4.1 model is deployed and accessible")
         sys.exit(1)

@@ -42,7 +42,7 @@ jobs:
       - name: Run evaluation
         id: run
         env:
-          PROJECT_ENDPOINT: ${{ secrets.PROJECT_ENDPOINT }}
+          AZURE_AI_PROJECT_ENDPOINT: ${{ secrets.AZURE_AI_PROJECT_ENDPOINT }}
           MODEL_NAME: ${{ vars.MODEL_NAME || 'gpt-4.1' }}
         run: |
           python src/evaluators/evaluate_agent.py > evaluation_results.txt
