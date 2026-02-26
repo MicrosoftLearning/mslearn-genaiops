@@ -76,67 +76,50 @@ module applicationInsights '../monitor/applicationinsights.bicep' = if (enableMo
 resource aiAccount 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
   name: !empty(existingAiAccountName) ? existingAiAccountName : 'ai-account-${resourceToken}'
   location: location
-  tags: tags
-  sku: {
-    name: 'S0'
-  }
   kind: 'AIServices'
-  identity: {
-    type: 'SystemAssigned'
-  }
+  sku: { name: 'S0' }
+  identity: { type: 'SystemAssigned' }
   properties: {
     allowProjectManagement: true
     customSubDomainName: !empty(existingAiAccountName) ? existingAiAccountName : 'ai-account-${resourceToken}'
+    publicNetworkAccess: 'Enabled'
+    disableLocalAuth: true
     networkAcls: {
       defaultAction: 'Allow'
       virtualNetworkRules: []
       ipRules: []
     }
-    publicNetworkAccess: 'Enabled'
-    disableLocalAuth: true
-  }
-  
-  @batchSize(1)
-  resource seqDeployments 'deployments' = [
-    for dep in (deployments ?? []): {
-      name: dep.name
-      sku: dep.sku
-      properties: {
-        model: dep.model
-      }
-    }
-  ]
-
-  resource project 'projects' = {
-    name: aiFoundryProjectName
-    location: location
-    identity: {
-      type: 'SystemAssigned'
-    }
-    properties: {
-      description: '${aiFoundryProjectName} Project'
-      displayName: '${aiFoundryProjectName}Project'
-    }
-    dependsOn: [
-      seqDeployments
-    ]
-  }
-
-  resource aiFoundryAccountCapabilityHost 'capabilityHosts@2025-10-01-preview' = if (enableHostedAgents) {
-    name: 'agents'
-    properties: {
-      capabilityHostKind: 'Agents'
-      // IMPORTANT: this is required to enable hosted agents deployment
-      // if no BYO Net is provided
-      enablePublicHostingEnvironment: true
-    }
   }
 }
 
+// NEW: separate project resource, matching docs
+resource project 'Microsoft.CognitiveServices/accounts/projects@2025-06-01' = {
+  name: aiFoundryProjectName
+  parent: aiAccount
+  location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    description: '${aiFoundryProjectName} Project'
+    displayName: '${aiFoundryProjectName}Project'
+  }
+}
+
+resource aiFoundryAccountCapabilityHost 'Microsoft.CognitiveServices/accounts/capabilityHosts@2025-10-01-preview' = if (enableHostedAgents) {
+  name: 'agents'
+  parent: aiAccount
+  properties: {
+    capabilityHostKind: 'Agents'
+    // IMPORTANT: this is required to enable hosted agents deployment
+    // if no BYO Net is provided
+    enablePublicHostingEnvironment: true
+  }
+}
 
 // Create connection towards appinsights
-resource appInsightConnection 'Microsoft.CognitiveServices/accounts/projects/connections@2025-04-01-preview' = {
-  parent: aiAccount::project
+resource appInsightConnection 'Microsoft.CognitiveServices/accounts/projects/connections@2025-04-01-preview' = if (enableMonitoring) {
+  parent: project
   name: 'appi-connection'
   properties: {
     category: 'AppInsights'
@@ -158,7 +141,7 @@ module aiConnections './connection.bicep' = [for (connection, index) in connecti
   name: 'connection-${connection.name}'
   params: {
     aiServicesAccountName: aiAccount.name
-    aiProjectName: aiAccount::project.name
+    aiProjectName: project.name
     connectionConfig: {
       name: connection.name
       category: connection.category
@@ -191,9 +174,9 @@ resource localUserCognitiveServicesUserRoleAssignment 'Microsoft.Authorization/r
 
 resource projectCognitiveServicesUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: aiAccount
-  name: guid(subscription().id, resourceGroup().id, aiAccount::project.name, '53ca6127-db72-4b80-b1b0-d745d6d5456d')
+  name: guid(subscription().id, resourceGroup().id, project.name, '53ca6127-db72-4b80-b1b0-d745d6d5456d')
   properties: {
-    principalId: aiAccount::project.identity.principalId
+    principalId: project.identity.principalId
     principalType: 'ServicePrincipal'
     roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '53ca6127-db72-4b80-b1b0-d745d6d5456d')
   }
@@ -214,7 +197,7 @@ module storage '../storage/storage.bicep' = if (hasStorageConnection) {
     principalId: principalId
     principalType: principalType
     aiServicesAccountName: aiAccount.name
-    aiProjectName: aiAccount::project.name
+    aiProjectName: project.name
   }
 }
 
@@ -229,7 +212,7 @@ module acr '../host/acr.bicep' = if (hasAcrConnection) {
     principalId: principalId
     principalType: principalType
     aiServicesAccountName: aiAccount.name
-    aiProjectName: aiAccount::project.name
+    aiProjectName: project.name
   }
 }
 
@@ -241,7 +224,7 @@ module bingGrounding '../search/bing_grounding.bicep' = if (hasBingConnection) {
     resourceName: 'bing-${resourceToken}'
     connectionName: bingConnectionName
     aiServicesAccountName: aiAccount.name
-    aiProjectName: aiAccount::project.name
+    aiProjectName: project.name
   }
 }
 
@@ -253,7 +236,7 @@ module bingCustomGrounding '../search/bing_custom_grounding.bicep' = if (hasBing
     resourceName: 'bingcustom-${resourceToken}'
     connectionName: bingCustomConnectionName
     aiServicesAccountName: aiAccount.name
-    aiProjectName: aiAccount::project.name
+    aiProjectName: project.name
   }
 }
 
@@ -267,7 +250,7 @@ module azureAiSearch '../search/azure_ai_search.bicep' = if (hasSearchConnection
     storageAccountResourceId: hasStorageConnection ? storage!.outputs.storageAccountId : ''
     containerName: 'knowledge'
     aiServicesAccountName: aiAccount.name
-    aiProjectName: aiAccount::project.name
+    aiProjectName: project.name
     principalId: principalId
     principalType: principalType
     location: location
@@ -276,15 +259,15 @@ module azureAiSearch '../search/azure_ai_search.bicep' = if (hasSearchConnection
 
 
 // Outputs
-output AZURE_AI_PROJECT_ENDPOINT string = aiAccount::project.properties.endpoints['AI Foundry API']
+output AZURE_AI_PROJECT_ENDPOINT string = project.properties.endpoints['AI Foundry API']
 output AZURE_OPENAI_ENDPOINT string = aiAccount.properties.endpoints['OpenAI Language Model Instance API']
 output aiServicesEndpoint string = aiAccount.properties.endpoint
 output accountId string = aiAccount.id
-output projectId string = aiAccount::project.id
+output projectId string = project.id
 output aiServicesAccountName string = aiAccount.name
-output aiServicesProjectName string = aiAccount::project.name
+output aiServicesProjectName string = project.name
 output aiServicesPrincipalId string = aiAccount.identity.principalId
-output projectName string = aiAccount::project.name
+output projectName string = project.name
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = applicationInsights.outputs.connectionString
 
 // Grouped dependent resources outputs
