@@ -27,7 +27,7 @@ from openai.types.evals.create_eval_jsonl_run_data_source_param import (
 load_dotenv()
 endpoint = os.environ.get("AZURE_AI_PROJECT_ENDPOINT")
 model_deployment_name = os.environ.get("MODEL_NAME", "gpt-4.1")
-dataset_name = "trail-guide-evaluation-dataset"
+dataset_name = "trail-guide-evaluation-dataset_2"
 dataset_version = "1"
 
 if not endpoint:
@@ -49,7 +49,7 @@ def upload_dataset():
     print("Step 1: Uploading evaluation dataset")
     print("=" * 80)
     
-    dataset_path = Path(__file__).parent.parent.parent / "data" / "trail_guide_evaluation_dataset.jsonl"
+    dataset_path = Path(__file__).parent.parent.parent / "data" / "trail_guide_evaluation_dataset_2.jsonl"
     
     if not dataset_path.exists():
         raise FileNotFoundError(f"Dataset not found at {dataset_path}")
