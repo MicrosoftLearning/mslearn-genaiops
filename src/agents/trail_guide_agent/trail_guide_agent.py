@@ -11,7 +11,7 @@ env_file = repo_root / '.env'
 load_dotenv(env_file)
 
 # Read instructions from prompt file
-prompt_file = Path(__file__).parent / 'prompts' / 'v4_instructions.txt'
+prompt_file = Path(__file__).parent / 'prompts' / 'v4_optimized_concise.txt'
 with open(prompt_file, 'r') as f:
     instructions = f.read().strip()
 
