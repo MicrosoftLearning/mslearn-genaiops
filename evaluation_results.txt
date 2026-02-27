@@ -1,14 +1,75 @@
 ================================================================================
+ Trail Guide Agent - Cloud Evaluation
+================================================================================
+
+Configuration:
+  Project: https://ai-account-u2favsrdpp24k.services.ai.azure.com/api/projects/ai-project-dev-tester
+  Model:   gpt-4.1
+  Dataset: trail-guide-evaluation-dataset (v1)
+
+================================================================================
+Step 1: Uploading evaluation dataset
+================================================================================
+
+Dataset: trail_guide_evaluation_dataset.jsonl
+Uploading...
+
+  Dataset version 1 already exists in Foundry.
+  Retrieving existing dataset ID...
+  ✓ Using existing dataset
+  Dataset ID: azureai://accounts/ai-account-u2favsrdpp24k/projects/ai-project-dev-tester/data/trail-guide-evaluation-dataset/versions/1
+
+================================================================================
+Step 2: Creating evaluation definition
+================================================================================
+
+Configuration:
+  Judge Model: gpt-4.1
+  Evaluators: Intent Resolution, Relevance, Groundedness
+
+Creating evaluation...
+
+✓ Evaluation definition created
+  Evaluation ID: eval_7d81e353fce74ab3a51105fac7f59ed8
+
+================================================================================
+Step 3: Running cloud evaluation
+================================================================================
+
+✓ Evaluation run started
+  Run ID: evalrun_31596933faa44251a62247465b5d8fbd
+  Status: in_progress
+
+This may take 5-10 minutes for 200 items...
+
+================================================================================
+Step 4: Polling for completion
+================================================================================
+  [3675s] Status: in_progress
+
+✓ Evaluation completed in 3694 seconds
+
+================================================================================
+Step 5: Retrieving results
+================================================================================
+
+Evaluation Summary
+  Report URL: https://ai.azure.com/nextgen/r/ZDCVYALRRAyvc0GrsS4tgA,rg-dev-tester,,ai-account-u2favsrdpp24k,ai-project-dev-tester/build/evaluations/eval_7d81e353fce74ab3a51105fac7f59ed8/run/evalrun_31596933faa44251a62247465b5d8fbd
+
+  [DEBUG] First item type : <class 'openai.types.evals.runs.output_item_list_response.OutputItemListResponse'>
+  [DEBUG] First item attrs: ['construct', 'copy', 'created_at', 'datasource_item', 'datasource_item_id', 'dict', 'eval_id', 'from_orm', 'id', 'json', 'model_computed_fields', 'model_config', 'model_construct', 'model_copy', 'model_dump', 'model_dump_json', 'model_extra', 'model_fields', 'model_fields_set', 'model_json_schema', 'model_parametrized_name', 'model_post_init', 'model_rebuild', 'model_validate', 'model_validate_json', 'model_validate_strings', 'object', 'parse_file', 'parse_obj', 'parse_raw', 'results', 'run_id', 'sample', 'schema', 'schema_json', 'status', 'to_dict', 'to_json', 'update_forward_refs', 'validate']     
+  [DEBUG] item.__dict__: {'id': '1', 'created_at': 1772201992, 'datasource_item': {'query': 'What essential gear do I need for a summer day hike?', 'response': 'For a summer day hike, essential gear includes: proper hiking boots with good ankle support, moisture-wicking clothing in layers, a daypack (20-30L), 2 liters of water, high-energy snacks, sun protection (hat, sunglasses, sunscreen SPF 30+), a basic first aid kit, map and compass or GPS device, headlamp with extra batteries, and a whistle for emergencies. Always check the weather forecast and trail conditions before heading out.', 'ground_truth': 'Essential day hike gear includes footwear, water, food, sun protection, navigation tools, first aid, and emergency supplies.'}, 'datasource_item_id': 0, 'eval_id': 'eval_7d81e353fce74ab3a51105fac7f59ed8', 'object': 'eval.run.output_item', 'results': [Result(name='intent_resolution', passed=True, score=5.0, sample={'usage': {'prompt_tokens': 1984, 'completion_tokens': 61, 'total_tokens': 2045}, 'finish_reason': 'stop', 'model': 'gpt-4.1-2025-04-14', 'input': [{'role': 'user', 'content': '{"query": "What essential gear do I need for a summer day hike?", "response": "For a summer day hike, essential gear includes: proper hiking boots with good ankle support, moisture-wicking clothing in layers, a daypack (20-30L), 2 liters of water, high-energy snacks, sun protection (hat, sunglasses, sunscreen SPF 30+), a basic first aid kit, map and compass or GPS device, headlamp with extra batteries, and a whistle for emergencies. Always check the weather forecast and trail conditions before heading out.", "tool_definitions": null}'}], 'output': [{'role': 'assistant', 'content': '{\n  "explanation": "The user asked for essential gear for a summer day hike. The agent provided a thorough, accurate, and relevant list, including safety, hydration, navigation, and sun protection, fully resolving the user\'s intent with no notable omissions.",\n  "score": 5\n}'}]}, type='azure_ai_evaluator', metric='intent_resolution', label='pass', reason="The user asked for essential gear for a summer day hike. The agent provided a thorough, accurate, and relevant list, including safety, hydration, navigation, and sun protection, fully resolving the user's intent with no notable omissions.", threshold=3), Result(name='relevance', passed=True, score=5.0, sample={'usage': {'prompt_tokens': 1678, 'completion_tokens': 63, 'total_tokens': 1741}, 'finish_reason': 'stop', 'model': 'gpt-4.1-2025-04-14', 'input': [{'role': 'user', 'content': '{"query": "What essential gear do I need for a summer day hike?", "response": "For a summer day hike, essential gear includes: proper hiking boots with good ankle support, moisture-wicking clothing in layers, a daypack (20-30L), 2 liters of water, high-energy snacks, sun protection (hat, sunglasses, sunscreen SPF 30+), a basic first aid kit, map and compass or GPS device, headlamp with extra batteries, and a whistle for emergencies. Always check the weather forecast and trail conditions before heading out."}'}], 'output': [{'role': 'assistant', 'content': '{\n  "explanation": "The response provides a thorough list of essential gear for a summer day hike, including clothing, hydration, navigation, safety, and sun protection. It also adds practical advice about checking weather and trail conditions, offering both completeness and useful context.",\n  "score": 5\n}'}]}, type='azure_ai_evaluator', metric='relevance', label='pass', reason='The response provides a thorough list of essential gear for a summer day hike, including clothing, hydration, navigation, safety, and sun protection. It also adds practical advice about checking weather and trail conditions, offering both completeness and useful context.', threshold=3), Result(name='groundedness', passed=True, score=5.0, sample={'usage': {'prompt_tokens': 1571, 'completion_tokens': 106, 'total_tokens': 1677}, 'finish_reason': 'stop', 'model': 'gpt-4.1-2025-04-14', 'input': [{'role': 'user', 'content': '{"query": "What essential gear do I need for a summer day hike?", "response": "For a summer day hike, essential gear includes: proper hiking boots with good ankle support, moisture-wicking clothing in layers, a daypack (20-30L), 2 liters of water, high-energy snacks, sun protection (hat, sunglasses, sunscreen SPF 30+), a basic first aid kit, map and compass or GPS device, headlamp with extra batteries, and a whistle for emergencies. Always check the weather forecast and trail conditions before heading out.", "context": "For a summer day hike, essential gear includes: proper hiking boots with good ankle support, moisture-wicking clothing in layers, a daypack (20-30L), 2 liters of water, high-energy snacks, sun protection (hat, sunglasses, sunscreen SPF 30+), a basic first aid kit, map and compass or GPS device, headlamp with extra batteries, and a whistle for emergencies. Always check the weather forecast and trail conditions before heading out."}'}], 'output': [{'role': 'assistant', 'content': "<S0>Let's think step by step: The query asks for the essential gear needed for a summer day hike. The context provides a detailed list of essential gear and some additional advice. The response repeats the context almost verbatim, listing all the gear and advice without omitting or adding any information. There are no inaccuracies or missing details.</S0>\n<S1>The response is fully accurate, complete, and directly grounded in the provided context, addressing the query thoroughly.</S1>\n<S2>5</S2>"}]}, type='azure_ai_evaluator', metric='groundedness', label='pass', reason='The response is fully accurate, complete, and directly grounded in the provided context, addressing the query thoroughly.', threshold=3)], 'run_id': 'evalrun_31596933faa44251a62247465b5d8fbd', 'sample': Sample(error=None, finish_reason='stop', input=[SampleInput(content='{"query": "What essential gear do I need for a summer day hike?", "response": "For a summer day hike, essential gear includes: proper hiking boots with good ankle support, moisture-wicking clothing in layers, a daypack (20-30L), 2 liters of water, high-energy snacks, sun protection (hat, sunglasses, sunscreen SPF 30+), a basic first aid kit, map and compass or GPS device, headlamp with extra batteries, and a whistle for emergencies. Always check the weather forecast and trail conditions before heading out.", "context": "For a summer day hike, essential gear includes: proper hiking boots with good ankle support, moisture-wicking clothing in layers, a daypack (20-30L), 2 liters of water, high-energy snacks, sun protection (hat, sunglasses, sunscreen SPF 30+), a basic first aid kit, map and compass or GPS device, headlamp with extra batteries, and a whistle for emergencies. Always check the weather forecast and trail conditions before heading out."}', role='user')], max_completion_tokens=None, model='gpt-4.1-2025-04-14', output=[SampleOutput(content="<S0>Let's think step by step: The query asks for the essential gear needed for a summer day hike. The context provides a detailed list of essential gear and some additional advice. The response repeats the context almost verbatim, listing all the gear and advice without omitting or adding any information. There are no inaccuracies or missing details.</S0>\n<S1>The response is fully accurate, complete, and directly grounded in the provided context, addressing the query thoroughly.</S1>\n<S2>5</S2>", role='assistant')], seed=None, temperature=None, top_p=None, usage=SampleUsage(cached_tokens=None, completion_tokens=106, prompt_tokens=1571, total_tokens=1677)), 'status': 'completed'}
+================================================================================
  Trail Guide Agent - Evaluation Results
 ================================================================================
 
-  Report URL   : https://ai.azure.com/nextgen/r/ZDCVYALRRAyvc0GrsS4tgA,rg-dev-tester,,ai-account-u2favsrdpp24k,ai-project-dev-tester/build/evaluations/eval_7d81e353fce74ab3a51105fac7f59ed8/run/evalrun_31596933faa44251a62247465b5d8fbd
-  Total items  : 89
-  Errored items: 0
-  Scored items : 89
+  Report URL   : https://ai.azure.com/nextgen/r/ZDCVYALRRAyvc0GrsS4tgA,rg-dev-tester,,ai-account-u2favsrdpp24k,ai-project-dev-tester/build/evaluations/eval_7d81e353fce74ab3a51105fac7f59ed8/run/eva
 
-Average Scores (1-5 scale, threshold: 3)
-  No scores returned — check the Report URL for details.
+================================================================================
+Cloud evaluation complete
+================================================================================
 
-Pass Rates (score >= 3)
-  No scores returned.
+Next steps:
+  1. Review detailed results in Azure AI Foundry portal
+  2. Analyze patterns in successful and failed evaluations
+  3. Commit evaluation_results.txt and push so the PR workflow can use it
