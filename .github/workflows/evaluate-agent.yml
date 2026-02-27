@@ -1,76 +1,85 @@
 name: Evaluate Trail Guide Agent
 
-# This workflow runs automatically when changes are pushed to the agent's
-# prompt or code files on a pull request targeting main.
-# You can also trigger it manually from the Actions tab.
 on:
   # Uncomment the lines below to enable automatic evaluation on pull requests
-  pull_request:
-    branches: [main]
-    paths:
-      - 'src/agents/trail_guide_agent/**'
+  # pull_request:
+  #   branches: [main]
+  #   paths:
+  #     - 'src/agents/trail_guide_agent/**'
   workflow_dispatch:
 
 permissions:
   contents: read
-  pull-requests: write  # needed to post the PR comment
+  pull-requests: write
+  id-token: write
 
 jobs:
-
-  # ---------------------------------------------------------------------------
-  # Job: comment
-  # Reads evaluation_results.txt that was committed to the branch by the
-  # student (produced locally by running evaluate_agent.py) and posts its
-  # contents as a comment on the pull request.
-  # On manual (workflow_dispatch) runs the results are printed to the log.
-  # ---------------------------------------------------------------------------
-  comment:
+  evaluate:
     runs-on: ubuntu-latest
-
+    
     steps:
-      # Check out the branch so we can read the committed results file
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
-
-      # Always print results to the workflow log (useful for manual runs)
-      - name: Print results to log
-        run: cat evaluation_results.txt
-
-      # Post the contents of evaluation_results.txt as a PR comment.
-      # Skipped on manual (workflow_dispatch) runs — no PR to comment on.
-      - name: Post results as PR comment
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Run evaluation
+        id: run
+        env:
+          AZURE_AI_PROJECT_ENDPOINT: ${{ secrets.AZURE_AI_PROJECT_ENDPOINT }}
+          MODEL_NAME: ${{ vars.MODEL_NAME || 'gpt-4.1' }}
+        run: |
+          python src/evaluators/evaluate_agent.py > evaluation_results.txt
+          cat evaluation_results.txt
+      
+      - name: Comment PR with results
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-
-            // Read the results file committed to the branch
             const results = fs.readFileSync('evaluation_results.txt', 'utf8');
-
-            const body = [
-              '## Trail Guide Agent — Evaluation Results',
-              '',
-              'Evaluation results from the local run committed with this PR.',
-              '',
-              '<details>',
-              '<summary>View full results</summary>',
-              '',
-              '```',
-              results,
-              '```',
-              '',
-              '</details>',
-              '',
-              '**Pass criteria (score ≥ 3 on a 1–5 scale):**',
-              '- Intent Resolution',
-              '- Relevance',
-              '- Groundedness',
-            ].join('\n');
-
+            
+            const body = `## 🎯 Agent Evaluation Results
+            
+            Automated evaluation completed for Trail Guide Agent changes.
+            
+            <details>
+            <summary>View Detailed Results</summary>
+            
+            \`\`\`
+            ${results}
+            \`\`\`
+            
+            </details>
+            
+            📊 [View full results in Azure AI Foundry Portal](${{ steps.run.outputs.report_url }})
+            
+            **Evaluation Criteria:**
+            - Intent Resolution (score ≥ 3)
+            - Relevance (score ≥ 3)
+            - Groundedness (score ≥ 3)
+            `;
+            
             github.rest.issues.createComment({
               issue_number: context.issue.number,
-              owner:        context.repo.owner,
-              repo:         context.repo.repo,
-              body:         body,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
             });
