@@ -22,18 +22,24 @@ jobs:
   # Reads evaluation_results.txt that was committed to the branch by the
   # student (produced locally by running evaluate_agent.py) and posts its
   # contents as a comment on the pull request.
+  # On manual (workflow_dispatch) runs the results are printed to the log.
   # ---------------------------------------------------------------------------
   comment:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
 
     steps:
       # Check out the branch so we can read the committed results file
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Post the contents of evaluation_results.txt as a PR comment
+      # Always print results to the workflow log (useful for manual runs)
+      - name: Print results to log
+        run: cat evaluation_results.txt
+
+      # Post the contents of evaluation_results.txt as a PR comment.
+      # Skipped on manual (workflow_dispatch) runs — no PR to comment on.
       - name: Post results as PR comment
+        if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
