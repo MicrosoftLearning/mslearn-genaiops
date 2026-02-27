@@ -267,10 +267,10 @@ def poll_for_results(eval_object, eval_run):
             error_detail = getattr(run, "error", None) or "No additional details available."
             raise RuntimeError(
                 f"Evaluation run failed after {elapsed}s.\n"
-                f"  Run ID     : {eval_run.id}\n"
-                f"  Error      : {error_detail}\n"
-                f"  Report URL : {getattr(run, 'report_url', 'N/A')}\n"
-                f"  Open the Report URL in Azure AI Foundry portal for full details."
+                f"  Eval ID : {eval_object.id}\n"
+                f"  Run ID  : {eval_run.id}\n"
+                f"  Error   : {error_detail}\n"
+                f"  To inspect: open Azure AI Foundry portal > Evaluations"
             )
         else:
             # Overwrite the same line so the terminal isn't flooded
@@ -299,7 +299,6 @@ def retrieve_and_display_results(eval_object, run):
     section("Step 5: Retrieving results")
 
     print(f"\nEvaluation Summary")
-    print(f"  Report URL: {run.report_url}")
 
     # Retrieve every scored item from the run
     output_items = list(
@@ -308,18 +307,6 @@ def retrieve_and_display_results(eval_object, run):
             eval_id=eval_object.id,
         )
     )
-
-    # Debug: print the raw structure of the first item so we can verify
-    # the attribute names match what the API actually returns.
-    # Remove this block once scores are confirmed working.
-    if output_items:
-        first = output_items[0]
-        print(f"\n  [DEBUG] First item type : {type(first)}")
-        print(f"  [DEBUG] First item attrs: {[a for a in dir(first) if not a.startswith('_')]}")
-        if hasattr(first, "evaluator_outputs"):
-            print(f"  [DEBUG] evaluator_outputs: {first.evaluator_outputs}")
-        if hasattr(first, "__dict__"):
-            print(f"  [DEBUG] item.__dict__: {first.__dict__}")
 
     # Separate items by status so we can report errors alongside scores
     errored_items = [
@@ -334,7 +321,7 @@ def retrieve_and_display_results(eval_object, run):
     if errored_items:
         print(f"\n  ⚠ {len(errored_items)} item(s) errored during evaluation.")
         print(f"    First error: {getattr(errored_items[0], 'error', 'details unavailable')}")
-        print(f"    Open the Report URL in Foundry portal to inspect all failed items.")
+        print(f"    Open Azure AI Foundry portal > Evaluations to inspect all failed items.")
 
     # Collect individual scores grouped by metric name
     scores: dict[str, list[float]] = {
@@ -363,7 +350,8 @@ def retrieve_and_display_results(eval_object, run):
         "=" * 80,
         " Trail Guide Agent - Evaluation Results",
         "=" * 80,
-        f"\n  Report URL   : {run.report_url}",
+        f"\n  Eval ID      : {eval_object.id}",
+        f"  Run ID       : {run.id}",
         f"  Total items  : {len(output_items)}",
         f"  Errored items: {len(errored_items)}",
         f"  Scored items : {len(scored_items)}",
@@ -385,7 +373,7 @@ def retrieve_and_display_results(eval_object, run):
     if not any_scores:
         # Scores missing — the evaluation may have completed but returned no
         # evaluator_outputs. Open the Report URL above to inspect in the portal.
-        lines.append("  No scores returned — check the Report URL for details.")
+        lines.append("  No scores returned — open Azure AI Foundry portal > Evaluations for details.")
         pass_lines.append("  No scores returned.")
 
     lines.extend(pass_lines)
