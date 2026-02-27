@@ -16,10 +16,8 @@ from dotenv import load_dotenv
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
 
-# Load environment variables from repository root
-repo_root = Path(__file__).parent.parent.parent
-env_file = repo_root / '.env'
-load_dotenv(env_file)
+# Load environment variables from .env file
+load_dotenv()
 
 def load_test_prompts(test_prompts_dir):
     """Load all test prompt files from the test-prompts directory."""

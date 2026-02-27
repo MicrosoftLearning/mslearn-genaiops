@@ -1,0 +1,14 @@
+================================================================================
+ Trail Guide Agent - Evaluation Results
+================================================================================
+
+  Report URL   : https://ai.azure.com/nextgen/r/ZDCVYALRRAyvc0GrsS4tgA,rg-dev-tester,,ai-account-u2favsrdpp24k,ai-project-dev-tester/build/evaluations/eval_7d81e353fce74ab3a51105fac7f59ed8/run/evalrun_31596933faa44251a62247465b5d8fbd
+  Total items  : 89
+  Errored items: 0
+  Scored items : 89
+
+Average Scores (1-5 scale, threshold: 3)
+  No scores returned — check the Report URL for details.
+
+Pass Rates (score >= 3)
+  No scores returned.

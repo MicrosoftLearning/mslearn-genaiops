@@ -258,6 +258,28 @@ module azureAiSearch '../search/azure_ai_search.bicep' = if (hasSearchConnection
 }
 
 
+// Deploy model deployments on the AI account.
+// Each entry in the `deployments` parameter becomes a real deployment that
+// can be referenced by name from the project (e.g. "gpt-4.1", "gpt-4.1-mini").
+@batchSize(1) // Deploy one at a time to avoid capacity conflicts
+resource modelDeployments 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = [
+  for deployment in (deployments ?? []): {
+    parent: aiAccount
+    name: deployment.name
+    sku: {
+      name: deployment.sku.name
+      capacity: deployment.sku.capacity
+    }
+    properties: {
+      model: {
+        format: deployment.model.format
+        name: deployment.model.name
+        version: deployment.model.?version ?? null
+      }
+    }
+  }
+]
+
 // Outputs
 output AZURE_AI_PROJECT_ENDPOINT string = project.properties.endpoints['AI Foundry API']
 output AZURE_OPENAI_ENDPOINT string = aiAccount.properties.endpoints['OpenAI Language Model Instance API']

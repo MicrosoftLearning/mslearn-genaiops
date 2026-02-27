@@ -127,8 +127,8 @@ With your Azure resources deployed, install the required Python packages.
     Open the `.env` file in your repository root and add:
 
     ```
-    AGENT_NAME=trail-guide
-    MODEL_NAME=gpt-4.1
+    AGENT_NAME="trail-guide"
+    MODEL_NAME="gpt-4.1"
     ```
 
 ## Understand the experimental workflow
@@ -232,7 +232,7 @@ The baseline provides:
 
 Create your baseline evaluation scores.
 
-1. Create `experiments/baseline/evaluation.csv`:
+1. Check if it created or create `experiments/baseline/evaluation.csv`:
 
     ```csv
     test_prompt,agent_response_excerpt,intent_resolution,relevance,groundedness,comments
@@ -404,7 +404,7 @@ Review the agent responses and create an evaluation CSV with quality scores.
     New-Item experiments/optimized-concise/evaluation.csv
     ```
 
-1. Open the file in VS Code and add the CSV header and scores:
+1. Open the file in VS Code and verify or add the CSV header and scores:
 
     ```csv
     test_prompt,agent_response_excerpt,intent_resolution,relevance,groundedness,comments
