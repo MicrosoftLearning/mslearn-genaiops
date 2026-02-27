@@ -318,6 +318,16 @@ Execute the complete evaluation pipeline with one command.
 
     > **Note**: Evaluation runtime varies based on dataset size and model capacity. 200 items typically takes 5-15 minutes.
 
+1. **Commit the results file**
+
+    The script writes a summary to `evaluation_results.txt` in your project root. Commit this file so the GitHub Actions workflow can read it when it runs on your PR:
+
+    ```powershell
+    git add evaluation_results.txt
+    git commit -m "Add evaluation results"
+    git push
+    ```
+
 ### Automate with GitHub Actions
 
 The evaluation script integrates seamlessly into GitHub Actions for automated PR evaluations.

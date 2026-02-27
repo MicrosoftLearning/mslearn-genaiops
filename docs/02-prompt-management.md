@@ -103,8 +103,8 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
 1. Add the agent configuration to your `.env` file:
 
     ```
-    AGENT_NAME=trail-guide
-    MODEL_NAME=gpt-4.1
+    AGENT_NAME="trail-guide"
+    MODEL_NAME="gpt-4.1"
     ```
 
 ### Install Python dependencies

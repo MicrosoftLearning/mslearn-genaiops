@@ -16,10 +16,8 @@ from dotenv import load_dotenv
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
 
-# Load environment variables from repository root
-repo_root = Path(__file__).parent.parent.parent
-env_file = repo_root / '.env'
-load_dotenv(env_file)
+# Load environment variables from .env file
+load_dotenv()
 
 def load_test_prompts(test_prompts_dir):
     """Load all test prompt files from the test-prompts directory."""
@@ -53,12 +51,14 @@ def run_batch_tests(experiment_name):
         endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
         credential=DefaultAzureCredential(),
     )
+
+    openai_client = client.get_openai_client()
     
     # Get the agent by name (assumes trail_guide_agent.py already created it)
     agent_name = os.environ.get("AGENT_NAME", "trail-guide")
     
     # List agents and find the one with our name
-    agents = client.agents.list_agents()
+    agents = client.agents.list()
     agent = None
     for a in agents:
         if a.name == agent_name:
@@ -70,10 +70,7 @@ def run_batch_tests(experiment_name):
         print("Please run 'python src/agents/trail_guide_agent/trail_guide_agent.py' first to create the agent.")
         return
     
-    print(f"Using agent: {agent.name} (id: {agent.id}, version: {agent.version})")
-    
-    # Create thread for this test run
-    thread = client.agents.create_thread()
+    print(f"Using agent: {agent.name} (id: {agent.id}, version: {agent.versions})")
     
     # Capture all results
     results = {
@@ -81,8 +78,8 @@ def run_batch_tests(experiment_name):
         "timestamp": datetime.now().isoformat(),
         "agent_id": agent.id,
         "agent_name": agent.name,
-        "agent_version": agent.version,
-        "model": agent.model,
+        "agent_version": agent.versions.as_dict() if hasattr(agent.versions, "as_dict") else str(agent.versions),
+        "agent_object": getattr(agent, "object", None),
         "test_results": []
     }
     
@@ -90,40 +87,49 @@ def run_batch_tests(experiment_name):
     for test_name, prompt_text in test_prompts.items():
         print(f"\nTesting: {test_name}")
         print(f"   Prompt: {prompt_text[:60]}...")
-        
-        # Send message
-        message = client.agents.create_message(
-            thread_id=thread.id,
-            role="user",
-            content=prompt_text,
+
+        # Create a fresh conversation for this test
+        conversation = openai_client.conversations.create()
+
+        # Send user message into the conversation
+        openai_client.conversations.items.create(
+            conversation_id=conversation.id,
+            items=[{
+                "type": "message",
+                "role": "user",
+                "content": prompt_text,
+            }],
         )
-        
-        # Run agent
-        run = client.agents.create_and_process_run(
-            thread_id=thread.id,
-            assistant_id=agent.id,
+
+        # Ask the agent to respond using the Responses API with agent_reference
+        response = openai_client.responses.create(
+            conversation=conversation.id,
+            extra_body={"agent_reference": {"name": agent_name, "type": "agent_reference"}},
+            input="",
         )
-        
-        # Get response
-        messages = client.agents.list_messages(thread_id=thread.id)
-        response = messages.data[0].content[0].text.value
-        
-        # Get token usage from run
+
+        # Extract text from the response; fall back to str(response) if shape changes
+        try:
+            response_text = response.output[0].content[0].text
+        except Exception:
+            response_text = str(response)
+
+        usage = getattr(response, "usage", None)
         token_usage = {
-            "prompt_tokens": run.usage.prompt_tokens if run.usage else None,
-            "completion_tokens": run.usage.completion_tokens if run.usage else None,
-            "total_tokens": run.usage.total_tokens if run.usage else None,
+            "prompt_tokens": getattr(usage, "input_tokens", None) if usage else None,
+            "completion_tokens": getattr(usage, "output_tokens", None) if usage else None,
+            "total_tokens": getattr(usage, "total_tokens", None) if usage else None,
         }
-        
+
         # Store result
         results["test_results"].append({
             "test_name": test_name,
             "prompt": prompt_text,
-            "response": response,
+            "response": response_text,
             "token_usage": token_usage,
-            "run_id": run.id,
+            "run_id": getattr(response, "id", None),
         })
-        
+
         print(f"   Response captured ({token_usage['total_tokens']} tokens)")
     
     # Save results to experiment folder (at repository root)

@@ -5,13 +5,11 @@ from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
 from azure.ai.projects.models import PromptAgentDefinition
 
-# Load environment variables from repository root
-repo_root = Path(__file__).parent.parent.parent.parent
-env_file = repo_root / '.env'
-load_dotenv(env_file)
+# Load environment variables from .env file
+load_dotenv()
 
 # Read instructions from prompt file
-prompt_file = Path(__file__).parent / 'prompts' / 'v2_instructions.txt'
+prompt_file = Path(__file__).parent / 'prompts' / 'v4_optimized_concise.txt'
 with open(prompt_file, 'r') as f:
     instructions = f.read().strip()
 
