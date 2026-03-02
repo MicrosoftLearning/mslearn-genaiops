@@ -14,9 +14,9 @@ This exercise takes approximately **40 minutes**.
 
 ## Introduction
 
-In this exercise, you'll use Microsoft Foundry's cloud evaluators to automatically assess quality at scale for the Adventure Works Trail Guide Agent. You'll run evaluations against a large test dataset (200 query-response pairs) to validate quality metrics and establish an automated evaluation pipeline for future changes.
+In this exercise, you'll use Microsoft Foundry's cloud evaluators to automatically assess quality at scale for the Adventure Works Trail Guide Agent. You'll run evaluations against a large test dataset (89 query-response pairs) to validate quality metrics and establish an automated evaluation pipeline for future changes.
 
-**Scenario**: You're operating the Adventure Works Trail Guide Agent. You want to evaluate it against a large test dataset (200 query-response pairs) to validate quality metrics and establish an automated evaluation pipeline that can scale as your agent evolves.
+**Scenario**: You're operating the Adventure Works Trail Guide Agent. You want to evaluate it against a large test dataset (89 query-response pairs) to validate quality metrics and establish an automated evaluation pipeline that can scale as your agent evolves.
 
 You'll use the following evaluation criteria—automated at scale:
 
@@ -159,7 +159,7 @@ Cloud evaluation follows a structured workflow:
 
 ### Dataset preparation
 
-The repository includes `data/trail_guide_evaluation_dataset.jsonl` with 200 pre-generated query-response pairs covering diverse hiking scenarios. Each entry includes:
+The repository includes `data/trail_guide_evaluation_dataset.jsonl` with 89 pre-generated query-response pairs covering diverse hiking scenarios. Each entry includes:
 
 - `query`: User question
 - `response`: Agent-generated answer
@@ -206,7 +206,7 @@ First, examine the prepared dataset structure.
     (Get-Content data/trail_guide_evaluation_dataset.jsonl).Count
     ```
 
-    Expected: 200 entries
+    Expected: 89 entries
 
 ### Understand the evaluation pipeline
 
@@ -219,7 +219,7 @@ The script performs all evaluation steps automatically:
 1. **Upload Dataset** - Uploads the JSONL dataset to Microsoft Foundry
 2. **Define Evaluation** - Creates evaluation definition with quality evaluators (Intent Resolution, Relevance, Groundedness)
 3. **Run Evaluation** - Starts the cloud evaluation run
-4. **Poll for Completion** - Waits for evaluation to complete (5-10 minutes for 200 items)
+4. **Poll for Completion** - Waits for evaluation to complete (5-10 minutes for 89 items)
 5. **Display Results** - Retrieves and shows scoring statistics
 
 This single-script approach makes it easy to run evaluations both locally during development and automatically in CI/CD pipelines.
@@ -279,7 +279,7 @@ Execute the complete evaluation pipeline with one command.
       Run ID: run-ghi789rst
       Status: running
 
-    This may take 5-10 minutes for 200 items...
+    This may take 5-10 minutes for 89 items...
 
     ================================================================================
     Step 4: Polling for completion
@@ -297,9 +297,9 @@ Execute the complete evaluation pipeline with one command.
       Report URL: https://<account>.services.ai.azure.com/projects/<project>/evaluations/...
 
     Average Scores (1-5 scale, threshold: 3)
-      Intent Resolution: 4.52 (n=200)
-      Relevance:         4.41 (n=200)
-      Groundedness:      4.18 (n=200)
+      Intent Resolution: 4.52 (n=89)
+      Relevance:         4.41 (n=89)
+      Groundedness:      4.18 (n=89)
 
     Pass Rates (score >= 3)
       Intent Resolution: 96.0%
@@ -316,7 +316,7 @@ Execute the complete evaluation pipeline with one command.
       3. Document key findings and recommendations
     ```
 
-    > **Note**: Evaluation runtime varies based on dataset size and model capacity. 200 items typically takes 5-15 minutes.
+    > **Note**: Evaluation runtime varies based on dataset size and model capacity. 89 items typically takes 5-15 minutes.
 
 1. **Commit the results file**
 
@@ -483,7 +483,7 @@ Document your findings and create an analysis report.
     
     ## Evaluation Summary
     
-    Evaluated: 200 test cases  
+    Evaluated: 89 test cases  
     Time: ~10 minutes  
     Scoring: GPT-4.1 as LLM judge (1-5 scale)
     
@@ -521,7 +521,7 @@ Document your findings and create an analysis report.
     
     - **Scales** to hundreds/thousands of items efficiently
     - **Consistent** scoring criteria across all evaluations
-    - **Fast** turnaround (10 minutes for 200 items)
+    - **Fast** turnaround (10 minutes for 89 items)
     - **Repeatable** and trackable over time
     - **CI/CD ready** for integration into deployment pipelines
     - **Detailed reasoning** provided for each score
@@ -580,7 +580,7 @@ Compare evaluation results between GPT-4.1 and GPT-4.1-mini to understand qualit
 
 ### Run evaluation on GPT-4.1-mini responses
 
-1. Generate 200 responses from GPT-4.1-mini for the same queries.
+1. Generate 89 responses from GPT-4.1-mini for the same queries.
 
 1. Run cloud evaluation on both sets.
 

@@ -1,10 +1,15 @@
 ================================================================================
- Trail Guide Agent - Evaluation FAILED
+ Trail Guide Agent - Evaluation Results
 ================================================================================
 
-Error: HTTPSConnection(host='ai-account-u2favsrdpp24k.services.ai.azure.com', port=443): Failed to resolve 'ai-account-u2favsrdpp24k.services.ai.azure.com' ([Errno 11001] getaddrinfo failed)
+  Eval ID      : eval_7c4c645fbe2c4e9e83d2c1b3af300106
+  Run ID       : evalrun_97c6ed6859324fc0bb01dce5df3ecb75
+  Total items  : 89
+  Errored items: 0
+  Scored items : 89
 
-Troubleshooting:
-  - Verify AZURE_AI_PROJECT_ENDPOINT in .env file
-  - Check Azure credentials: az login
-  - Ensure GPT-4.1 model is deployed and accessible
+Average Scores (1-5 scale, threshold: 3)
+  No scores returned — open Azure AI Foundry portal > Evaluations for details.
+
+Pass Rates (score >= 3)
+  No scores returned.
