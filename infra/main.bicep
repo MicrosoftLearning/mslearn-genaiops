@@ -110,6 +110,9 @@ param enableHostedAgents bool
 @description('Enable monitoring for the AI project')
 param enableMonitoring bool = true
 
+@description('Optional. Object ID of the GitHub Actions service principal to grant Azure AI User role for CI/CD evaluation workflows.')
+param githubActionsPrincipalId string = ''
+
 // Tags that should be applied to all resources.
 // 
 // Note that 'azd-service-name' tags should be applied separately to service host resources.
@@ -152,6 +155,7 @@ module aiProject 'core/ai/ai-project.bicep' = {
     additionalDependentResources: dependentResources
     enableMonitoring: enableMonitoring
     enableHostedAgents: enableHostedAgents
+    githubActionsPrincipalId: githubActionsPrincipalId
   }
 }
 

@@ -152,6 +152,20 @@ module aiConnections './connection.bicep' = [for (connection, index) in connecti
   }
 }]
 
+// Azure AI User (53ca6127-db72-4b80-b1b0-d745d6d5456d) has Microsoft.CognitiveServices/* wildcard
+// data actions, covering AIServices/agents/write required by the Foundry project API.
+// Assign at the account scope so it applies to all projects under this account.
+resource localUserAiUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: aiAccount
+  name: guid(subscription().id, resourceGroup().id, principalId, '53ca6127-db72-4b80-b1b0-d745d6d5456d')
+  properties: {
+    principalId: principalId
+    principalType: principalType
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '53ca6127-db72-4b80-b1b0-d745d6d5456d')
+  }
+}
+
+// Keep Azure AI Developer at resource group scope for broader resource management access
 resource localUserAiDeveloperRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: resourceGroup()
   name: guid(subscription().id, resourceGroup().id, principalId, '64702f94-c441-49e6-a78b-ef80e0188fee')
@@ -169,6 +183,21 @@ resource localUserCognitiveServicesUserRoleAssignment 'Microsoft.Authorization/r
     principalId: principalId
     principalType: principalType
     roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', 'a97b65f3-24c7-4388-baec-2e87135dc908')
+  }
+}
+
+// Optional: assign Azure AI User to a GitHub Actions service principal so CI/CD
+// workflows can call the Foundry project API (AIServices/agents/write).
+@description('Optional. Object ID of the GitHub Actions service principal to grant Azure AI User role.')
+param githubActionsPrincipalId string = ''
+
+resource githubActionsAiUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(githubActionsPrincipalId)) {
+  scope: aiAccount
+  name: guid(subscription().id, resourceGroup().id, githubActionsPrincipalId, '53ca6127-db72-4b80-b1b0-d745d6d5456d')
+  properties: {
+    principalId: githubActionsPrincipalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '53ca6127-db72-4b80-b1b0-d745d6d5456d')
   }
 }
 

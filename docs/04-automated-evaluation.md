@@ -80,6 +80,13 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
 
     Sign in with your Azure credentials when prompted.
 
+    > ⚠️ **Important**
+    > In some environments, the VS Code integrated terminal may crash or close during the interactive login flow.
+    > If this happens, authenticate using explicit credentials instead:
+    > ```powershell
+    > az login --username <your-username> --password <your-password>
+    > ```
+
 1. Provision resources:
 
     ```powershell
@@ -103,6 +110,15 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
     ```powershell
     azd env get-values > .env
     ```
+
+    > ⚠️ **Important – File Encoding**
+    >
+    > After generating the `.env` file, make sure it is saved using **UTF-8** encoding.
+    >
+    > In editors like **VS Code**, check the encoding indicator in the bottom-right corner.  
+    > If it shows **UTF-16 LE** (or any encoding other than UTF-8), click it, choose **Save with Encoding**, and select **UTF-8**.
+    >
+    > Using the wrong encoding may cause environment variables to be read incorrectly.
 
     This creates a `.env` file in your project root with all the provisioned resource information.
 
@@ -374,27 +390,54 @@ The evaluation script integrates seamlessly into GitHub Actions for automated PR
 
 1. **Configure Azure authentication**
 
-    Create a service principal with Foundry project access:
+    Create a service principal for GitHub Actions:
 
     ```powershell
-    # Create service principal
-    az ad sp create-for-rbac --name "github-agent-evaluator" `
-      --role "Azure AI Developer" `
-      --scopes /subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.MachineLearningServices/workspaces/<workspace> `
-      --sdk-auth
+    az ad sp create-for-rbac --name "github-agent-evaluator"
     ```
 
-    Configure federated identity for GitHub OIDC:
+    Note the `appId` value from the output — you will use it in the next steps.
+
+    Assign the **Azure AI User** role at the account scope. This role has `Microsoft.CognitiveServices/*` wildcard data actions, which covers the `AIServices/agents/write` action required by the Foundry project evaluation API:
+
+    ```powershell
+    az role assignment create `
+      --assignee "<appId>" `
+      --role "Azure AI User" `
+      --scope "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.CognitiveServices/accounts/<ai-account-name>"
+    ```
+
+    > **Important**: Use the `AZURE_AI_ACCOUNT_NAME` value from your `.env` file as `<ai-account-name>`. The `Azure AI Developer` role is **not sufficient** — it only covers `OpenAI/*`, `SpeechServices/*`, `ContentSafety/*`, and `MaaS/*` data actions, but not `AIServices/agents/write` which the Foundry project API requires.
+
+    > **Tip**: If you set the optional `githubActionsPrincipalId` parameter when running `azd up`, the infrastructure deployment will create this role assignment automatically for future environments.
+
+    Configure federated identity for GitHub OIDC so the workflow can authenticate without a secret.
+
+    Create a file named `federated-credential.json` in your repository root:
+
+    ```json
+    {
+      "name": "github-actions",
+      "issuer": "https://token.actions.githubusercontent.com",
+      "subject": "repo:<your-org>/<your-repo>:ref:refs/heads/main",
+      "audiences": ["api://AzureADTokenExchange"]
+    }
+    ```
+
+    > **Note**: Replace `<your-org>/<your-repo>` with your exact GitHub username and repository name. The subject is case-sensitive and must match exactly.
+
+    Register the federated credential using the file:
 
     ```powershell
     az ad app federated-credential create `
-      --id <app-id> `
-      --parameters '{
-        "name": "github-actions",
-        "issuer": "https://token.actions.githubusercontent.com",
-        "subject": "repo:<your-org>/<your-repo>:ref:refs/heads/main",
-        "audiences": ["api://AzureADTokenExchange"]
-      }'
+      --id "<appId>" `
+      --parameters @federated-credential.json
+    ```
+
+    Once the credential is created successfully, delete the file — it contains no secrets but there is no reason to keep it in the repository:
+
+    ```powershell
+    Remove-Item federated-credential.json
     ```
 
 1. **Review the PR evaluation workflow**
@@ -610,7 +653,7 @@ Create `experiments/automated/model_comparison.md` with:
 
 **Resolution**:
 - Run `az login` to refresh Azure credentials
-- Verify you have **Azure AI User** role on the Foundry project
+- Verify the service principal has the **Azure AI User** role at the CognitiveServices account scope — this role has `Microsoft.CognitiveServices/*` wildcard data actions required for `AIServices/agents/write`. `Azure AI Developer` alone is **not sufficient**
 - Check `AZURE_AI_PROJECT_ENDPOINT` in `.env` file is correct and includes `/api/projects/<project>`
 
 ### Evaluator scoring seems inconsistent
