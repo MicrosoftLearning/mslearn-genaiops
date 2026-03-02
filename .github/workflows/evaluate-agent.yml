@@ -55,6 +55,7 @@ jobs:
           script: |
             const fs = require('fs');
             const results = fs.readFileSync('evaluation_results.txt', 'utf8');
+            const reportUrl = '${{ steps.run.outputs.report_url }}' || 'Not available';
             
             const body = `## 🎯 Agent Evaluation Results
             
@@ -69,7 +70,7 @@ jobs:
             
             </details>
             
-            📊 [View full results in Azure AI Foundry Portal](${{ steps.run.outputs.report_url }})
+            📊 [View full results in Azure AI Foundry Portal](${reportUrl})
             
             **Evaluation Criteria:**
             - Intent Resolution (score ≥ 3)

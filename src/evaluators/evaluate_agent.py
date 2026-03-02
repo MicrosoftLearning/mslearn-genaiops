@@ -189,6 +189,7 @@ def create_evaluation_definition():
             "data_mapping": {
                 "query":    "{{item.query}}",
                 "response": "{{item.response}}",
+                "context":  "{{item.ground_truth}}",
             },
         },
     ]
@@ -385,6 +386,16 @@ def retrieve_and_display_results(eval_object, run):
     RESULTS_FILE.write_text(summary, encoding="utf-8")
     print(f"\n  Results saved to {RESULTS_FILE}")
     print(f"  Commit this file so the GitHub Actions workflow can read it.")
+
+    # Emit report_url as a GitHub Actions step output when running in CI
+    report_url = getattr(run, "report_url", None) or (
+        f"{endpoint.rstrip('/')}/evaluations/{eval_object.id}/runs/{run.id}"
+    )
+    github_output = os.environ.get("GITHUB_OUTPUT")
+    if github_output:
+        with open(github_output, "a", encoding="utf-8") as gh_out:
+            gh_out.write(f"report_url={report_url}\n")
+        print(f"  GitHub Actions output set: report_url={report_url}")
 
     return output_items
 
