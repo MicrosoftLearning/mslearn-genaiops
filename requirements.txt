@@ -32,6 +32,10 @@ httpx>=0.25.0
 # Logging and Monitoring
 structlog>=23.1.0
 
+# Application Insights and distributed tracing
+azure-monitor-opentelemetry>=1.6.0
+opentelemetry-instrumentation-openai-v2>=2.0.0
+
 # Jupyter notebook support (optional)
 jupyter>=1.0.0
 ipykernel>=6.25.0
