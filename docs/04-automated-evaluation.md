@@ -346,47 +346,7 @@ Execute the complete evaluation pipeline with one command.
 
 ### Automate with GitHub Actions
 
-The evaluation script integrates seamlessly into GitHub Actions for automated PR evaluations.
-
-1. **Configure GitHub Secrets**
-
-    Add these secrets to your repository (Settings → Secrets and variables → Actions):
-
-    | Secret Name                    | Description                          | Example Value                    |
-    |--------------------------------|--------------------------------------|----------------------------------|
-    | `AZURE_CLIENT_ID`              | Service principal client ID          | `12345678-1234-1234-1234-...`    |
-    | `AZURE_TENANT_ID`              | Azure tenant ID                      | `87654321-4321-4321-4321-...`    |
-    | `AZURE_SUBSCRIPTION_ID`        | Azure subscription ID                | `abcdef12-abcd-abcd-abcd-...`    |
-    | `AZURE_AI_PROJECT_ENDPOINT`    | Microsoft Foundry project endpoint   | `https://...ai.azure.com/...`    |
-
-    **Optional Variables:**
-    - `MODEL_NAME`: Judge model deployment name (default: gpt-4.1)
-
-1. **Enable automatic PR evaluations**
-
-    The workflow is disabled by default. To enable automatic evaluation on pull requests:
-
-    1. Open `.github/workflows/evaluate-agent.yml` in your repository
-    2. Uncomment the `pull_request` trigger (lines 4-7):
-
-        ```yaml
-        on:
-          pull_request:
-            branches: [main]
-            paths:
-              - 'src/agents/trail_guide_agent/**'
-          workflow_dispatch:
-        ```
-
-    3. Commit and push the change:
-
-        ```powershell
-        git add .github/workflows/evaluate-agent.yml
-        git commit -m "Enable automated PR evaluations"
-        git push origin main
-        ```
-
-    Now the workflow will run automatically whenever you modify agent code in a PR.
+The evaluation script integrates with GitHub Actions to automatically run evaluations on pull requests that modify agent code, and post results as a PR comment.
 
 1. **Configure Azure authentication**
 
@@ -396,9 +356,9 @@ The evaluation script integrates seamlessly into GitHub Actions for automated PR
     az ad sp create-for-rbac --name "github-agent-evaluator"
     ```
 
-    Note the `appId` value from the output — you will use it in the next steps.
+    Save the `appId`, `tenant`, and `password` values from the output — you will use them in the next steps.
 
-    Assign the **Azure AI User** role at the account scope. This role has `Microsoft.CognitiveServices/*` wildcard data actions, which covers the `AIServices/agents/write` action required by the Foundry project evaluation API:
+    Assign the **Azure AI User** role so the service principal can call the Foundry project API:
 
     ```powershell
     az role assignment create `
@@ -407,13 +367,13 @@ The evaluation script integrates seamlessly into GitHub Actions for automated PR
       --scope "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.CognitiveServices/accounts/<ai-account-name>"
     ```
 
-    > **Important**: Use the `AZURE_AI_ACCOUNT_NAME` value from your `.env` file as `<ai-account-name>`. The `Azure AI Developer` role is **not sufficient** — it only covers `OpenAI/*`, `SpeechServices/*`, `ContentSafety/*`, and `MaaS/*` data actions, but not `AIServices/agents/write` which the Foundry project API requires.
+    > **Note**: Use the `AZURE_SUBSCRIPTION_ID`, `AZURE_RESOURCE_GROUP`, and `AZURE_AI_ACCOUNT_NAME` values from your `.env` file to fill in the scope. The `Azure AI Developer` role alone is **not sufficient** for this API.
 
-    > **Tip**: If you set the optional `githubActionsPrincipalId` parameter when running `azd up`, the infrastructure deployment will create this role assignment automatically for future environments.
+    Create two federated credentials so the workflow can authenticate via OIDC for both manual runs and pull requests. GitHub sends a different token subject for each trigger type, so one credential is required per subject.
 
-    Configure federated identity for GitHub OIDC so the workflow can authenticate without a secret.
+    **Credential 1 — manual runs and pushes to main:**
 
-    Create a file named `federated-credential.json` in your repository root:
+    Create `federated-credential.json`:
 
     ```json
     {
@@ -424,68 +384,80 @@ The evaluation script integrates seamlessly into GitHub Actions for automated PR
     }
     ```
 
-    > **Note**: Replace `<your-org>/<your-repo>` with your exact GitHub username and repository name. The subject is case-sensitive and must match exactly.
-
-    Register the federated credential using the file:
-
     ```powershell
     az ad app federated-credential create `
       --id "<appId>" `
       --parameters @federated-credential.json
-    ```
-
-    Once the credential is created successfully, delete the file — it contains no secrets but there is no reason to keep it in the repository:
-
-    ```powershell
     Remove-Item federated-credential.json
     ```
 
-1. **Review the PR evaluation workflow**
+    **Credential 2 — pull requests:**
 
-    ```powershell
-    code .github/workflows/evaluate-agent.yml
+    Create `federated-credential-pr.json`:
+
+    ```json
+    {
+      "name": "github-actions-pr",
+      "issuer": "https://token.actions.githubusercontent.com",
+      "subject": "repo:<your-org>/<your-repo>:pull_request",
+      "audiences": ["api://AzureADTokenExchange"]
+    }
     ```
 
-    The workflow:
-    - Disabled by default (requires uncommenting the PR trigger)
-    - Can be triggered manually via workflow_dispatch
-    - Runs the complete evaluation script
-    - Shows results in workflow logs
-    - Comments results directly on the PR
+    ```powershell
+    az ad app federated-credential create `
+      --id "<appId>" `
+      --parameters @federated-credential-pr.json
+    Remove-Item federated-credential-pr.json
+    ```
+
+    > **Important**: Replace `<your-org>/<your-repo>` with your exact GitHub username and repository name. Both values are case-sensitive. If either credential is missing, the workflow will fail with an `AADSTS700213` authentication error for that trigger type.
+
+1. **Configure GitHub Secrets**
+
+    Add the following secrets to your repository under **Settings → Secrets and variables → Actions → New repository secret**:
+
+    | Secret Name                    | Where to find it                                        |
+    |--------------------------------|---------------------------------------------------------|
+    | `AZURE_CLIENT_ID`              | `appId` from `az ad sp create-for-rbac` output          |
+    | `AZURE_TENANT_ID`              | `tenant` from `az ad sp create-for-rbac` output         |
+    | `AZURE_SUBSCRIPTION_ID`        | `AZURE_SUBSCRIPTION_ID` in your `.env` file             |
+    | `AZURE_AI_PROJECT_ENDPOINT`    | `AZURE_AI_PROJECT_ENDPOINT` in your `.env` file         |
+
+    Optionally, add a repository variable (not secret) for the model name:
+    - **Settings → Secrets and variables → Actions → Variables → New repository variable**
+    - Name: `MODEL_NAME`, Value: `gpt-4.1` (or `gpt-4.1-mini`)
 
 1. **Test the workflow manually**
 
-    Before enabling automatic PR evaluations, test the workflow manually:
+    Before testing with a PR, verify the workflow runs successfully with a manual trigger:
 
     1. Go to your repository on GitHub
-    2. Navigate to Actions → Evaluate Trail Guide Agent
-    3. Click "Run workflow"
-    4. Select the branch and run
+    1. Navigate to **Actions → Evaluate Trail Guide Agent**
+    1. Click **Run workflow**, select `main`, and click **Run workflow**
+    1. Wait for the run to complete and verify it passes
 
-    This tests the workflow without requiring a PR.
+1. **Test with a pull request**
 
-1. **Test with a PR (after enabling)**
-
-    Push a change to an agent prompt and open a PR to trigger evaluation:
+    The workflow runs automatically when a PR modifies files under `src/agents/trail_guide_agent/`. To test it, create a branch, make a small change, and open a PR:
 
     ```powershell
-    # Make a small change to test
+    git checkout -b test/trigger-evaluation
+    # Make a small change to any agent file, for example:
     code src/agents/trail_guide_agent/prompts/v1_instructions.txt
-    
-    # Commit and push
     git add .
-    git commit -m "test: Trigger evaluation workflow"
-    git push origin main
+    git commit -m "test: trigger evaluation workflow"
+    git push origin test/trigger-evaluation
     ```
 
-1. **View results in PR**
+    Then open a pull request from `test/trigger-evaluation` → `main` on GitHub. The workflow will start automatically.
 
-    Once the workflow completes, a comment will be posted to your PR with:
-    - Summary of evaluation scores
-    - Pass rates for each criterion
-    - Link to detailed results in Azure AI Foundry portal
+1. **View results in the PR**
 
-    > **Note**: If you haven't enabled automatic PR evaluations, you can still manually trigger the workflow from the Actions tab.
+    Once the workflow completes, a comment is posted to your PR with:
+    - Evaluation scores and pass rates for each criterion
+    - Full log output in a collapsible section
+    - Link to detailed results in the Azure AI Foundry portal
 
 ### Review results in Azure portal
 
@@ -655,6 +627,36 @@ Create `experiments/automated/model_comparison.md` with:
 - Run `az login` to refresh Azure credentials
 - Verify the service principal has the **Azure AI User** role at the CognitiveServices account scope — this role has `Microsoft.CognitiveServices/*` wildcard data actions required for `AIServices/agents/write`. `Azure AI Developer` alone is **not sufficient**
 - Check `AZURE_AI_PROJECT_ENDPOINT` in `.env` file is correct and includes `/api/projects/<project>`
+
+### OIDC login fails on PR workflows (`AADSTS700213`)
+
+**Symptom**: Workflow succeeds when triggered manually but fails with `AADSTS700213: No matching federated identity record found` when triggered by a pull request.
+
+**Resolution**:
+
+GitHub sends a different OIDC subject depending on the trigger event:
+- `workflow_dispatch` or `push` on main → subject is `repo:<org>/<repo>:ref:refs/heads/main`
+- `pull_request` → subject is `repo:<org>/<repo>:pull_request`
+
+You need **two** federated credentials, one per subject. Create the missing PR credential:
+
+```powershell
+# Create federated-credential-pr.json
+@"
+{
+  "name": "github-actions-pr",
+  "issuer": "https://token.actions.githubusercontent.com",
+  "subject": "repo:<your-org>/<your-repo>:pull_request",
+  "audiences": ["api://AzureADTokenExchange"]
+}
+"@ | Set-Content federated-credential-pr.json
+
+az ad app federated-credential create `
+  --id "<appId>" `
+  --parameters @federated-credential-pr.json
+
+Remove-Item federated-credential-pr.json
+```
 
 ### Evaluator scoring seems inconsistent
 
