@@ -14,8 +14,9 @@ import time
 import uuid
 from pathlib import Path
 from dotenv import load_dotenv
-from azure.identity import DefaultAzureCredential
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from azure.ai.projects import AIProjectClient
+from openai import AzureOpenAI
 from azure.monitor.opentelemetry import configure_azure_monitor
 from opentelemetry import trace
 from opentelemetry.instrumentation.openai_v2 import OpenAIInstrumentor
@@ -24,6 +25,7 @@ from opentelemetry.instrumentation.openai_v2 import OpenAIInstrumentor
 load_dotenv()
 
 project_endpoint = os.environ["AZURE_AI_PROJECT_ENDPOINT"]
+openai_endpoint = os.environ["AZURE_OPENAI_ENDPOINT"]
 model_name = os.getenv("MODEL_NAME", "gpt-4.1")
 
 # Enable prompt and response content capture in spans
@@ -35,11 +37,25 @@ project_client = AIProjectClient(
     credential=DefaultAzureCredential(),
 )
 connection_string = project_client.telemetry.get_application_insights_connection_string()
+print(f"[DEBUG] Connection string: {connection_string}")
+
+# Set as env var so all SDK components can discover it automatically
+os.environ["APPLICATIONINSIGHTS_CONNECTION_STRING"] = connection_string
+
 configure_azure_monitor(connection_string=connection_string)
 OpenAIInstrumentor().instrument()
 
 tracer = trace.get_tracer(__name__)
-chat_client = project_client.get_openai_client(api_version="2024-10-21")
+
+token_provider = get_bearer_token_provider(
+    DefaultAzureCredential(),
+    "https://cognitiveservices.azure.com/.default",
+)
+chat_client = AzureOpenAI(
+    azure_endpoint=openai_endpoint,
+    azure_ad_token_provider=token_provider,
+    api_version="2024-10-21",
+)
 
 # Paths to prompt versions and test prompts
 PROMPTS_DIR = Path(__file__).parent.parent / "agents" / "trail_guide_agent" / "prompts"
@@ -123,3 +139,9 @@ if __name__ == "__main__":
     print("All versions complete.")
     print("Open Azure AI Foundry > Tracing to compare spans across versions.")
     print(f"{'='*60}")
+
+    # Force flush all telemetry before exit
+    provider = trace.get_tracer_provider()
+    if hasattr(provider, "force_flush"):
+        provider.force_flush()
+        print("Telemetry flushed.")
