@@ -2,11 +2,14 @@
 # Adventure Works Outdoor Gear - AI Trail Assistant
 # Updated: 2026-01-16
 
-# Core Azure AI Projects SDK (Latest Versions)
-azure-ai-projects>=1.0.0b1
-azure-identity>=1.15.0
-azure-core>=1.29.0
+# Core Azure AI Projects SDK (Pinned for compatibility)
+azure-ai-projects==2.0.0b4
+azure-identity==1.25.2
+azure-core==1.38.2
 azure-mgmt-resource>=23.0.0
+azure-monitor-opentelemetry==1.8.6
+opentelemetry-instrumentation-openai-v2==2.3b0
+openai==2.24.0
 
 # Evaluation and ML libraries
 pandas>=2.1.0
@@ -31,10 +34,6 @@ httpx>=0.25.0
 
 # Logging and Monitoring
 structlog>=23.1.0
-
-# Application Insights and distributed tracing
-azure-monitor-opentelemetry>=1.6.0
-opentelemetry-instrumentation-openai-v2>=2.0.0
 
 # Jupyter notebook support (optional)
 jupyter>=1.0.0
