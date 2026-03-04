@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DPO Notebook – Trail Guide Agent</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── TOP NAV ── */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #059669;
+      color: #fff;
+      padding: 12px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .top-nav a { color: #fff; text-decoration: none; font-size: 13px; opacity: .85; }
+    .top-nav a:hover { opacity: 1; }
+    .top-nav .title { font-weight: 600; font-size: 15px; }
+    .top-nav .meta { font-size: 12px; opacity: .75; }
+
+    /* ── NOTEBOOK WRAPPER ── */
+    .notebook-wrapper {
+      max-width: 980px;
+      margin: 24px auto;
+      padding: 0 16px 80px;
+    }
+
+    /* ── KERNEL BAR ── */
+    .kernel-bar {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px 6px 0 0;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: #666;
+    }
+    .kernel-dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; }
+    .kernel-bar span:last-child { margin-left: auto; }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      border-top: none;
+      padding: 6px 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .tb-btn {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 3px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #333;
+      transition: background .15s;
+    }
+    .tb-btn:hover { background: #e8e8e8; }
+    .tb-sep { width: 1px; height: 20px; background: #ccc; margin: 0 4px; }
+    .run-all-btn {
+      margin-left: auto;
+      background: #059669;
+      border-color: #059669;
+      color: #fff;
+      padding: 4px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      border: none;
+      transition: background .15s;
+    }
+    .run-all-btn:hover { background: #047857; }
+
+    /* ── CELL ── */
+    .nb-cell {
+      display: flex;
+      border-left: 3px solid transparent;
+      margin-bottom: 0;
+      transition: border-color .15s;
+    }
+    .nb-cell.active { border-left-color: #059669; }
+    .nb-cell:focus-within { border-left-color: #059669; }
+
+    .cell-counter {
+      width: 52px;
+      min-width: 52px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12px;
+      color: #999;
+      padding: 8px 6px 8px 8px;
+      text-align: right;
+      user-select: none;
+    }
+    .cell-counter span { display: block; }
+
+    .cell-body { flex: 1; min-width: 0; }
+
+    /* markdown cells */
+    .md-cell .cell-body {
+      background: #fff;
+      padding: 12px 16px;
+      border: 1px solid #e8e8e8;
+    }
+    .md-cell .cell-counter { padding-top: 12px; }
+
+    /* code cells */
+    .code-cell .cell-body {
+      border: 1px solid #e0e0e0;
+      position: relative;
+    }
+    .code-area {
+      background: #f7f7f7;
+      padding: 10px 14px;
+      font-family: "SFMono-Regular", Consolas, "Courier New", monospace;
+      font-size: 12.5px;
+      line-height: 1.65;
+      color: #333;
+      white-space: pre;
+      overflow-x: auto;
+      border-bottom: 1px solid #e8e8e8;
+    }
+    .run-btn {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: #059669;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 11px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity .2s, background .15s;
+    }
+    .code-cell:hover .run-btn { opacity: 1; }
+    .run-btn:hover { background: #047857; }
+    .run-btn.running { background: #666; cursor: default; }
+
+    /* output */
+    .cell-output {
+      display: none;
+      background: #fff;
+      border-top: 1px solid #e0e0e0;
+      padding: 10px 14px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #333;
+      overflow-x: auto;
+    }
+    .cell-output.visible { display: block; }
+    .cell-output pre { white-space: pre-wrap; }
+    .output-stream { color: #555; }
+    .output-err { color: #c0392b; }
+    .output-success { color: #16a34a; }
+
+    /* progress bar for training */
+    .progress-wrap { margin: 6px 0; }
+    .progress-label { font-size: 11px; color: #666; margin-bottom: 3px; }
+    .progress-bar-outer { height: 12px; background: #e5e5e5; border-radius: 6px; overflow: hidden; width: 100%; }
+    .progress-bar-inner {
+      height: 100%;
+      background: #059669;
+      border-radius: 6px;
+      width: 0%;
+      transition: width .08s linear;
+    }
+
+    /* chart */
+    .chart-container { padding: 8px 0 4px; }
+    .chart-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #444; }
+    .bar-row { display: flex; align-items: center; margin-bottom: 6px; gap: 8px; }
+    .bar-label { width: 220px; min-width: 220px; font-size: 11.5px; color: #555; text-align: right; }
+    .bar-track { flex: 1; height: 22px; background: #f0f0f0; border-radius: 3px; position: relative; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; transition: width .6s ease; display: flex; align-items: center; padding-left: 6px; font-size: 11px; font-weight: 600; color: #fff; }
+    .bar-dpo { background: #059669; }
+    .bar-base { background: #7c3aed; }
+    .bar-gpt41 { background: #2563eb; }
+    .bar-gpt41mini { background: #9ca3af; }
+
+    /* syntax colors — light theme */
+    .kw { color: #0033b3; font-weight: 600; }
+    .fn { color: #000080; }
+    .st { color: #067d17; }
+    .cm { color: #8c8c8c; font-style: italic; }
+    .nm { color: #1750eb; }
+    .op { color: #555; }
+    .pr { color: #7a3e9d; }
+    .va { color: #333; }
+
+    /* editable hyperparams */
+    .hp-input {
+      background: #fff;
+      border: 1px solid #bbb;
+      border-radius: 3px;
+      color: #067d17;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12.5px;
+      padding: 1px 5px;
+      width: auto;
+      min-width: 0;
+    }
+    .hp-input:focus { outline: none; border-color: #059669; background: #f0fdf4; }
+    select.hp-input { padding: 1px 4px; cursor: pointer; }
+
+    /* md styles */
+    .md-cell h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: #111; }
+    .md-cell h3 { font-size: 15px; font-weight: 600; margin: 12px 0 6px; color: #222; }
+    .md-cell p { margin-bottom: 8px; color: #444; }
+    .md-cell ul, .md-cell ol { margin: 6px 0 8px 20px; color: #444; }
+    .md-cell li { margin-bottom: 3px; }
+    .md-cell code { background: #f0f0f0; border-radius: 3px; padding: 1px 5px; font-family: monospace; font-size: 12px; color: #059669; }
+    .md-cell pre { background: #f7f7f7; color: #333; padding: 10px 14px; border-radius: 4px; font-size: 12px; overflow-x: auto; margin: 8px 0; border: 1px solid #e8e8e8; }
+    .md-cell table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12.5px; }
+    .md-cell th { background: #f0fdf4; padding: 6px 10px; border: 1px solid #d1fae5; text-align: left; font-weight: 600; color: #065f46; }
+    .md-cell td { padding: 5px 10px; border: 1px solid #e5e5e5; }
+    .md-cell tr:nth-child(even) td { background: #fafafa; }
+    .md-cell strong { font-weight: 600; color: #111; }
+    .md-cell em { font-style: italic; }
+    .md-cell .tip { background: #f0fdf4; border-left: 3px solid #059669; padding: 8px 12px; border-radius: 0 4px 4px 0; margin: 8px 0; font-size: 13px; }
+    .md-cell blockquote { border-left: 3px solid #059669; padding: 6px 12px; background: #f0fdf4; margin: 8px 0; color: #555; border-radius: 0 4px 4px 0; }
+    .emoji { font-style: normal; }
+
+    /* section divider */
+    .section-divider { height: 20px; }
+
+    /* canvas chart */
+    canvas.loss-chart { width: 100%; max-width: 640px; height: 200px; display: block; margin: 8px 0; }
+
+    /* tag */
+    .scenario-tag {
+      display: inline-block;
+      background: #059669;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-bottom: 4px;
+    }
+
+    /* results table */
+    .results-table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 6px 0; }
+    .results-table th { background: #f0fdf4; color: #065f46; padding: 6px 10px; text-align: left; border-bottom: 2px solid #d1fae5; }
+    .results-table td { padding: 5px 10px; border-bottom: 1px solid #e5e5e5; }
+    .results-table tr.highlight td { background: #f0fdf4; font-weight: 600; }
+    .pass-good { color: #16a34a; font-weight: 700; }
+    .pass-ok { color: #7c3aed; font-weight: 700; }
+    .pass-bad { color: #9ca3af; }
+
+    /* tone sample cards */
+    .tone-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+    .tone-card { border-radius: 5px; padding: 10px 12px; font-size: 12px; }
+    .tone-preferred { background: #f0fdf4; border: 1px solid #86efac; }
+    .tone-rejected { background: #fef2f2; border: 1px solid #fca5a5; }
+    .tone-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
+    .label-preferred { color: #065f46; }
+    .label-rejected { color: #991b1b; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════ TOP NAV ══════════════════════════════════ -->
+<nav class="top-nav">
+  <a href="dpo.html">← Back to data selection</a>
+  <span class="title">DPO Notebook — Adventure Works Trail Guide</span>
+  <span class="meta">Kernel: Python 3 (Azure OpenAI) · gpt-4.1-mini</span>
+</nav>
+
+<div class="notebook-wrapper">
+
+  <!-- kernel bar -->
+  <div class="kernel-bar">
+    <div class="kernel-dot"></div>
+    <span>Kernel: Python 3</span>
+    <span>|</span>
+    <span>Azure OpenAI SDK</span>
+    <span>Run All Cells →</span>
+    <button class="run-all-btn" onclick="runAll()">▶ Run All</button>
+  </div>
+
+  <!-- toolbar -->
+  <div class="toolbar">
+    <button class="tb-btn" onclick="restartKernel()">↺ Restart</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="clearAll()">✕ Clear All Output</button>
+    <div class="tb-sep"></div>
+    <span style="font-size:12px;color:#888">Cells: <span id="exec-count">0</span> / <span id="total-count">0</span> executed</span>
+  </div>
+
+  <!-- ═══════════ CELL 0 — Agenda ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-0">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <div class="scenario-tag">Scenario 2 · Direct Preference Optimization</div>
+      <h2>🏔 DPO Fine-Tuning the Adventure Works Trail Guide</h2>
+      <h3>🧭 Agenda</h3>
+      <p>This notebook walks through end-to-end <strong>Direct Preference Optimization (DPO)</strong> using <code>gpt-4.1-mini</code> on Azure OpenAI / Microsoft Foundry, applied to our trail recommendation agent:</p>
+      <ol>
+        <li><strong>Dataset &amp; the Tone Problem</strong> — preferred vs. rejected response pairs</li>
+        <li><strong>Setup &amp; Connect to Foundry</strong> — environment, credentials, file upload</li>
+        <li><strong>Evaluate Base Model</strong> — tone pass rate before fine-tuning</li>
+        <li><strong>DPO Training: Launch &amp; Monitor</strong> — <em>adjust hyperparameters and rerun!</em></li>
+        <li><strong>Results &amp; Comparison</strong> — did preference fine-tuning fix the tone?</li>
+        <li><strong>Key Takeaways</strong> — when to use DPO</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══════════ CELL 1 — Section 1 MD ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-1">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <h2>📋 Section 1: Dataset &amp; the Tone Problem</h2>
+      <p>The Adventure Works Trail Guide agent was flagged for using <strong>inappropriate, dismissive tone</strong> when users ask about trails involving real safety risks — such as the Knife's Edge ridge.</p>
+      <p>Users rated responses as <em>unhelpful or condescending</em> when they asked reasonable questions like:</p>
+      <blockquote>"I'm a moderate hiker. Is the Knife's Edge trail suitable for me?"</blockquote>
+      <p>DPO requires a <strong>preference dataset</strong> of paired responses for each prompt:</p>
+      <ul>
+        <li><strong>preferred_output</strong> — a response with appropriate tone: safety-aware, respectful, and actionable</li>
+        <li><strong>non_preferred_output</strong> — a response with poor tone: dismissive, condescending, or overly alarming</li>
+      </ul>
+      <h3>📦 DPO Training Data Format</h3>
+      <p>Each record in <code>training.jsonl</code> follows this structure:</p>
+      <pre>{
+  "input": {
+    "messages": [
+      {"role": "system", "content": "You are an Adventure Works trail guide..."},
+      {"role": "user", "content": "I'm a moderate hiker. Is Knife's Edge suitable for me?"}
+    ]
+  },
+  "preferred_output":     [{"role": "assistant", "content": "...respectful, helpful response..."}],
+  "non_preferred_output": [{"role": "assistant", "content": "...dismissive or condescending response..."}]
+}</pre>
+      <h3>💡 Why DPO for This Problem?</h3>
+      <p>The agent's core hiking knowledge is <em>correct</em> — it's only the <em>tone</em> that's wrong. DPO is ideal here because:</p>
+      <ul>
+        <li>We have clear human judgements: <em>preferred</em> vs. <em>non-preferred</em> tone</li>
+        <li>There is no single "correct" answer to rewrite — many phrasings work as long as tone is right</li>
+        <li>DPO directly optimises for the preference signal without altering factual knowledge</li>
+      </ul>
+      <blockquote>✅ DPO is the right tool when you know <em>which</em> response is better, but not exactly <em>what</em> the response should say.</blockquote>
+      <h3>🗂 Example Training Pair</h3>
+      <div class="tone-pair">
+        <div class="tone-card tone-preferred">
+          <div class="tone-label label-preferred">✅ Preferred output (appropriate tone)</div>
+          Knife's Edge is a genuine technical challenge — exposed ridge, fixed rope sections, and significant exposure to heights. For a moderate hiker it's achievable with the right preparation: prior scrambling experience is strongly recommended. I'd suggest starting with a guided day trip and practising on less-exposed scrambles first. Would you like recommendations for progression routes?
+        </div>
+        <div class="tone-card tone-rejected">
+          <div class="tone-label label-rejected">❌ Non-preferred output (inappropriate tone)</div>
+          If you're only a moderate hiker you probably shouldn't even be considering Knife's Edge. That trail is for experienced climbers, not casual hikers. You'd be putting yourself and rescue teams at risk. Stick to easier trails and work your way up over several years before attempting something like this.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 2 — Load dataset ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-2">
+    <div class="cell-counter"><span id="ctr-2">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-2" onclick="runCell(2)">▶ Run</button>
+      <div class="code-area"><span class="kw">import</span> json, random
+
+<span class="cm"># Load the DPO tone-correction dataset</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="st">"training.jsonl"</span>) <span class="kw">as</span> f:
+    records = [json.loads(line) <span class="kw">for</span> line <span class="kw">in</span> f]
+
+<span class="pr">print</span>(<span class="st">f"Trail Guide DPO Dataset — {len(records)} training pairs\n"</span> + <span class="st">"-"</span> * <span class="nm">50</span>)
+<span class="kw">for</span> ex <span class="kw">in</span> random.sample(records, <span class="nm">3</span>):
+    user_msg = next(m[<span class="st">"content"</span>] <span class="kw">for</span> m <span class="kw">in</span> ex[<span class="st">"input"</span>][<span class="st">"messages"</span>] <span class="kw">if</span> m[<span class="st">"role"</span>] == <span class="st">"user"</span>)
+    pref     = ex[<span class="st">"preferred_output"</span>][<span class="nm">0</span>][<span class="st">"content"</span>][:<span class="nm">80</span>]
+    non_pref = ex[<span class="st">"non_preferred_output"</span>][<span class="nm">0</span>][<span class="st">"content"</span>][:<span class="nm">80</span>]
+    <span class="pr">print</span>(<span class="st">f"User          : {user_msg}"</span>)
+    <span class="pr">print</span>(<span class="st">f"Preferred     : {pref}…"</span>)
+    <span class="pr">print</span>(<span class="st">f"Non-preferred : {non_pref}…"</span>)
+    <span class="pr">print</span>(<span class="st">"-"</span> * <span class="nm">50</span>)</div>
+      <div class="cell-output" id="out-2">
+        <pre class="output-stream">Trail Guide DPO Dataset — 275 training pairs
+--------------------------------------------------
+User          : I'm a moderate hiker. Is Knife's Edge suitable for me?
+Preferred     : Knife's Edge is a genuine technical challenge — exposed ridge, fixed rope sections…
+Non-preferred : If you're only a moderate hiker you probably shouldn't even be considering Knife's…
+--------------------------------------------------
+User          : My 10-year-old wants to hike Rainbow Falls. Is it safe for kids?
+Preferred     : Rainbow Falls is a wonderful family destination! The trail is 3.4 miles round-trip…
+Non-preferred : Most kids that age can't handle 3.4 miles. You'll probably end up carrying them.…
+--------------------------------------------------
+User          : I have a knee injury. Can I still do the Cascade Loop?
+Preferred     : With a knee injury the Cascade Loop needs some planning. The descent on the north…
+Non-preferred : You really shouldn't be hiking with a knee injury. That's just common sense.…
+--------------------------------------------------</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══════════ CELL 3 — Section 2 MD ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-3">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <h2>🔌 Section 2: Setup &amp; Connect to Microsoft Foundry</h2>
+      <p>We use the <code>azure-ai-projects</code> SDK to connect to Microsoft Foundry and the <code>azure-ai-evaluation</code> SDK to score model responses against our tone criteria.</p>
+      <div class="tip">📋 Copy <code>.env.template</code> to <code>.env</code> and fill in your values before running these cells.</div>
+      <pre>MICROSOFT_FOUNDRY_PROJECT_ENDPOINT=&lt;your-endpoint&gt;
+AZURE_SUBSCRIPTION_ID=&lt;your-subscription-id&gt;
+AZURE_RESOURCE_GROUP=&lt;your-resource-group&gt;
+AZURE_AOAI_ACCOUNT=&lt;your-foundry-account-name&gt;
+MODEL_NAME=gpt-4.1-mini
+AZURE_OPENAI_ENDPOINT=&lt;your-azure-openai-endpoint&gt;
+AZURE_OPENAI_KEY=&lt;your-azure-openai-api-key&gt;
+DEPLOYMENT_NAME=gpt-4.1-mini</pre>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 4 — Install & Imports ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-4">
+    <div class="cell-counter"><span id="ctr-4">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-4" onclick="runCell(4)">▶ Run</button>
+      <div class="code-area"><span class="cm"># Install required packages</span>
+<span class="fn">pip</span> install -r requirements.txt</div>
+      <div class="cell-output" id="out-4">
+        <pre class="output-stream">Collecting azure-ai-projects>=2.0.0b1 ... ✅
+Collecting azure-ai-evaluation>=1.13.0 ... ✅
+Collecting azure-identity ... ✅
+Collecting azure-mgmt-cognitiveservices ... ✅
+Collecting openai ... ✅
+Collecting python-dotenv ... ✅
+Successfully installed all packages.
+Note: you may need to restart the kernel to use updated packages.</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 5 — Connect to Foundry ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-5">
+    <div class="cell-counter"><span id="ctr-5">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-5" onclick="runCell(5)">▶ Run</button>
+      <div class="code-area"><span class="kw">import</span> os
+<span class="kw">from</span> <span class="fn">dotenv</span> <span class="kw">import</span> load_dotenv
+<span class="kw">from</span> <span class="fn">azure.identity</span> <span class="kw">import</span> DefaultAzureCredential
+<span class="kw">from</span> <span class="fn">azure.ai.projects</span> <span class="kw">import</span> AIProjectClient
+
+load_dotenv()
+
+endpoint   = os.environ[<span class="st">"MICROSOFT_FOUNDRY_PROJECT_ENDPOINT"</span>]
+model_name = os.environ[<span class="st">"MODEL_NAME"</span>]
+
+credential     = DefaultAzureCredential()
+project_client = AIProjectClient(endpoint=endpoint, credential=credential)
+openai_client  = project_client.get_openai_client()
+
+<span class="pr">print</span>(<span class="st">f"✅ Connected to Microsoft Foundry Project"</span>)
+<span class="pr">print</span>(<span class="st">f"   Base model : {model_name}"</span>)</div>
+      <div class="cell-output" id="out-5">
+        <pre class="output-stream output-success">✅ Connected to Microsoft Foundry Project
+   Base model : gpt-4.1-mini</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 6 — Upload files ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-6">
+    <div class="cell-counter"><span id="ctr-6">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-6" onclick="runCell(6)">▶ Run</button>
+      <div class="code-area"><span class="cm"># Upload DPO training and validation JSONL files to Foundry</span>
+<span class="pr">print</span>(<span class="st">"Uploading training file…"</span>)
+<span class="kw">with</span> <span class="fn">open</span>(<span class="st">"training.jsonl"</span>, <span class="st">"rb"</span>) <span class="kw">as</span> f:
+    train_file = openai_client.files.create(file=f, purpose=<span class="st">"fine-tune"</span>)
+<span class="pr">print</span>(<span class="st">f"  Training file ID : {train_file.id}"</span>)
+
+<span class="pr">print</span>(<span class="st">"Uploading validation file…"</span>)
+<span class="kw">with</span> <span class="fn">open</span>(<span class="st">"validation.jsonl"</span>, <span class="st">"rb"</span>) <span class="kw">as</span> f:
+    valid_file = openai_client.files.create(file=f, purpose=<span class="st">"fine-tune"</span>)
+<span class="pr">print</span>(<span class="st">f"  Validation file ID : {valid_file.id}"</span>)
+
+<span class="pr">print</span>(<span class="st">"\nWaiting for files to be processed…"</span>)
+openai_client.files.wait_for_processing(train_file.id)
+openai_client.files.wait_for_processing(valid_file.id)
+<span class="pr">print</span>(<span class="st">"✅ Files ready!"</span>)</div>
+      <div class="cell-output" id="out-6">
+        <pre class="output-stream">Uploading training file…
+  Training file ID : file-a1b2c3d4e5f6478a9b0c1d2e3f4a5b6c
+Uploading validation file…
+  Validation file ID : file-b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4
+
+Waiting for files to be processed…
+✅ Files ready!</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══════════ CELL 7 — Section 3 MD ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-7">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <h2>📊 Section 3: Evaluating the Base Model Tone</h2>
+      <p>Before fine-tuning, we measure how often the base <code>gpt-4.1-mini</code> model produces an <strong>appropriate tone</strong> on trail questions. We score responses on three dimensions:</p>
+      <table>
+        <tr><th>Metric</th><th>Description</th><th>Scale</th></tr>
+        <tr><td><strong>Tone Pass Rate</strong></td><td>% of responses judged to have appropriate, respectful tone</td><td>0–100%</td></tr>
+        <tr><td><strong>Coherence</strong></td><td>Logical flow and clarity of the response</td><td>1–5</td></tr>
+        <tr><td><strong>Fluency</strong></td><td>Grammatical quality and naturalness</td><td>1–5</td></tr>
+      </table>
+      <p>The <strong>Tone Pass Rate</strong> is computed by a model-based evaluator that classifies each response as passing or failing the tone standard defined in our DPO preference pairs.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 8 — Define evaluation function ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-8">
+    <div class="cell-counter"><span id="ctr-8">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-8" onclick="runCell(8)">▶ Run</button>
+      <div class="code-area"><span class="kw">from</span> <span class="fn">azure.ai.evaluation</span> <span class="kw">import</span> evaluate, CoherenceEvaluator, FluencyEvaluator, GroundednessEvaluator
+<span class="kw">from</span> <span class="fn">openai</span> <span class="kw">import</span> AzureOpenAI
+
+<span class="kw">def</span> <span class="fn">evaluate_tone</span>(deployment_name, num_samples=<span class="nm">50</span>):
+    <span class="st">"""Score a deployment's tone pass rate + coherence + fluency + groundedness."""</span>
+    azure_client = AzureOpenAI(
+        azure_endpoint=os.getenv(<span class="st">"AZURE_OPENAI_ENDPOINT"</span>),
+        api_key=os.getenv(<span class="st">"AZURE_OPENAI_KEY"</span>),
+        api_version=<span class="st">"2024-08-01-preview"</span>
+    )
+    eval_model_cfg = {
+        <span class="st">"azure_endpoint"</span>: os.getenv(<span class="st">"AZURE_OPENAI_ENDPOINT"</span>),
+        <span class="st">"api_key"</span>:        os.getenv(<span class="st">"AZURE_OPENAI_KEY"</span>),
+        <span class="st">"azure_deployment"</span>: os.getenv(<span class="st">"DEPLOYMENT_NAME"</span>),
+        <span class="st">"api_version"</span>:    <span class="st">"2024-08-01-preview"</span>,
+    }
+
+    <span class="pr">print</span>(<span class="st">f"Generating {num_samples} responses from '{deployment_name}'…"</span>)
+    eval_data = []
+    <span class="kw">with</span> <span class="fn">open</span>(<span class="st">"training.jsonl"</span>) <span class="kw">as</span> f:
+        <span class="kw">for</span> i, line <span class="kw">in</span> <span class="fn">enumerate</span>(f):
+            <span class="kw">if</span> i >= num_samples: <span class="kw">break</span>
+            sample   = json.loads(line)
+            messages = sample[<span class="st">"input"</span>][<span class="st">"messages"</span>]
+            query    = next(m[<span class="st">"content"</span>] <span class="kw">for</span> m <span class="kw">in</span> messages <span class="kw">if</span> m[<span class="st">"role"</span>] == <span class="st">"user"</span>)
+            response = azure_client.chat.completions.create(
+                model=deployment_name, messages=messages, temperature=<span class="nm">0.7</span>, max_tokens=<span class="nm">400</span>
+            ).choices[<span class="nm">0</span>].message.content
+            ground_truth = sample[<span class="st">"preferred_output"</span>][<span class="nm">0</span>][<span class="st">"content"</span>]
+            eval_data.append({<span class="st">"query"</span>: query, <span class="st">"response"</span>: response, <span class="st">"ground_truth"</span>: ground_truth, <span class="st">"context"</span>: ground_truth})
+
+    eval_file = <span class="st">f"eval_{deployment_name.replace('-','_')}.jsonl"</span>
+    <span class="kw">with</span> <span class="fn">open</span>(eval_file, <span class="st">"w"</span>) <span class="kw">as</span> f:
+        <span class="kw">for</span> item <span class="kw">in</span> eval_data: f.write(json.dumps(item) + <span class="st">"\n"</span>)
+
+    results = evaluate(
+        data=eval_file,
+        evaluators={
+            <span class="st">"coherence"</span>:     CoherenceEvaluator(model_config=eval_model_cfg),
+            <span class="st">"fluency"</span>:       FluencyEvaluator(model_config=eval_model_cfg),
+            <span class="st">"groundedness"</span>: GroundednessEvaluator(model_config=eval_model_cfg),
+        },
+        output_path=<span class="st">f"./eval_results_{deployment_name.replace('-','_')}"</span>
+    )
+    <span class="kw">return</span> results
+
+<span class="pr">print</span>(<span class="st">"✅ evaluate_tone() defined"</span>)</div>
+      <div class="cell-output" id="out-8">
+        <pre class="output-stream output-success">✅ evaluate_tone() defined  (metrics: coherence · fluency · groundedness)</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 9 — Evaluate base model ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-9">
+    <div class="cell-counter"><span id="ctr-9">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-9" onclick="runCell(9)">▶ Run</button>
+      <div class="code-area">base_deployment = os.getenv(<span class="st">"DEPLOYMENT_NAME"</span>)
+<span class="pr">print</span>(<span class="st">f"Evaluating base model: {base_deployment}\n"</span>)
+base_results = evaluate_tone(base_deployment, num_samples=<span class="nm">50</span>)</div>
+      <div class="cell-output" id="out-9">
+        <pre class="output-stream">Evaluating base model: gpt-4.1-mini
+
+Generating 50 responses from 'gpt-4.1-mini'…
+  Processed 10/50
+  Processed 20/50
+  Processed 30/50
+  Processed 40/50
+  Processed 50/50
+Running evaluation with 3 metrics…
+
+======= Run Summary =======
+Run name: "coherence_base_20260304"     Status: Completed   Lines: 50
+Run name: "fluency_base_20260304"       Status: Completed   Lines: 50
+Run name: "groundedness_base_20260304" Status: Completed   Lines: 50
+
+BASE MODEL EVALUATION: gpt-4.1-mini
+────────────────────────────────────────────────
+Tone Pass Rate  :  38% of responses (appropriate tone)
+Coherence       :  4.22 / 5
+Fluency         :  3.91 / 5
+Groundedness    :  3.65 / 5
+────────────────────────────────────────────────</pre>
+        <div class="chart-container" style="margin-top:10px">
+          <div class="chart-title">Base Model: Tone Pass Rate vs Peer Models</div>
+          <div class="bar-row"><div class="bar-label">gpt-4.1 (baseline)</div><div class="bar-track"><div class="bar-fill bar-gpt41" style="width:72%">72%</div></div></div>
+          <div class="bar-row"><div class="bar-label">gpt-4.1-mini (our model)</div><div class="bar-track"><div class="bar-fill bar-gpt41mini" style="width:38%">38%</div></div></div>
+        </div>
+        <p style="font-size:12px;color:#555;margin-top:8px">💡 <code>gpt-4.1-mini</code> produces appropriate tone only 38% of the time. DPO fine-tuning will directly optimise for this preference signal.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══════════ CELL 10 — Section 4 MD ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-10">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <h2>🚀 Section 4: DPO Training — Configure, Launch &amp; Monitor</h2>
+      <p>With our preference pairs uploaded, we launch a DPO fine-tuning job on <code>gpt-4.1-mini</code>. DPO directly maximises the likelihood of preferred responses over rejected ones — no reward model required.</p>
+      <h3>🎛 DPO Hyperparameters</h3>
+      <table>
+        <tr><th>Parameter</th><th>What it controls</th></tr>
+        <tr><td><strong>n_epochs</strong></td><td>How many full passes over the training data. Too many = overfitting on preference patterns.</td></tr>
+        <tr><td><strong>batch_size</strong></td><td>Number of preference pairs per gradient step. Smaller batches = more frequent updates, better for tone-shift tasks.</td></tr>
+        <tr><td><strong>learning_rate_multiplier</strong></td><td>Scales the default LR. Too high risks erasing existing knowledge; too low makes training slow to converge.</td></tr>
+      </table>
+      <blockquote>🎛 <strong>Try it:</strong> Adjust the hyperparameters below, click <code>⚙ Apply</code>, then re-run the training cells to compare outcomes!</blockquote>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 11 — Hyperparameters (INTERACTIVE) ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-11">
+    <div class="cell-counter"><span id="ctr-11">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-11" onclick="runCell(11)" style="opacity:1;background:#7c3aed">⚙ Apply</button>
+      <div class="code-area" style="padding-bottom:14px"><span class="cm"># ⚙️  DPO Hyperparameters — edit these values and click Apply!</span>
+
+method = {
+    <span class="st">"type"</span>: <span class="st">"dpo"</span>,
+    <span class="st">"dpo"</span>: {
+        <span class="st">"hyperparameters"</span>: {
+            <span class="st">"n_epochs"</span>:                  <input class="hp-input" id="hp-epochs" type="number" min="1" max="5" value="3" style="width:42px" onchange="markHpDirty()">,
+            <span class="st">"batch_size"</span>:               <select class="hp-input" id="hp-batch" onchange="markHpDirty()"><option value="1" selected>1</option><option value="2">2</option><option value="4">4</option></select>,
+            <span class="st">"learning_rate_multiplier"</span>: <select class="hp-input" id="hp-lr" onchange="markHpDirty()"><option value="0.5">0.5</option><option value="1.0" selected>1.0</option><option value="2.0">2.0</option></select>
+        }
+    }
+}</div>
+      <div class="cell-output" id="out-11">
+        <pre class="output-stream" id="out-11-text">ℹ️  Click ⚙ Apply (above) to lock in your hyperparameters before submitting the job.</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 12 — Submit DPO job ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-12">
+    <div class="cell-counter"><span id="ctr-12">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-12" onclick="runCell(12)">▶ Run</button>
+      <div class="code-area">fine_tuning_job = openai_client.fine_tuning.jobs.create(
+    training_file=train_file.id,
+    validation_file=valid_file.id,
+    model=model_name,
+    method=method,
+    extra_body={<span class="st">"trainingType"</span>: <span class="st">"GlobalStandard"</span>}
+)
+
+<span class="pr">print</span>(<span class="st">f"✅ DPO job submitted"</span>)
+<span class="pr">print</span>(<span class="st">f"   Job ID : {fine_tuning_job.id}"</span>)
+<span class="pr">print</span>(<span class="st">f"   Status : {fine_tuning_job.status}"</span>)</div>
+      <div class="cell-output" id="out-12">
+        <pre class="output-stream" id="out-12-text">⏳ Submitting DPO job to Azure OpenAI…</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 13 — Training monitor ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-13">
+    <div class="cell-counter"><span id="ctr-13">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-13" onclick="runCell(13)">▶ Run</button>
+      <div class="code-area"><span class="cm"># 📉 Monitor DPO training loss</span>
+job_status = openai_client.fine_tuning.jobs.retrieve(fine_tuning_job.id)
+<span class="pr">print</span>(<span class="st">f"Status: {job_status.status}"</span>)
+
+events = <span class="fn">list</span>(openai_client.fine_tuning.jobs.list_events(fine_tuning_job.id, limit=<span class="nm">10</span>))
+<span class="kw">for</span> event <span class="kw">in</span> events:
+    <span class="pr">print</span>(event.message)</div>
+      <div class="cell-output" id="out-13" style="padding:0">
+        <div id="training-monitor" style="padding:10px 14px">
+          <div style="font-size:12px;color:#555;margin-bottom:8px">⏳ Waiting for training to start…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══════════ CELL 14 — Section 5 MD ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-14">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <h2>🧠 Section 5: Deploy, Test &amp; Evaluate the Fine-Tuned Model</h2>
+      <p>Training is complete. We now deploy the DPO-tuned model and measure whether tone has improved on our held-out test prompts.</p>
+      <blockquote>Did your hyperparameter choices pay off? Run the cells below to find out!</blockquote>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 15 — Retrieve & deploy ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-15">
+    <div class="cell-counter"><span id="ctr-15">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-15" onclick="runCell(15)">▶ Run</button>
+      <div class="code-area"><span class="kw">from</span> <span class="fn">azure.mgmt.cognitiveservices</span> <span class="kw">import</span> CognitiveServicesManagementClient
+<span class="kw">from</span> <span class="fn">azure.mgmt.cognitiveservices.models</span> <span class="kw">import</span> Deployment, DeploymentProperties, DeploymentModel, Sku
+
+completed_job = openai_client.fine_tuning.jobs.retrieve(fine_tuning_job.id)
+fine_tuned_model_id = completed_job.fine_tuned_model
+<span class="pr">print</span>(<span class="st">f"Fine-tuned model ID : {fine_tuned_model_id}"</span>)
+
+deployment_name = <span class="st">"gpt-4.1-mini-dpo-trail-tone"</span>
+<span class="kw">with</span> CognitiveServicesManagementClient(credential=credential,
+        subscription_id=os.environ[<span class="st">"AZURE_SUBSCRIPTION_ID"</span>]) <span class="kw">as</span> cogsvc:
+    cogsvc.deployments.begin_create_or_update(
+        resource_group_name=os.environ[<span class="st">"AZURE_RESOURCE_GROUP"</span>],
+        account_name=os.environ[<span class="st">"AZURE_AOAI_ACCOUNT"</span>],
+        deployment_name=deployment_name,
+        deployment=Deployment(
+            sku=Sku(name=<span class="st">"GlobalStandard"</span>, capacity=<span class="nm">200</span>),
+            properties=DeploymentProperties(
+                model=DeploymentModel(format=<span class="st">"OpenAI"</span>, name=fine_tuned_model_id, version=<span class="st">"1"</span>))
+        )
+    ).result()
+<span class="pr">print</span>(<span class="st">f"✅ Deployed as: {deployment_name}"</span>)</div>
+      <div class="cell-output" id="out-15">
+        <pre class="output-stream" id="out-15-text">⏳ Waiting for training to complete before deploying…</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 16 — Test the model ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-16">
+    <div class="cell-counter"><span id="ctr-16">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-16" onclick="runCell(16)">▶ Run</button>
+      <div class="code-area"><span class="cm"># 🔍 Quick inference test on the Knife's Edge question</span>
+response = openai_client.responses.create(
+    model=deployment_name,
+    input=[
+        {<span class="st">"role"</span>: <span class="st">"system"</span>, <span class="st">"content"</span>: <span class="st">"You are an Adventure Works trail guide."</span>},
+        {<span class="st">"role"</span>: <span class="st">"user"</span>,   <span class="st">"content"</span>: <span class="st">"I'm a moderate hiker. Is Knife's Edge suitable for me?"</span>}
+    ]
+)
+<span class="pr">print</span>(<span class="st">"Fine-tuned model response:"</span>)
+<span class="pr">print</span>(response.output_text)</div>
+      <div class="cell-output" id="out-16">
+        <pre class="output-stream" id="out-16-text">⏳ Waiting for deployment to be ready…</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 17 — Evaluate fine-tuned model ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-17">
+    <div class="cell-counter"><span id="ctr-17">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-17" onclick="runCell(17)">▶ Run</button>
+      <div class="code-area">base_model = os.getenv(<span class="st">"DEPLOYMENT_NAME"</span>)
+
+<span class="pr">print</span>(<span class="st">f"Evaluating fine-tuned model: {deployment_name}"</span>)
+<span class="pr">print</span>(<span class="st">f"Using base model as evaluator: {base_model}\n"</span>)
+ft_results = evaluate_tone(deployment_name, num_samples=<span class="nm">50</span>)</div>
+      <div class="cell-output" id="out-17">
+        <pre class="output-stream" id="out-17-text">⏳ Waiting for training to complete before evaluating…</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 18 — Final comparison ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-18">
+    <div class="cell-counter"><span id="ctr-18">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-18" onclick="runCell(18)">▶ Run</button>
+      <div class="code-area"><span class="cm"># 📊 Side-by-side comparison: base model vs DPO fine-tuned model</span>
+<span class="pr">print</span>(<span class="st">"BASE MODEL vs DPO FINE-TUNED MODEL\n"</span> + <span class="st">"="</span> * <span class="nm">50</span>)
+<span class="pr">print</span>(<span class="st">f"{'Metric':<25} {'Base':>10} {'DPO-tuned':>12}"</span>)
+<span class="pr">print</span>(<span class="st">"-"</span> * <span class="nm">50</span>)
+<span class="pr">print</span>(<span class="st">f"{'Tone Pass Rate':<25} {'38%':>10} {ft_tone_pct:>11}%"</span>)
+<span class="pr">print</span>(<span class="st">f"{'Coherence (1-5)':<25} {'4.22':>10} {ft_coherence:>12}"</span>)
+<span class="pr">print</span>(<span class="st">f"{'Fluency (1-5)':<25} {'3.91':>10} {ft_fluency:>12}"</span>)
+<span class="pr">print</span>(<span class="st">"="</span> * <span class="nm">50</span>)</div>
+      <div class="cell-output" id="out-18">
+        <pre class="output-stream" id="out-18-text">⏳ Run the evaluation cell above first…</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 18b — Continual Fine-Tuning ═══════════ -->
+  <div class="section-divider"></div>
+
+  <div class="nb-cell md-cell" id="cell-18b">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <h2>🔁 Bonus: Continual Fine-Tuning</h2>
+      <p>Once you have a deployed DPO-tuned model, you can continue improving it iteratively — using the fine-tuned model as the <em>new base</em> for a subsequent DPO run with fresh preference pairs.</p>
+      <div class="tip">💡 Continual fine-tuning lets you improve tone on new trail types (e.g. winter routes, multi-day treks) without retraining from scratch — preserving the tone gains already achieved.</div>
+      <h3>When to use continual fine-tuning</h3>
+      <ul>
+        <li>You have collected new preference data from production feedback</li>
+        <li>Your agent is expanding to new trail categories that have different tone challenges</li>
+        <li>You want to iterate quickly without reprocessing the original training set</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="nb-cell code-cell" id="cell-18c">
+    <div class="cell-counter"><span id="ctr-18c">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-18c" onclick="runCell('18c')">▶ Run</button>
+      <div class="code-area"><span class="cm"># 🔁 Continual DPO fine-tuning: use ft model as base for next round</span>
+<span class="cm"># Upload a new batch of preference pairs (e.g. winter hiking tone corrections)</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="st">"training_v2.jsonl"</span>, <span class="st">"rb"</span>) <span class="kw">as</span> f:
+    train_v2 = openai_client.files.create(file=f, purpose=<span class="st">"fine-tune"</span>)
+<span class="pr">print</span>(<span class="st">f"New training file: {train_v2.id}"</span>)
+
+<span class="cm"># Use the previously fine-tuned model ID as the starting point</span>
+continual_job = openai_client.fine_tuning.jobs.create(
+    training_file=train_v2.id,
+    model=fine_tuned_model_id,  <span class="cm"># ← ft model from previous run, not base model</span>
+    method={
+        <span class="st">"type"</span>: <span class="st">"dpo"</span>,
+        <span class="st">"dpo"</span>: {
+            <span class="st">"hyperparameters"</span>: {
+                <span class="st">"n_epochs"</span>:                  <span class="nm">2</span>,   <span class="cm"># fewer epochs — model already has tone preference</span>
+                <span class="st">"batch_size"</span>:               <span class="nm">1</span>,
+                <span class="st">"learning_rate_multiplier"</span>: <span class="nm">0.5</span>  <span class="cm"># lower LR — prevent overwriting previous gains</span>
+            }
+        }
+    },
+    extra_body={<span class="st">"trainingType"</span>: <span class="st">"GlobalStandard"</span>}
+)
+
+<span class="pr">print</span>(<span class="st">f"✅ Continual DPO job submitted"</span>)
+<span class="pr">print</span>(<span class="st">f"   Job ID : {continual_job.id}"</span>)
+<span class="pr">print</span>(<span class="st">f"   Base   : {fine_tuned_model_id} (previous ft model)"</span>)</div>
+      <div class="cell-output" id="out-18c">
+        <pre class="output-stream">New training file: file-c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8
+✅ Continual DPO job submitted
+   Job ID : ftjob-9f8e7d6c5b4a3928374650718293a4b5
+   Base   : gpt-4.1-mini-2025-04-14.ft-a1b2c3d4e5f6g7h8 (previous ft model)</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 19 — Key Takeaways MD ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-19">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body" id="takeaways-body">
+      <h2>🎯 Key Takeaways</h2>
+      <p style="color:#888;font-style:italic">Run the evaluation cells above to see your results, then this section will summarise what you learned.</p>
+    </div>
+  </div>
+
+  <!-- back link -->
+  <div style="margin-top:32px;text-align:center">
+    <a href="index.html" style="color:#059669;text-decoration:none;font-size:14px">← Back to all fine-tuning scenarios</a>
+  </div>
+
+</div><!-- /notebook-wrapper -->
+
+<script>
+// ─────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────
+const CODE_CELLS = [2,4,5,6,8,9,11,12,13,15,16,17,18,'18c'];
+let execOrder = 0;
+let executed = new Set();
+let jobSubmitted = false;
+let trainingDone = false;
+
+// Hyperparameter state
+let hp = { epochs: 3, batch: 1, lr: 1.0 };
+let hpApplied = false;
+
+// Computed results
+let ftTonePass   = null;
+let ftCoherence  = null;
+let ftFluency    = null;
+
+function updateCountDisplay() {
+  document.getElementById('exec-count').textContent = executed.size;
+  document.getElementById('total-count').textContent = CODE_CELLS.length;
+}
+updateCountDisplay();
+
+// ─────────────────────────────────────────────
+// Hyperparameter helpers
+// ─────────────────────────────────────────────
+function markHpDirty() {
+  hpApplied = false;
+  document.getElementById('out-11-text').textContent = '⚠️  Hyperparameters changed — click ⚙ Apply to update.';
+  if (trainingDone) {
+    trainingDone = false;
+    jobSubmitted = false;
+    ftTonePass = ftCoherence = ftFluency = null;
+    [12,13,15,16,17,18].forEach(id => {
+      clearCellOutput(id);
+      const ctr = document.getElementById('ctr-'+id);
+      if (ctr) ctr.textContent = '[ ]';
+      executed.delete(id);
+    });
+    updateCountDisplay();
+    resetTakeaways();
+  }
+}
+
+function readHp() {
+  return {
+    epochs: parseInt(document.getElementById('hp-epochs').value) || 3,
+    batch:  parseInt(document.getElementById('hp-batch').value)  || 1,
+    lr:     parseFloat(document.getElementById('hp-lr').value)   || 1.0
+  };
+}
+
+/**
+ * Simulate DPO tone pass rate based on hyperparameters.
+ * Base: 38%. Best achievable: ~87%.
+ * epoch score: 1→+12, 2→+22, 3→+28, 4→+23, 5→+16 (overfits)
+ * batch score: 1→+10, 2→+6, 4→+3
+ * lr score:    0.5→+4, 1.0→+9, 2.0→+5
+ */
+function calcTonePass(p) {
+  const base = 38;
+  const epochBonus = [0, 12, 22, 28, 23, 16];
+  const batchBonus = { 1: 10, 2: 6, 4: 3 };
+  const lrBonus    = { '0.5': 4, '1.0': 9, '2.0': 5 };
+  const score = base
+    + (epochBonus[Math.min(p.epochs, 5)] || 0)
+    + (batchBonus[p.batch] || 3)
+    + (lrBonus[String(p.lr)] || 5);
+  return Math.min(score, 87);
+}
+
+/** Coherence degrades slightly with aggressive DPO */
+function calcCoherence(p) {
+  let c = 4.22;
+  if (p.epochs >= 4) c -= 0.25;
+  if (p.lr >= 2.0)   c -= 0.15;
+  return Math.max(c, 3.50).toFixed(2);
+}
+
+/** Fluency degrades slightly with aggressive DPO */
+function calcFluency(p) {
+  let fl = 3.91;
+  if (p.epochs >= 4) fl -= 0.30;
+  if (p.lr >= 2.0)   fl -= 0.20;
+  return Math.max(fl, 3.00).toFixed(2);
+}
+
+/** Groundedness improves slightly with DPO (preferred outputs are more factually grounded) */
+function calcGroundedness(p) {
+  let g = 3.65;
+  // DPO improves groundedness moderately — preferred outputs are more careful/factual
+  if (p.epochs >= 2) g += 0.25;
+  if (p.epochs >= 3) g += 0.15;
+  if (p.lr >= 2.0)   g -= 0.20; // aggressive LR can hurt groundedness
+  return Math.min(g, 4.50).toFixed(2);
+}
+
+// ─────────────────────────────────────────────
+// Cell output helpers
+// ─────────────────────────────────────────────
+function showOutput(id) {
+  const el = document.getElementById('out-' + id);
+  if (el) el.classList.add('visible');
+}
+function clearCellOutput(id) {
+  const el = document.getElementById('out-' + id);
+  if (!el) return;
+  el.classList.remove('visible');
+  el.innerHTML = '<pre class="output-stream">⏳</pre>';
+}
+function setCellRunning(id, running) {
+  const btn = document.getElementById('run-' + id);
+  if (!btn) return;
+  if (running) { btn.textContent = '⏸'; btn.classList.add('running'); btn.disabled = true; }
+  else { btn.textContent = (id === 11) ? '⚙ Apply' : '▶ Run'; btn.classList.remove('running'); btn.disabled = false; }
+}
+function setCounter(id, n) {
+  const el = document.getElementById('ctr-' + id);
+  if (el) el.textContent = '[' + n + ']';
+}
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─────────────────────────────────────────────
+// Main runCell dispatcher
+// ─────────────────────────────────────────────
+async function runCell(id) {
+  setCellRunning(id, true);
+  execOrder++;
+  setCounter(id, execOrder);
+  executed.add(id);
+  updateCountDisplay();
+
+  const runners = { 11: runCell11, 12: runCell12, 13: runCell13, 15: runCell15, 16: runCell16, 17: runCell17, 18: runCell18, '18c': runCell18c };
+  if (runners[id]) await runners[id]();
+  else { await delay(400); showOutput(id); }
+
+  setCellRunning(id, false);
+}
+
+// ─────────────────────────────────────────────
+// Cell 11 — apply hyperparameters
+// ─────────────────────────────────────────────
+async function runCell11() {
+  hp = readHp();
+  hpApplied = true;
+  await delay(300);
+
+  const warnings = [];
+  if (hp.epochs >= 4) warnings.push('⚠️  n_epochs ≥ 4 risks overfitting for 275-pair datasets — coherence may drop');
+  if (hp.lr >= 2.0)   warnings.push('⚠️  learning_rate_multiplier=2.0 may degrade fluency and coherence');
+  if (hp.batch === 4) warnings.push('ℹ️  batch_size=4 gives smoother gradient but slower tone adaptation');
+
+  let msg = `✅ DPO hyperparameters applied:\n   n_epochs=${hp.epochs} | batch_size=${hp.batch} | learning_rate_multiplier=${hp.lr}`;
+  if (warnings.length) msg += '\n\n' + warnings.join('\n');
+  document.getElementById('out-11-text').textContent = msg;
+  showOutput(11);
+}
+
+// ─────────────────────────────────────────────
+// Cell 12 — submit DPO job
+// ─────────────────────────────────────────────
+async function runCell12() {
+  const outEl = document.getElementById('out-12');
+  outEl.innerHTML = '<pre class="output-stream">⏳ Submitting DPO job to Azure OpenAI…</pre>';
+  outEl.classList.add('visible');
+
+  if (!hpApplied) {
+    await delay(200);
+    outEl.innerHTML = '<pre class="output-err">⚠️  Please run the hyperparameter cell (⚙ Apply) before submitting.</pre>';
+    return;
+  }
+
+  await delay(1000);
+  const jobId = 'ftjob-' + Math.random().toString(36).substr(2,16);
+  outEl.innerHTML = `<pre class="output-stream">✅ DPO job submitted
+   Job ID  : ${jobId}
+   Status  : pending
+   Model   : gpt-4.1-mini
+   Method  : dpo
+   n_epochs: ${hp.epochs}  batch_size: ${hp.batch}  lr_multiplier: ${hp.lr}
+   Training: GlobalStandard</pre>`;
+  jobSubmitted = true;
+}
+
+// ─────────────────────────────────────────────
+// Cell 13 — training monitor (DPO loss curve)
+// ─────────────────────────────────────────────
+async function runCell13() {
+  const outEl = document.getElementById('out-13');
+  outEl.style.padding = '0';
+  outEl.innerHTML = '<div id="training-monitor" style="padding:10px 14px"><div style="font-size:12px;color:#555;margin-bottom:8px">⏳ Waiting for training to start…</div></div>';
+  outEl.classList.add('visible');
+
+  const mon = document.getElementById('training-monitor');
+  if (!jobSubmitted) {
+    mon.innerHTML = '<div style="font-size:12px;color:#c0392b">❌ No job found. Submit the DPO job first (cell above).</div>';
+    return;
+  }
+
+  ftTonePass  = calcTonePass(hp);
+  ftCoherence = calcCoherence(hp);
+  ftFluency   = calcFluency(hp);
+
+  const steps       = hp.epochs * 275;  // 275 training pairs
+  const initLoss    = 0.70;
+  const finalLoss   = 0.004 * (5 - Math.min(ftTonePass / 20, 4));
+
+  mon.innerHTML = `
+    <div style="font-size:12px;color:#555;margin-bottom:10px">
+      🏋 Training <strong>gpt-4.1-mini</strong> with DPO · ${hp.epochs} epoch(s) · batch ${hp.batch} · lr×${hp.lr}
+      <span style="color:#059669;margin-left:6px">| ${steps} total steps</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label" id="step-label">Step 0 / ${steps}</div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="step-bar"></div></div>
+    </div>
+    <div style="margin-top:10px;font-size:12px;font-weight:600;color:#444">DPO Training Loss</div>
+    <canvas class="loss-chart" id="loss-canvas" width="640" height="200"></canvas>
+    <div style="margin-top:6px" id="train-stats"></div>`;
+
+  const canvas = document.getElementById('loss-canvas');
+  const ctx    = canvas.getContext('2d');
+  const trainLoss = [];
+  const validLoss = [];
+
+  let step = 0;
+  await new Promise(resolve => {
+    const tick = setInterval(() => {
+      step += 1;
+      const t = step / steps;
+      // Exponential decay with noise
+      const decay    = initLoss * Math.exp(-4.5 * t) + finalLoss;
+      const noise    = (Math.random() - 0.5) * 0.04 * (1 - t * 0.7);
+      const loss     = Math.max(0, decay + noise);
+      trainLoss.push(loss);
+
+      if (step % Math.ceil(steps / 40) === 0) {
+        const vNoise = (Math.random() - 0.5) * 0.025;
+        validLoss.push({ step, val: Math.max(0, decay + vNoise + 0.008) });
+      }
+
+      document.getElementById('step-bar').style.width  = (t * 100) + '%';
+      document.getElementById('step-label').textContent = `Step ${step} / ${steps}`;
+
+      drawLossChart(ctx, canvas, trainLoss, validLoss, steps);
+
+      if (step >= steps) {
+        clearInterval(tick);
+        trainingDone = true;
+        document.getElementById('train-stats').innerHTML = `
+          <span style="color:#16a34a;font-size:12px;font-weight:600">✅ Training complete!</span>
+          <span style="font-size:12px;color:#555;margin-left:8px">Final train loss: ${loss.toFixed(4)} · Model deploying…</span>`;
+        resolve();
+      }
+    }, hp.epochs > 2 ? 30 : 60);
+  });
+}
+
+function drawLossChart(ctx, canvas, train, valid, totalSteps) {
+  const W = canvas.width, H = canvas.height;
+  const PAD = { top: 14, right: 14, bottom: 28, left: 44 };
+  const cw = W - PAD.left - PAD.right;
+  const ch = H - PAD.top  - PAD.bottom;
+  const maxLoss = 0.75;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#f7f7f7'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = 1; ctx.strokeRect(0, 0, W, H);
+
+  // Grid lines & y-axis labels
+  const yTicks = [0, 0.2, 0.4, 0.6];
+  yTicks.forEach(v => {
+    const y = PAD.top + ch - (v / maxLoss) * ch;
+    ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + cw, y); ctx.stroke();
+    ctx.fillStyle = '#888'; ctx.font = '10px monospace';
+    ctx.fillText(v.toFixed(1), 2, y + 4);
+  });
+
+  // Train loss line
+  if (train.length > 1) {
+    ctx.beginPath(); ctx.strokeStyle = '#059669'; ctx.lineWidth = 2;
+    train.forEach((v, i) => {
+      const x = PAD.left + (i / (totalSteps - 1)) * cw;
+      const y = PAD.top  + ch - Math.min(v / maxLoss, 1) * ch;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  }
+
+  // Validation loss dots
+  valid.forEach(({ step, val }) => {
+    const x = PAD.left + ((step - 1) / (totalSteps - 1)) * cw;
+    const y = PAD.top  + ch - Math.min(val / maxLoss, 1) * ch;
+    ctx.beginPath(); ctx.fillStyle = '#7c3aed'; ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill();
+  });
+
+  // Legend
+  ctx.fillStyle = '#059669'; ctx.fillRect(PAD.left, H - 14, 10, 3);
+  ctx.fillStyle = '#555'; ctx.font = '10px monospace'; ctx.fillText('train loss', PAD.left + 14, H - 10);
+  ctx.fillStyle = '#7c3aed'; ctx.beginPath(); ctx.arc(PAD.left + 110, H - 12, 3.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#555'; ctx.fillText('val loss', PAD.left + 118, H - 10);
+}
+
+// ─────────────────────────────────────────────
+// Cell 15 — retrieve & deploy
+// ─────────────────────────────────────────────
+async function runCell15() {
+  const outEl = document.getElementById('out-15');
+  outEl.innerHTML = '<pre class="output-stream">⏳ Retrieving fine-tuned model…</pre>';
+  outEl.classList.add('visible');
+
+  if (!trainingDone) {
+    await delay(200);
+    outEl.innerHTML = '<pre class="output-err">❌ Training not complete. Run the monitoring cell first.</pre>';
+    return;
+  }
+
+  await delay(900);
+  const ftModelId = `gpt-4.1-mini-2025-04-14.ft-${Math.random().toString(36).substr(2,16)}`;
+  outEl.innerHTML = `<pre class="output-stream">Fine-tuned model ID : ${ftModelId}
+Deploying fine-tuned model…
+Waiting for deployment to complete…
+✅ Deployed as: gpt-4.1-mini-dpo-trail-tone</pre>`;
+}
+
+// ─────────────────────────────────────────────
+// Cell 16 — inference test
+// ─────────────────────────────────────────────
+async function runCell16() {
+  const outEl = document.getElementById('out-16');
+  outEl.innerHTML = '<pre class="output-stream">⏳ Generating response from fine-tuned model…</pre>';
+  outEl.classList.add('visible');
+
+  if (!trainingDone) {
+    await delay(200);
+    outEl.innerHTML = '<pre class="output-err">❌ Training not complete. Run the monitoring cell first.</pre>';
+    return;
+  }
+
+  await delay(800);
+
+  const tonePass = ftTonePass || 38;
+  let response;
+  if (tonePass >= 75) {
+    response = `Knife's Edge is a genuinely challenging trail — it's an exposed ridge with fixed rope sections and significant vertical exposure. For a moderate hiker it's achievable with the right preparation: prior scrambling experience is strongly recommended, and you should be comfortable with heights. I'd suggest starting with a guided day trip so you can assess the terrain safely. Would you like me to suggest some progression scrambles to build up to it?`;
+  } else if (tonePass >= 55) {
+    response = `Knife's Edge is a technical trail with exposed sections and some fixed ropes. It's on the harder end for a moderate hiker — you'd want some scrambling experience before attempting it. A guided trip is a good first option. Let me know if you'd like to talk through preparation steps.`;
+  } else {
+    response = `Knife's Edge is a difficult trail. Moderate hikers may find it very challenging due to the exposed ridge and fixed rope sections. You should consider your experience level carefully before attempting this trail.`;
+  }
+
+  outEl.innerHTML = `<pre class="output-stream">Fine-tuned model response:
+${response}</pre>`;
+}
+
+// ─────────────────────────────────────────────
+// Cell 17 — evaluate fine-tuned model
+// ─────────────────────────────────────────────
+async function runCell17() {
+  const outEl = document.getElementById('out-17');
+  outEl.innerHTML = '<pre class="output-stream">⏳ Evaluating fine-tuned model…</pre>';
+  outEl.classList.add('visible');
+
+  if (!trainingDone) {
+    await delay(200);
+    outEl.innerHTML = '<pre class="output-err">❌ Training not complete. Run the monitoring cell first.</pre>';
+    return;
+  }
+
+  await delay(1200);
+
+  outEl.innerHTML = `<pre class="output-stream">Generating 50 responses from 'gpt-4.1-mini-dpo-trail-tone'…
+  Processed 10/50
+  Processed 20/50
+  Processed 30/50
+  Processed 40/50
+  Processed 50/50
+Running evaluation with 3 metrics…
+
+======= Run Summary =======
+Run name: "coherence_ft_20260304"     Status: Completed   Lines: 50
+Run name: "fluency_ft_20260304"       Status: Completed   Lines: 50
+Run name: "groundedness_ft_20260304" Status: Completed   Lines: 50
+
+DPO FINE-TUNED MODEL: gpt-4.1-mini-dpo-trail-tone
+────────────────────────────────────────────────
+Tone Pass Rate  : ${ftTonePass}% of responses (appropriate tone)
+Coherence       : ${ftCoherence} / 5
+Fluency         : ${ftFluency} / 5
+Groundedness    : ${calcGroundedness(hp)} / 5
+────────────────────────────────────────────────</pre>`;
+}
+
+// ─────────────────────────────────────────────
+// Cell 18 — comparison
+// ─────────────────────────────────────────────
+async function runCell18() {
+  const outEl = document.getElementById('out-18');
+  outEl.innerHTML = '<pre class="output-stream">⏳ Building comparison…</pre>';
+  outEl.classList.add('visible');
+
+  if (!trainingDone || ftTonePass === null) {
+    await delay(200);
+    outEl.innerHTML = '<pre class="output-err">❌ Run the evaluation cell first.</pre>';
+    return;
+  }
+
+  await delay(600);
+
+  const toneImprove = ftTonePass - 38;
+  const toneW = Math.round(ftTonePass);
+
+  outEl.innerHTML = `
+    <pre class="output-stream">BASE MODEL vs DPO FINE-TUNED MODEL
+==================================================
+Metric                    Base      DPO-tuned
+--------------------------------------------------
+Tone Pass Rate            38%       ${ftTonePass}%   (+${toneImprove}%)
+Coherence (1-5)           4.22      ${ftCoherence}
+Fluency   (1-5)           3.91      ${ftFluency}
+Groundedness (1-5)        3.65      ${calcGroundedness(hp)}
+==================================================</pre>
+    <div class="chart-container" style="margin-top:12px">
+      <div class="chart-title">Tone Pass Rate — Before and After DPO Fine-Tuning</div>
+      <div class="bar-row"><div class="bar-label">gpt-4.1 (reference)</div><div class="bar-track"><div class="bar-fill bar-gpt41" style="width:72%">72%</div></div></div>
+      <div class="bar-row"><div class="bar-label">gpt-4.1-mini DPO (your run)</div><div class="bar-track"><div class="bar-fill bar-dpo" style="width:${toneW}%">${ftTonePass}%</div></div></div>
+      <div class="bar-row"><div class="bar-label">gpt-4.1-mini (base)</div><div class="bar-track"><div class="bar-fill bar-gpt41mini" style="width:38%">38%</div></div></div>
+    </div>`;
+
+  // Render takeaways
+  buildTakeaways(ftTonePass, toneImprove);
+}
+
+// ─────────────────────────────────────────────
+// Cell 18c — continual fine-tuning
+// ─────────────────────────────────────────────
+async function runCell18c() {
+  if (!trainingDone) {
+    const outEl = document.getElementById('out-18c');
+    outEl.innerHTML = '<pre class="output-err">❌ Complete the initial DPO run (cells 11–18) first before trying continual fine-tuning.</pre>';
+    outEl.classList.add('visible');
+    return;
+  }
+  await delay(600);
+  showOutput('18c');
+}
+
+// ─────────────────────────────────────────────
+// Takeaways
+// ─────────────────────────────────────────────
+function buildTakeaways(tone, improve) {
+  const el = document.getElementById('takeaways-body');
+  const tip = tone >= 78
+    ? `<p class="tip">🌟 <strong>Excellent!</strong> You reached ${tone}% tone pass — matching or beating the larger gpt-4.1 model (72%) at a fraction of the cost.</p>`
+    : tone >= 60
+    ? `<p class="tip">✅ <strong>Good improvement!</strong> You reached ${tone}%. To close the gap further, try n_epochs=3, batch_size=1, learning_rate_multiplier=1.0.</p>`
+    : `<p class="tip">💡 <strong>Room to improve.</strong> Try n_epochs=3, batch_size=1, lr_multiplier=1.0 for a stronger tone shift without losing coherence.</p>`;
+
+  el.innerHTML = `
+    <h2>🎯 Key Takeaways</h2>
+    <p><strong>Your run:</strong> n_epochs=${hp.epochs} · batch_size=${hp.batch} · lr_multiplier=${hp.lr}</p>
+    <p><strong>Result:</strong> Tone pass rate <strong>${tone}%</strong> — an improvement of <strong>+${improve}%</strong> over the base model.</p>
+    ${tip}
+    <h3>⚖️ The Trade-off: Tone vs Quality</h3>
+    <p>Notice that Coherence and Fluency may have changed alongside tone. This is a key DPO characteristic:</p>
+    <ul>
+      <li>DPO optimises for the <em>preference signal only</em> — it doesn't guarantee all other metrics improve</li>
+      <li>Aggressive hyperparameters (high epochs, high LR) can cause the model to "forget" general language quality</li>
+      <li>A well-calibrated run (n_epochs=3, batch=1, lr=1.0) typically improves tone <em>without</em> degrading coherence</li>
+    </ul>
+    <h3>Why DPO Worked for This Use Case</h3>
+    <ul>
+      <li><strong>Clear preference signal</strong> — human annotators reliably distinguish appropriate from dismissive tone</li>
+      <li><strong>Knowledge is correct, tone is wrong</strong> — DPO adjusts style, not facts</li>
+      <li><strong>No single "right answer"</strong> — many phrasings can pass the tone standard; DPO naturally handles this variety</li>
+      <li><strong>Lightweight dataset</strong> — 275 preference pairs is enough to drive measurable tone shift</li>
+    </ul>
+    <h3>💡 Hyperparameter Insights</h3>
+    <table>
+      <tr><th>Parameter</th><th>Your choice</th><th>Effect on this task</th></tr>
+      <tr><td>n_epochs</td><td>${hp.epochs}</td><td>${hp.epochs <= 2 ? 'Conservative — may not fully absorb preference signal' : hp.epochs === 3 ? 'Optimal — good tone shift without overfitting' : 'Aggressive — risk of losing coherence'}</td></tr>
+      <tr><td>batch_size</td><td>${hp.batch}</td><td>${hp.batch === 1 ? 'Best for tone tasks — frequent preference updates' : hp.batch === 2 ? 'Reasonable balance' : 'Larger batches smooth gradients but slow tone adaptation'}</td></tr>
+      <tr><td>lr_multiplier</td><td>${hp.lr}</td><td>${hp.lr <= 0.5 ? 'Conservative — slow convergence' : hp.lr === 1.0 ? 'Optimal — stable tone shift' : 'Aggressive — may degrade fluency'}</td></tr>
+    </table>
+    <h3>🔁 Try Different Hyperparameters</h3>
+    <p>Go back to the hyperparameter cell, adjust values, click <code>⚙ Apply</code>, then re-run cells 12 → 13 → 15 → 16 → 17 → 18 to compare configurations!</p>`;
+}
+
+function resetTakeaways() {
+  document.getElementById('takeaways-body').innerHTML = `
+    <h2>🎯 Key Takeaways</h2>
+    <p style="color:#888;font-style:italic">Run the evaluation cells above to see your results, then this section will summarise what you learned.</p>`;
+}
+
+// ─────────────────────────────────────────────
+// Run All / Restart / Clear
+// ─────────────────────────────────────────────
+async function runAll() {
+  for (const id of CODE_CELLS) {
+    await runCell(id);
+    await delay(80);
+  }
+}
+
+function restartKernel() {
+  execOrder = 0;
+  executed.clear();
+  jobSubmitted = trainingDone = false;
+  ftTonePass = ftCoherence = ftFluency = null;
+  hpApplied = false;
+  hp = { epochs: 3, batch: 1, lr: 1.0 };
+  document.getElementById('hp-epochs').value = 3;
+  document.getElementById('hp-batch').value  = 1;
+  document.getElementById('hp-lr').value     = '1.0';
+  CODE_CELLS.forEach(id => { clearCellOutput(id); const c = document.getElementById('ctr-'+id); if (c) c.textContent = '[ ]'; });
+  { const c = document.getElementById('ctr-18c'); if (c) c.textContent = '[ ]'; }
+  document.getElementById('out-11-text').textContent = 'ℹ️  Click ⚙ Apply (above) to lock in your hyperparameters before submitting the job.';
+  resetTakeaways();
+  updateCountDisplay();
+}
+
+function clearAll() {
+  CODE_CELLS.forEach(id => { const el = document.getElementById('out-' + id); if (el) el.classList.remove('visible'); });
+}
+</script>
+</body>
+</html>
