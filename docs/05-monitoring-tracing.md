@@ -21,7 +21,7 @@ In this exercise, you'll use Application Insights and distributed tracing to obs
 You'll run the same five test prompts against prompt versions v1, v2, and v3, then analyze the results from two angles:
 
 - **Azure Monitor**: Aggregated token usage and latency metrics across versions
-- **Microsoft Foundry Tracing**: Individual span trees per version, with per-prompt timing and attribute data
+- **Trace tree (local)**: A nested span tree per version from `python src/tests/check_traces.py`, with per-prompt timing and token attributes
 
 ## Set up the environment
 
@@ -131,7 +131,7 @@ With your Azure resources deployed, install the required Python packages.
     Open the `.env` file in your repository root and add:
 
     ```
-    MODEL_NAME=gpt-4.1
+    MODEL_NAME="gpt-4.1"
     ```
 
 ## Understand the monitoring script
@@ -178,7 +178,28 @@ Before running anything, take a moment to review what `src/tests/run_monitoring.
     - Does v3 produce noticeably longer responses than v1?
     - Does token count grow consistently from v1 to v3?
 
-    > **Note**: It may take a few minutes for monitoring data to appear in Azure Monitor and Microsoft Foundry after the script completes.
+1. View the trace tree for the latest run (recommended).
+
+    This lab uses a local trace viewer script that queries Log Analytics and prints a nested tree. This makes the parent/child chain very explicit without relying on a portal UI.
+
+    Run:
+
+    ```powershell
+    python src/tests/check_traces.py
+    ```
+
+    You should see one trace per prompt version, with three levels:
+
+    ```
+    trail_guide_v1                            ← root: entire version run
+    ├── v1_day-hike-gear                      ← child: one test prompt (duration + token attributes)
+    │   └── chat gpt-4.1                      ← auto: the actual LLM call
+    └── ...
+    trail_guide_v2  (same structure)
+    trail_guide_v3  (same structure)
+    ```
+
+    If the output says `No traces found yet`, wait 2–3 minutes and run the script again.
 
 ## View monitoring data in Azure Monitor
 
@@ -213,46 +234,48 @@ Focus on the **token usage** metrics and compare the three prompt versions:
 
 ### Compare the individual interactions
 
-1. In the navigation pane on the left, select **Tracing**.
-1. You'll see rows for each model call. Review the **Input**, **Output**, and **Duration** columns.
-1. Compare rows from `trail_guide_v1` spans against rows from `trail_guide_v3` spans.
+Use the output of `python src/tests/check_traces.py` to compare prompt versions.
+
+1. For the same test name (for example, `v1_trail-difficulty` vs `v3_trail-difficulty`), compare:
+    - **Duration** (shown in milliseconds)
+    - **Total tokens** (and prompt vs completion breakdown)
+1. Use the nested structure to understand the chain:
+    - The `v{n}_{test-name}` span is where you attach per-test token and duration attributes.
+    - The `chat gpt-4.1` span is the instrumented model call.
 
     - Which version produces the most consistent response lengths?
     - Which version shows the highest duration?
     - Are there any calls that stand out as unusually slow or verbose?
 
-## View trace data in Microsoft Foundry
+## View trace data
 
-The Tracing page gives you the full span tree for each version run — one parent span per version, with nested child spans for each test prompt and auto-instrumented LLM calls beneath those.
+The `check_traces.py` output gives you the full span tree for each version run — one root span per version, with nested child spans for each test prompt and auto-instrumented LLM calls beneath those.
 
 ### Review the version spans
 
-1. In the Tracing page, locate the three top-level spans: `trail_guide_v1`, `trail_guide_v2`, and `trail_guide_v3`.
-1. Select `trail_guide_v1` to open the span detail view.
+1. Run the trace viewer script:
 
-    You'll see a tree of nested spans:
-    - **`trail_guide_v1`** — the parent span for the entire version run
-        - **`v1_<test-name>`** — one child span per test prompt
-            - **`chat gpt-4.1`** — automatically added by OpenAIInstrumentor for the actual LLM call
+    ```powershell
+    python src/tests/check_traces.py
+    ```
 
-1. Select a `v1_<test-name>` span and review its **attributes**:
+1. Locate the root spans: `trail_guide_v1`, `trail_guide_v2`, and `trail_guide_v3`.
+1. Under each root span, locate a test child span like `v1_trail-difficulty`.
+1. Review the inline attributes printed on each test child span:
 
     | Attribute | What it tells you |
     |---|---|
-    | `prompt.version` | Which prompt version produced this response |
-    | `test.name` | Which test prompt was used |
-    | `response.total_tokens` | Total tokens consumed by this specific call |
-    | `response.duration_s` | Latency in seconds for this call |
-    | `session.id` | Groups all calls from the same script run |
+    | Span name (for example, `v3_trail-difficulty`) | Which prompt version + which test prompt |
+    | `[...]ms` | Latency for that span (milliseconds) |
+    | `tokens: total (↑prompt ↓completion)` | Token usage for that specific test call |
 
 ### Compare span trees across versions
 
-1. Navigate back to the Tracing list and open `trail_guide_v3`.
-1. Select the same test (e.g. `v3_trail-difficulty`) and compare its attributes to the equivalent `v1_trail-difficulty` span.
+1. Compare `trail_guide_v3` to `trail_guide_v1` for the same test (for example, `v3_trail-difficulty` vs `v1_trail-difficulty`).
 
-    - Is `response.completion_tokens` higher in v3?
-    - Is `response.duration_s` longer?
-    - Open the auto-instrumented `chat gpt-4.1` child span and review the captured prompt and response content.
+    - Are completion tokens higher in v3?
+    - Is the duration longer?
+    - Compare the `chat gpt-4.1` child span durations under each test span.
 
 1. Repeat the comparison for at least two other test prompts. Document your observations:
 
@@ -285,7 +308,7 @@ If you completed [Lab 03: Design and optimize prompts](03-design-optimize-prompt
     python src/tests/run_monitoring.py
     ```
 
-1. In Azure AI Foundry Tracing, compare the new `trail_guide_v4_optimized_concise` span tree against `trail_guide_v3`.
+1. Run `python src/tests/check_traces.py` again and compare the new `trail_guide_v4_optimized_concise` span tree against `trail_guide_v3`.
 
     - Does the token reduction you measured in evaluation hold up at runtime?
     - Is there a latency improvement as well?
