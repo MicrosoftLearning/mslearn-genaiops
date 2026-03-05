@@ -28,9 +28,6 @@ project_endpoint = os.environ["AZURE_AI_PROJECT_ENDPOINT"]
 openai_endpoint = os.environ["AZURE_OPENAI_ENDPOINT"]
 model_name = os.getenv("MODEL_NAME", "gpt-4.1")
 
-# Enable prompt and response content capture in spans
-os.environ["OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"] = "true"
-
 # Connect to Azure AI Project and retrieve Application Insights connection string
 project_client = AIProjectClient(
     endpoint=project_endpoint,

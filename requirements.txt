@@ -1,13 +1,17 @@
 # GenAI Operations Dependencies - Trail Guide Agent
 # Adventure Works Outdoor Gear - AI Trail Assistant
-# Updated: 2026-01-16
+# Updated: 2026-03-04
 
 # Core Azure AI Projects SDK (Pinned for compatibility)
 azure-ai-projects==2.0.0b4
 azure-identity==1.25.2
 azure-core==1.38.2
 azure-mgmt-resource>=23.0.0
+azure-mgmt-applicationinsights>=4.0.0
+azure-mgmt-loganalytics>=13.0.0
+azure-mgmt-subscription>=3.1.1
 azure-monitor-opentelemetry==1.8.6
+azure-monitor-query>=1.4.0
 opentelemetry-instrumentation-openai-v2==2.3b0
 openai==2.24.0
 
