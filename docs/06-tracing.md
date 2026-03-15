@@ -1,10 +1,4 @@
----
-lab:
-    title: 'Application Tracing and Debugging'
-    description: 'Analyze and debug generative AI applications using distributed tracing, view trace data in Application Insights, and optimize application performance.'
-    level: 400
-    duration: 30 minutes
----
+
 
 # Analyze and debug your generative AI app with tracing
 
