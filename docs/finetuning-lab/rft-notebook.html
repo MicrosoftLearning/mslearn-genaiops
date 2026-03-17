@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RFT Notebook – Trail Guide Agent</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── TOP NAV ── */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #be185d;
+      color: #fff;
+      padding: 12px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .top-nav a { color: #fff; text-decoration: none; font-size: 13px; opacity: .85; }
+    .top-nav a:hover { opacity: 1; }
+    .top-nav .title { font-weight: 600; font-size: 15px; }
+    .top-nav .meta { font-size: 12px; opacity: .75; }
+
+    /* ── NOTEBOOK WRAPPER ── */
+    .notebook-wrapper {
+      max-width: 980px;
+      margin: 24px auto;
+      padding: 0 16px 80px;
+    }
+
+    /* ── KERNEL BAR ── */
+    .kernel-bar {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px 6px 0 0;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: #666;
+    }
+    .kernel-dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; }
+    .kernel-bar span:last-child { margin-left: auto; }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      border-top: none;
+      padding: 6px 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .tb-btn {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 3px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #333;
+      transition: background .15s;
+    }
+    .tb-btn:hover { background: #e8e8e8; }
+    .tb-sep { width: 1px; height: 20px; background: #ccc; margin: 0 4px; }
+    .run-all-btn {
+      margin-left: auto;
+      background: #be185d;
+      border-color: #be185d;
+      color: #fff;
+      padding: 4px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      border: none;
+      transition: background .15s;
+    }
+    .run-all-btn:hover { background: #9d174d; }
+
+    /* ── CELL ── */
+    .nb-cell {
+      display: flex;
+      border-left: 3px solid transparent;
+      margin-bottom: 0;
+      transition: border-color .15s;
+    }
+    .nb-cell.active { border-left-color: #be185d; }
+    .nb-cell:focus-within { border-left-color: #be185d; }
+
+    .cell-counter {
+      width: 52px;
+      min-width: 52px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12px;
+      color: #999;
+      padding: 8px 6px 8px 8px;
+      text-align: right;
+      user-select: none;
+    }
+    .cell-counter span { display: block; }
+
+    .cell-body { flex: 1; min-width: 0; }
+
+    /* markdown cells */
+    .md-cell .cell-body {
+      background: #fff;
+      padding: 12px 16px;
+      border: 1px solid #e8e8e8;
+    }
+    .md-cell .cell-counter { padding-top: 12px; }
+
+    /* code cells */
+    .code-cell .cell-body {
+      border: 1px solid #e0e0e0;
+      position: relative;
+    }
+    .code-area {
+      background: #f7f7f7;
+      padding: 10px 14px;
+      font-family: "SFMono-Regular", Consolas, "Courier New", monospace;
+      font-size: 12.5px;
+      line-height: 1.65;
+      color: #333;
+      white-space: pre;
+      overflow-x: auto;
+      border-bottom: 1px solid #e8e8e8;
+    }
+    .run-btn {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: #be185d;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 11px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity .2s, background .15s;
+    }
+    .code-cell:hover .run-btn { opacity: 1; }
+    .run-btn:hover { background: #9d174d; }
+    .run-btn.running { background: #666; cursor: default; }
+
+    /* output */
+    .cell-output {
+      display: none;
+      background: #fff;
+      border-top: 1px solid #e0e0e0;
+      padding: 10px 14px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #333;
+      overflow-x: auto;
+    }
+    .cell-output.visible { display: block; }
+    .cell-output pre { white-space: pre-wrap; }
+    .output-stream { color: #555; }
+    .output-err { color: #c0392b; }
+    .output-success { color: #16a34a; }
+
+    /* progress bar for training */
+    .progress-wrap { margin: 6px 0; }
+    .progress-label { font-size: 11px; color: #666; margin-bottom: 3px; }
+    .progress-bar-outer { height: 12px; background: #e5e5e5; border-radius: 6px; overflow: hidden; width: 100%; }
+    .progress-bar-inner {
+      height: 100%;
+      background: #be185d;
+      border-radius: 6px;
+      width: 0%;
+      transition: width .08s linear;
+    }
+
+    /* chart */
+    .chart-container { padding: 8px 0 4px; }
+    .chart-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #444; }
+    .bar-row { display: flex; align-items: center; margin-bottom: 6px; gap: 8px; }
+    .bar-label { width: 200px; min-width: 200px; font-size: 11.5px; color: #555; text-align: right; }
+    .bar-track { flex: 1; height: 22px; background: #f0f0f0; border-radius: 3px; position: relative; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; transition: width .6s ease; display: flex; align-items: center; padding-left: 6px; font-size: 11px; font-weight: 600; color: #fff; }
+    .bar-o3 { background: #2563eb; }
+    .bar-ft { background: #be185d; }
+    .bar-base { background: #7c3aed; }
+    .bar-gpt { background: #9ca3af; }
+    .bar-legend { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+    .bar-legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #555; }
+    .bar-legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+    /* syntax colors — light theme */
+    .kw { color: #0033b3; font-weight: 600; } /* keyword: def, import, etc */
+    .fn { color: #000080; }                   /* function/module names */
+    .st { color: #067d17; }                   /* strings */
+    .cm { color: #8c8c8c; font-style: italic; } /* comments */
+    .nm { color: #1750eb; }                   /* numbers */
+    .op { color: #555; }                      /* operators/punctuation */
+    .pr { color: #7a3e9d; }                   /* builtins: print, open, etc */
+    .va { color: #333; }                      /* variable names */
+
+    /* editable hyperparams */
+    .hp-input {
+      background: #fff;
+      border: 1px solid #bbb;
+      border-radius: 3px;
+      color: #067d17;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12.5px;
+      padding: 1px 5px;
+      width: auto;
+      min-width: 0;
+    }
+    .hp-input:focus { outline: none; border-color: #be185d; background: #fffbea; }
+    select.hp-input { padding: 1px 4px; cursor: pointer; }
+
+    /* md styles */
+    .md-cell h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: #111; }
+    .md-cell h3 { font-size: 15px; font-weight: 600; margin: 12px 0 6px; color: #222; }
+    .md-cell p { margin-bottom: 8px; color: #444; }
+    .md-cell ul, .md-cell ol { margin: 6px 0 8px 20px; color: #444; }
+    .md-cell li { margin-bottom: 3px; }
+    .md-cell code { background: #f0f0f0; border-radius: 3px; padding: 1px 5px; font-family: monospace; font-size: 12px; color: #be185d; }
+    .md-cell pre { background: #f7f7f7; color: #333; padding: 10px 14px; border-radius: 4px; font-size: 12px; overflow-x: auto; margin: 8px 0; border: 1px solid #e8e8e8; }
+    .md-cell table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12.5px; }
+    .md-cell th { background: #f0f0f0; padding: 6px 10px; border: 1px solid #ddd; text-align: left; font-weight: 600; }
+    .md-cell td { padding: 5px 10px; border: 1px solid #e5e5e5; }
+    .md-cell tr:nth-child(even) td { background: #fafafa; }
+    .md-cell strong { font-weight: 600; color: #111; }
+    .md-cell em { font-style: italic; }
+    .md-cell .tip { background: #fdf4ff; border-left: 3px solid #be185d; padding: 8px 12px; border-radius: 0 4px 4px 0; margin: 8px 0; font-size: 13px; }
+    .md-cell blockquote { border-left: 3px solid #be185d; padding: 6px 12px; background: #fdf4ff; margin: 8px 0; color: #555; border-radius: 0 4px 4px 0; }
+    .emoji { font-style: normal; }
+
+    /* section divider */
+    .section-divider { height: 20px; }
+
+    /* reward chart (canvas) */
+    canvas.reward-chart { width: 100%; max-width: 640px; height: 200px; display: block; margin: 8px 0; }
+
+    /* tag */
+    .scenario-tag {
+      display: inline-block;
+      background: #be185d;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-bottom: 4px;
+    }
+
+    /* results table */
+    .results-table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 6px 0; }
+    .results-table th { background: #f0f0f0; color: #333; padding: 6px 10px; text-align: left; border-bottom: 2px solid #ddd; }
+    .results-table td { padding: 5px 10px; border-bottom: 1px solid #e5e5e5; }
+    .results-table tr.highlight td { background: #fdf4ff; font-weight: 600; }
+    .pass-good { color: #16a34a; font-weight: 700; }
+    .pass-ok { color: #7c3aed; font-weight: 700; }
+    .pass-bad { color: #9ca3af; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════ TOP NAV ══════════════════════════════════ -->
+<nav class="top-nav">
+  <a href="rft.html">← Back to data selection</a>
+  <span class="title">RFT Notebook — Adventure Works Trail Guide</span>
+  <span class="meta">Kernel: Python 3 (Azure OpenAI) · o4-mini</span>
+</nav>
+
+<div class="notebook-wrapper">
+
+  <!-- kernel bar -->
+  <div class="kernel-bar">
+    <div class="kernel-dot"></div>
+    <span>Kernel: Python 3</span>
+    <span>|</span>
+    <span>Azure OpenAI SDK</span>
+    <span>Run All Cells →</span>
+    <button class="run-all-btn" onclick="runAll()">▶ Run All</button>
+  </div>
+
+  <!-- toolbar -->
+  <div class="toolbar">
+    <button class="tb-btn" onclick="restartKernel()">↺ Restart</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="clearAll()">✕ Clear All Output</button>
+    <div class="tb-sep"></div>
+    <span style="font-size:12px;color:#888">Cells: <span id="exec-count">0</span> / <span id="total-count">0</span> executed</span>
+  </div>
+
+  <!-- ═══════════ CELL 0 — Agenda ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-0">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <div class="scenario-tag">Scenario 3 · Reinforcement Fine-Tuning</div>
+      <h2>🏔 Reinforcement Fine-Tuning the Adventure Works Trail Guide</h2>
+      <h3>🧭 Agenda</h3>
+      <p>This notebook walks through end-to-end <strong>Reinforcement Fine-Tuning (RFT)</strong> using <code>o4-mini</code> on Azure OpenAI, applied to our trail recommendation agent:</p>
+      <ol>
+        <li><strong>Dataset &amp; Objective</strong> — multi-constraint trail planning problems</li>
+        <li><strong>System Prompt, Schema &amp; Grader</strong> — defining what "good" looks like</li>
+        <li><strong>Evaluating Base Models</strong> — establish a baseline before fine-tuning</li>
+        <li><strong>RFT Training: Setup, Launch &amp; Monitoring</strong> — <em>adjust hyperparameters and rerun!</em></li>
+        <li><strong>Results &amp; Comparison</strong> — did fine-tuning help?</li>
+        <li><strong>Key Takeaways</strong> — when to use RFT</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══════════ CELL 1 — Section 1 MD ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-1">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <h2>🧮 Section 1: Dataset &amp; Objective</h2>
+      <p>We use a dataset of <strong>complex trail-planning problems</strong> from Adventure Works. Each example includes multiple constraints that must all be satisfied in the model's recommendation.</p>
+      <p>Each example contains:</p>
+      <ul>
+        <li>A <strong>planning scenario</strong> (e.g. group size, fitness levels, trip duration)</li>
+        <li>A set of <strong>constraints</strong> (child-friendly, medical limitations, gear requirements)</li>
+        <li>The model must produce a <strong>structured itinerary</strong> with safety notes</li>
+      </ul>
+      <p><strong>Example:</strong><br>
+        <code>Plan a 4-day moderate loop. Group: 8 hikers (beginner + intermediate). Child age 7. Max 12 miles/day.</code></p>
+      <h3>🧠 Why This Is a Perfect Fit for RFT</h3>
+      <p>This task is <strong>not ideal for SFT</strong> because:</p>
+      <ul>
+        <li>There are <strong>many valid itinerary paths</strong> for any given scenario</li>
+        <li>Correctness is easy to <em>grade</em> but hard to prescribe as a single label</li>
+        <li>We want the model to satisfy <em>all constraints</em> simultaneously — reward-based learning does this naturally</li>
+      </ul>
+      <blockquote>✅ RFT lets the model explore solutions and learn from a grader — without requiring exact output labels.</blockquote>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 2 — Load dataset ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-2">
+    <div class="cell-counter"><span id="ctr-2">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-2" onclick="runCell(2)">▶ Run</button>
+      <div class="code-area"><span class="kw">from</span> <span class="fn">datasets</span> <span class="kw">import</span> load_dataset
+<span class="kw">import</span> random, json
+
+<span class="cm"># Load Adventure Works trail planning dataset</span>
+dataset = load_dataset(<span class="st">"adventureworks/trail-planning-rft"</span>, split=<span class="st">"train"</span>)
+
+<span class="pr">print</span>(<span class="st">"🏔 Trail Planning Dataset Samples\n"</span> + <span class="st">"-"</span> * <span class="nm">40</span>)
+<span class="kw">for</span> i <span class="kw">in</span> random.sample(<span class="fn">range</span>(<span class="fn">len</span>(dataset)), <span class="nm">5</span>):
+    item = dataset[i]
+    <span class="pr">print</span>(<span class="st">f"Scenario  : {item['scenario']}"</span>)
+    <span class="pr">print</span>(<span class="st">f"Constraints: {item['constraints']}"</span>)
+    <span class="pr">print</span>(<span class="st">"-"</span> * <span class="nm">40</span>)</div>
+      <div class="cell-output" id="out-2">
+        <pre class="output-stream">🏔 Trail Planning Dataset Samples
+----------------------------------------
+Scenario  : 4-day moderate loop, 8 hikers, child age 7, max 12 mi/day
+Constraints: ['child_friendly', 'varied_fitness', 'gear_list_required']
+----------------------------------------
+Scenario  : Solo 14er weekend summit, intermediate fitness, altitude acclimatisation
+Constraints: ['altitude_safety', 'solo_emergency_plan', 'weather_contingency']
+----------------------------------------
+Scenario  : 3-day group backpacking, 2 beginners, 4 intermediate, 1 with knee injury
+Constraints: ['medical_accommodation', 'low_elevation_gain', 'camp_near_water']
+----------------------------------------
+Scenario  : Winter snowshoe day hike, family of 5, children ages 6 and 9
+Constraints: ['child_friendly', 'cold_weather_gear', 'short_distance', 'bailout_route']
+----------------------------------------
+Scenario  : Via ferrata first-timer, moderate fitness, guide required, half-day
+Constraints: ['guided_activity', 'equipment_rental', 'difficulty_progression']
+----------------------------------------</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══════════ CELL 3 — Section 2 MD ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-3">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <h2>🧩 Section 2: System Prompt, Response Schema &amp; Grader Setup</h2>
+      <p>To enable RFT, we configure three key components:</p>
+      <ul>
+        <li>A <strong>system prompt</strong> guiding the model to produce structured trail plans</li>
+        <li>A <strong>response schema</strong> enforcing JSON output format</li>
+        <li>A <strong>model-based grader</strong> scoring each completion 0–5</li>
+      </ul>
+      <h3>🎯 Grader Scoring Rubric</h3>
+      <table>
+        <tr><th>Score</th><th>Description</th></tr>
+        <tr><td>5</td><td>All constraints addressed, safe, logical sequencing, appropriate difficulty</td></tr>
+        <tr><td>4</td><td>Minor gap — one constraint partially addressed or vague safety note</td></tr>
+        <tr><td>3</td><td>Two constraints partially addressed, or itinerary has a logical gap</td></tr>
+        <tr><td>2</td><td>Multiple constraints missed but basic structure is present</td></tr>
+        <tr><td>1</td><td>Major issues — missing safety plan or ignores key constraints</td></tr>
+        <tr><td>0</td><td>Invalid output, ignores scenario, or unsafe recommendation</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 4 — System prompt ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-4">
+    <div class="cell-counter"><span id="ctr-4">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-4" onclick="runCell(4)">▶ Run</button>
+      <div class="code-area"><span class="cm"># 💬 System Prompt used during RFT training and evaluation</span>
+instruction = (
+    <span class="st">"You are an expert Adventure Works trail guide. "</span>
+    <span class="st">"Given a trail planning scenario and a set of constraints, "</span>
+    <span class="st">"produce a structured recommendation that satisfies ALL constraints.\n\n"</span>
+    <span class="st">"- Address every constraint explicitly in your plan.\n"</span>
+    <span class="st">"- Include: itinerary, gear_list, safety_notes, difficulty_rating.\n"</span>
+    <span class="st">"- Return only a valid JSON object with the following schema.\n"</span>
+    <span class="st">"- If any constraint cannot be fully met, explain why in safety_notes.\n\n"</span>
+    <span class="st">"Example: scenario='Solo 14er weekend', constraints=['altitude_safety']\n"</span>
+    <span class="st">"Output: {\"itinerary\":[...], \"gear_list\":[...], \"safety_notes\":\"...\", \"difficulty_rating\":\"hard\"}"</span>
+)</div>
+      <div class="cell-output" id="out-4">
+        <pre class="output-stream output-success">✅ System prompt defined (length: 512 chars)</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 5 — Response schema ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-5">
+    <div class="cell-counter"><span id="ctr-5">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-5" onclick="runCell(5)">▶ Run</button>
+      <div class="code-area"><span class="cm"># 📦 JSON Schema enforcing structured trail plan output</span>
+response_schema = {
+    <span class="st">"type"</span>: <span class="st">"json_schema"</span>,
+    <span class="st">"json_schema"</span>: {
+        <span class="st">"name"</span>: <span class="st">"trail_recommendation"</span>,
+        <span class="st">"schema"</span>: {
+            <span class="st">"type"</span>: <span class="st">"object"</span>,
+            <span class="st">"required"</span>: [<span class="st">"itinerary"</span>, <span class="st">"gear_list"</span>, <span class="st">"safety_notes"</span>, <span class="st">"difficulty_rating"</span>],
+            <span class="st">"properties"</span>: {
+                <span class="st">"itinerary"</span>: {<span class="st">"type"</span>: <span class="st">"array"</span>, <span class="st">"description"</span>: <span class="st">"Day-by-day plan"</span>},
+                <span class="st">"gear_list"</span>: {<span class="st">"type"</span>: <span class="st">"array"</span>, <span class="st">"description"</span>: <span class="st">"Required equipment"</span>},
+                <span class="st">"safety_notes"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>},
+                <span class="st">"difficulty_rating"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>, <span class="st">"enum"</span>: [<span class="st">"easy"</span>, <span class="st">"moderate"</span>, <span class="st">"hard"</span>]}
+            },
+            <span class="st">"additionalProperties"</span>: <span class="kw">False</span>
+        },
+        <span class="st">"strict"</span>: <span class="kw">True</span>
+    }
+}</div>
+      <div class="cell-output" id="out-5">
+        <pre class="output-stream output-success">✅ Response schema defined — 4 required fields: itinerary, gear_list, safety_notes, difficulty_rating</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 6 — Grader ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-6">
+    <div class="cell-counter"><span id="ctr-6">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-6" onclick="runCell(6)">▶ Run</button>
+      <div class="code-area"><span class="cm"># 🎯 Custom Model-Based Grader (o3-mini) for RFT</span>
+custom_grader = {
+    <span class="st">"name"</span>: <span class="st">"trail_plan_grader"</span>,
+    <span class="st">"type"</span>: <span class="st">"score_model"</span>,
+    <span class="st">"model"</span>: <span class="st">"o3-mini"</span>,
+    <span class="st">"input"</span>: [
+        {
+            <span class="st">"role"</span>: <span class="st">"developer"</span>,
+            <span class="st">"content"</span>: (
+                <span class="st">"You are an expert trail guide evaluator. Given a planning scenario, "</span>
+                <span class="st">"its constraints, and a model-generated recommendation, score the response 0-5.\n\n"</span>
+                <span class="st">"Scoring: 5=all constraints addressed + safe + logical; "</span>
+                <span class="st">"4=minor gap; 3=partial; 2=multiple gaps; 1=major issues; 0=invalid/unsafe.\n"</span>
+                <span class="st">"Output: Score: &lt;0-5&gt;\nReasoning: &lt;brief&gt;"</span>
+            )
+        },
+        {
+            <span class="st">"role"</span>: <span class="st">"user"</span>,
+            <span class="st">"content"</span>: <span class="st">'{"scenario": {{item.scenario}}, "constraints": {{item.constraints}}, "response": {{sample.output_text}}}'</span>
+        }
+    ],
+    <span class="st">"pass_threshold"</span>: <span class="nm">5</span>,
+    <span class="st">"range"</span>: [<span class="nm">0.0</span>, <span class="nm">5.0</span>]
+}</div>
+      <div class="cell-output" id="out-6">
+        <span class="output-success">✅ Custom grader configured</span><br>
+        <pre class="output-stream">{'name': 'trail_plan_grader',
+ 'type': 'score_model',
+ 'model': 'o3-mini',
+ 'pass_threshold': 5,
+ 'range': [0.0, 5.0]}</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══════════ CELL 7 — Section 3 MD ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-7">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <h2>📊 Section 3: Evaluating Base Models</h2>
+      <p>Before fine-tuning, we benchmark how existing models handle multi-constraint trail planning using our custom grader.</p>
+      <p>We compare: <code>o3</code>, <code>o4-mini</code>, <code>gpt-4.1</code>, <code>gpt-4.1-mini</code></p>
+      <table>
+        <tr><th>Metric</th><th>Description</th></tr>
+        <tr><td><strong>Pass %</strong></td><td>% of completions scoring at or above the pass threshold (5/5)</td></tr>
+        <tr><td><strong>Error %</strong></td><td>% of completions that failed structurally (malformed output)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 8 — Upload eval dataset ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-8">
+    <div class="cell-counter"><span id="ctr-8">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-8" onclick="runCell(8)">▶ Run</button>
+      <div class="code-area"><span class="kw">from</span> <span class="fn">scripts.io_utils</span> <span class="kw">import</span> upload_file
+<span class="kw">from</span> <span class="fn">scripts.dataset_utils</span> <span class="kw">import</span> save_dataset_in_eval_format
+
+<span class="cm"># Use 100 test examples for evaluation</span>
+test_dataset = load_dataset(<span class="st">"adventureworks/trail-planning-rft"</span>, split=<span class="st">"test"</span>)
+eval_ready_path = <span class="st">"data/trail_eval_100.jsonl"</span>
+
+save_dataset_in_eval_format(test_dataset, eval_ready_path, max_records=<span class="nm">100</span>)
+eval_file_id = <span class="kw">await</span> upload_file(<span class="st">"trail_eval_100.jsonl"</span>, eval_ready_path, purpose=<span class="st">"evals"</span>)
+<span class="pr">print</span>(<span class="st">f"✅ Eval file ID: {eval_file_id}"</span>)</div>
+      <div class="cell-output" id="out-8">
+        <pre class="output-stream">✅ Saved 100 records to data/trail_eval_100.jsonl
+Using Azure API for file upload...
+✅ Eval file ID: file-a3f9b821cc2e4d5e8b1f3a7c09d4e612</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 9 — Run base evals ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-9">
+    <div class="cell-counter"><span id="ctr-9">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-9" onclick="runCell(9)">▶ Run</button>
+      <div class="code-area"><span class="kw">from</span> <span class="fn">scripts.eval_utils</span> <span class="kw">import</span> create_eval, create_eval_run
+
+eval_id = <span class="kw">await</span> create_eval(<span class="st">"trail-base-eval"</span>, grader_model=<span class="st">"o3-mini"</span>, pass_threshold=<span class="nm">5</span>)
+<span class="pr">print</span>(<span class="st">f"📊 Evaluation created: {eval_id}"</span>)
+
+RUN_MODELS = [<span class="st">"o3"</span>, <span class="st">"o4-mini"</span>, <span class="st">"gpt-4.1"</span>, <span class="st">"gpt-4.1-mini"</span>]
+<span class="kw">for</span> model <span class="kw">in</span> RUN_MODELS:
+    <span class="kw">await</span> create_eval_run(eval_id, eval_file_id, model, system_prompt=instruction)
+<span class="pr">print</span>(<span class="st">f"🚀 Evaluation runs launched for: {', '.join(RUN_MODELS)}"</span>)</div>
+      <div class="cell-output" id="out-9">
+        <pre class="output-stream">Evaluation created successfully with ID: eval_trail_c9a284f5e13b
+📊 Evaluation created: eval_trail_c9a284f5e13b
+Create Eval Run Status for o3: 201
+Create Eval Run Status for o4-mini: 201
+Create Eval Run Status for gpt-4.1: 201
+Create Eval Run Status for gpt-4.1-mini: 201
+🚀 Evaluation runs launched for: o3, o4-mini, gpt-4.1, gpt-4.1-mini</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 10 — View base eval results ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-10">
+    <div class="cell-counter"><span id="ctr-10">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-10" onclick="runCell(10)">▶ Run</button>
+      <div class="code-area"><span class="kw">from</span> <span class="fn">scripts.eval_utils</span> <span class="kw">import</span> display_evaluation_summary
+<span class="kw">await</span> display_evaluation_summary([eval_id])</div>
+      <div class="cell-output" id="out-10">
+        <pre class="output-stream">================================================
+Base Model Evaluation Summary
+================================================
+Model          Status     Pass %   Error %
+----------------------------------------------
+o3             completed  94.0%    0.0%
+o4-mini        completed  71.0%    0.0%
+gpt-4.1        completed   8.0%    0.0%
+gpt-4.1-mini   completed   3.0%    0.0%
+================================================</pre>
+        <div class="chart-container">
+          <div class="chart-title">Base Model Pass Rate (%) — Multi-Constraint Trail Planning</div>
+          <div class="bar-row"><div class="bar-label">o3</div><div class="bar-track"><div class="bar-fill bar-o3" style="width:94%">94%</div></div></div>
+          <div class="bar-row"><div class="bar-label">o4-mini (base)</div><div class="bar-track"><div class="bar-fill bar-base" style="width:71%">71%</div></div></div>
+          <div class="bar-row"><div class="bar-label">gpt-4.1</div><div class="bar-track"><div class="bar-fill bar-gpt" style="width:8%">8%</div></div></div>
+          <div class="bar-row"><div class="bar-label">gpt-4.1-mini</div><div class="bar-track"><div class="bar-fill bar-gpt" style="width:3%">3%</div></div></div>
+        </div>
+        <p style="font-size:12px;color:#555;margin-top:8px">💡 <strong>o4-mini at 71%</strong> is the best candidate for RFT — it has a good base but clear room για improvement on constraint satisfaction.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══════════ CELL 11 — Section 4 MD ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-11">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <h2>🚀 Section 4: RFT Training — Setup, Launch &amp; Monitoring</h2>
+      <p>With our system prompt, schema, and grader defined, we fine-tune <code>o4-mini</code> using RFT on just <strong>100 training examples</strong>.</p>
+      <h3>🧪 RFT is Sample-Efficient by Design</h3>
+      <p>Each training example includes a prompt with embedded scenario + constraints. The grader scores the model's completions, providing reward signal — no ground-truth labels needed.</p>
+      <blockquote>🎛 <strong>Try it:</strong> Adjust the hyperparameters in the cell below, then re-run the training cells to see how they affect the reward curve and final pass rate!</blockquote>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 12 — Prepare training data ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-12">
+    <div class="cell-counter"><span id="ctr-12">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-12" onclick="runCell(12)">▶ Run</button>
+      <div class="code-area"><span class="kw">from</span> <span class="fn">scripts.dataset_utils</span> <span class="kw">import</span> convert_to_rft_dataset
+
+train_rft_path = <span class="st">"data/trail_train_100.jsonl"</span>
+valid_rft_path = <span class="st">"data/trail_valid_50.jsonl"</span>
+
+convert_to_rft_dataset(train_raw, train_rft_path, instruction, max_records=<span class="nm">100</span>)
+convert_to_rft_dataset(valid_raw, valid_rft_path, instruction, max_records=<span class="nm">50</span>)
+
+<span class="pr">print</span>(<span class="st">f"✅ Train set saved to: {train_rft_path}"</span>)
+<span class="pr">print</span>(<span class="st">f"✅ Validation set saved to: {valid_rft_path}"</span>)
+
+<span class="cm"># Preview one sample record</span>
+<span class="kw">with</span> <span class="fn">open</span>(train_rft_path) <span class="kw">as</span> f:
+    sample = json.loads(f.readline())
+<span class="pr">print</span>(<span class="st">"\n📝 Sample RFT Training Record:\n"</span>)
+<span class="pr">print</span>(json.dumps(sample, indent=<span class="nm">2</span>))</div>
+      <div class="cell-output" id="out-12">
+        <pre class="output-stream">✅ Converted 100 records to RFT format → data/trail_train_100.jsonl
+✅ Converted 50 records to RFT format → data/trail_valid_50.jsonl
+✅ Train set saved to: data/trail_train_100.jsonl
+✅ Validation set saved to: data/trail_valid_50.jsonl
+
+📝 Sample RFT Training Record:
+
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "You are an Adventure Works trail guide...\nPlan a 4-day moderate loop.\nScenario: \"4-day moderate loop, group 8, child age 7\"\nConstraints: \"['child_friendly', 'varied_fitness', 'gear_list_required']\""
+    }
+  ],
+  "scenario": "4-day moderate loop, group 8, child age 7",
+  "constraints": "['child_friendly', 'varied_fitness', 'gear_list_required']"
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 13 — Upload training files ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-13">
+    <div class="cell-counter"><span id="ctr-13">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-13" onclick="runCell(13)">▶ Run</button>
+      <div class="code-area"><span class="cm"># ☁️ Upload train and validation sets to Azure OpenAI</span>
+train_file_id = <span class="kw">await</span> upload_file(<span class="st">"trail_train_100.jsonl"</span>, train_rft_path, purpose=<span class="st">"fine-tune"</span>)
+valid_file_id = <span class="kw">await</span> upload_file(<span class="st">"trail_valid_50.jsonl"</span>, valid_rft_path, purpose=<span class="st">"fine-tune"</span>)
+
+<span class="pr">print</span>(<span class="st">f"📤 Train  File ID : {train_file_id}"</span>)
+<span class="pr">print</span>(<span class="st">f"📤 Valid  File ID : {valid_file_id}"</span>)</div>
+      <div class="cell-output" id="out-13">
+        <pre class="output-stream">Using Azure API for file upload...
+✅ File 'trail_train_100.jsonl' uploaded successfully.
+Using Azure API for file upload...
+✅ File 'trail_valid_50.jsonl' uploaded successfully.
+📤 Train  File ID : file-d7e3f09ab14c4b8da3f250e18c6a9b1
+📤 Valid  File ID : file-94b1c23de50a4f9cb7e60d17fa5b2c8</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 14 — Hyperparameter config (INTERACTIVE) ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-14">
+    <div class="cell-counter"><span id="ctr-14">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-14" onclick="runCell(14)" style="opacity:1;background:#7c3aed">⚙ Apply</button>
+      <div class="code-area" style="padding-bottom:14px"><span class="cm"># ⚙️  RFT Hyperparameters — edit these values and click Apply!</span>
+
+method = {
+    <span class="st">"type"</span>: <span class="st">"reinforcement"</span>,
+    <span class="st">"reinforcement"</span>: {
+        <span class="st">"hyperparameters"</span>: {
+            <span class="st">"n_epochs"</span>:              <input class="hp-input" id="hp-epochs" type="number" min="1" max="5" value="1" style="width:42px" onchange="markHpDirty()">,
+            <span class="st">"batch_size"</span>:            <select class="hp-input" id="hp-batch" onchange="markHpDirty()"><option value="2">2</option><option value="4" selected>4</option><option value="8">8</option></select>,
+            <span class="st">"eval_interval"</span>:        <span class="nm">5</span>,
+            <span class="st">"eval_samples"</span>:          <span class="nm">2</span>,
+            <span class="st">"reasoning_effort"</span>:      <select class="hp-input" id="hp-effort" onchange="markHpDirty()"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option></select>,
+            <span class="st">"learning_rate_multiplier"</span>: <select class="hp-input" id="hp-lr" onchange="markHpDirty()"><option value="0.5">0.5</option><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select>
+        },
+        <span class="st">"grader"</span>: custom_grader,
+        <span class="st">"response_format"</span>: response_schema
+    }
+}</div>
+      <div class="cell-output" id="out-14">
+        <pre class="output-stream" id="out-14-text">ℹ️  Click ⚙ Apply (above) to lock in your hyperparameters before submitting the job.</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 15 — Submit job ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-15">
+    <div class="cell-counter"><span id="ctr-15">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-15" onclick="runCell(15)">▶ Run</button>
+      <div class="code-area"><span class="kw">from</span> <span class="fn">openai</span> <span class="kw">import</span> OpenAI
+
+client = OpenAI(base_url=AZURE_API_ENDPOINT, api_key=AZURE_API_KEY)
+
+finetune_job = client.fine_tuning.jobs.create(
+    model=<span class="st">"o4-mini-2025-04-16"</span>,
+    training_file=train_file_id,
+    validation_file=valid_file_id,
+    method=method,
+    suffix=<span class="st">"trail-guide-rft"</span>
+)
+<span class="pr">print</span>(<span class="st">f"Fine-tuning job submitted. Job ID: {finetune_job.id}"</span>)</div>
+      <div class="cell-output" id="out-15">
+        <pre class="output-stream">⏳ Submitting RFT job to Azure OpenAI...</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 16 — Monitor training ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-16">
+    <div class="cell-counter"><span id="ctr-16">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-16" onclick="runCell(16)">▶ Run</button>
+      <div class="code-area"><span class="cm"># 📈 Monitor training reward curve</span>
+<span class="kw">from</span> <span class="fn">scripts.ft_utils</span> <span class="kw">import</span> stream_training_events
+
+<span class="kw">async for</span> event <span class="kw">in</span> stream_training_events(finetune_job.id):
+    <span class="pr">print</span>(event)</div>
+      <div class="cell-output" id="out-16" style="padding:0">
+        <div id="training-monitor" style="padding:10px 14px">
+          <div style="font-size:12px;color:#555;margin-bottom:8px">⏳ Waiting for training to start…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══════════ CELL 17 — Section 5 MD ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-17">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <h2>🧠 Section 5: Evaluating the Fine-Tuned Model &amp; Comparing Results</h2>
+      <p>The fine-tuned model is now deployed. We evaluate it on the <strong>same 100-example test set</strong> with the same grader and compare pass rates.</p>
+      <blockquote>Did our hyperparameter choices pay off? Run the cells below to find out!</blockquote>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 18 — Run ft eval ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-18">
+    <div class="cell-counter"><span id="ctr-18">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-18" onclick="runCell(18)">▶ Run</button>
+      <div class="code-area"><span class="kw">from</span> <span class="fn">scripts.eval_utils</span> <span class="kw">import</span> create_eval, create_eval_run
+
+ft_eval_id = <span class="kw">await</span> create_eval(<span class="st">"trail-ft-eval"</span>, grader_model=<span class="st">"o3-mini"</span>, pass_threshold=<span class="nm">5</span>)
+<span class="pr">print</span>(<span class="st">f"📊 Evaluation created: {ft_eval_id}"</span>)
+
+ft_deployment = <span class="st">"o4-mini-2025-04-16-trail-guide-rft"</span>
+<span class="kw">await</span> create_eval_run(ft_eval_id, eval_file_id, ft_deployment, system_prompt=instruction)
+<span class="pr">print</span>(<span class="st">f"🚀 Evaluation launched for: {ft_deployment}"</span>)</div>
+      <div class="cell-output" id="out-18">
+        <pre class="output-stream">Evaluation created successfully with ID: eval_trail_ft_b8c491d2
+📊 Evaluation created: eval_trail_ft_b8c491d2
+Create Eval Run Status for o4-mini-2025-04-16-trail-guide-rft: 201
+🚀 Evaluation launched for: o4-mini-2025-04-16-trail-guide-rft</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 19 — Final comparison ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-19">
+    <div class="cell-counter"><span id="ctr-19">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-19" onclick="runCell(19)">▶ Run</button>
+      <div class="code-area"><span class="kw">from</span> <span class="fn">scripts.eval_utils</span> <span class="kw">import</span> display_evaluation_summary
+<span class="kw">await</span> display_evaluation_summary([eval_id, ft_eval_id])</div>
+      <div class="cell-output" id="out-19">
+        <pre class="output-stream">⏳ Loading evaluation results…</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 20 — Key Takeaways MD ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-20">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body" id="takeaways-body">
+      <h2>🎯 Key Takeaways</h2>
+      <p style="color:#888;font-style:italic">Run the evaluation cells above to see your results, then this section will summarise what you learned.</p>
+    </div>
+  </div>
+
+  <!-- back link -->
+  <div style="margin-top:32px;text-align:center">
+    <a href="index.html" style="color:#be185d;text-decoration:none;font-size:14px">← Back to all fine-tuning scenarios</a>
+  </div>
+
+</div><!-- /notebook-wrapper -->
+
+<script>
+// ─────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────
+const CODE_CELLS = [2,4,5,6,8,9,10,12,13,14,15,16,18,19];
+let execOrder = 0;
+let executed = new Set();
+let jobSubmitted = false;
+let trainingDone = false;
+let trainAnimInterval = null;
+
+// Hyperparameter state (set when cell-14 is run)
+let hp = { epochs: 1, batch: 4, effort: 'medium', lr: 2 };
+let hpApplied = false;
+
+// Computed results (null until cell-16 training finishes)
+let finalPassRate = null;
+
+// Update counter display
+function updateCountDisplay() {
+  document.getElementById('exec-count').textContent = executed.size;
+  document.getElementById('total-count').textContent = CODE_CELLS.length;
+}
+updateCountDisplay();
+
+// ─────────────────────────────────────────────
+// Hyperparameter helpers
+// ─────────────────────────────────────────────
+function markHpDirty() {
+  hpApplied = false;
+  document.getElementById('out-14-text').textContent = '⚠️  Hyperparameters changed — click ⚙ Apply to update.';
+  // Reset training if it was done
+  if (trainingDone) {
+    trainingDone = false;
+    jobSubmitted = false;
+    finalPassRate = null;
+    // Reset downstream cells
+    clearCellOutput(15); clearCellOutput(16); clearCellOutput(18); clearCellOutput(19);
+    [15,16,18,19].forEach(id => {
+      document.getElementById('ctr-'+id).textContent = '[ ]';
+      executed.delete(id);
+    });
+    updateCountDisplay();
+  }
+}
+
+function readHp() {
+  return {
+    epochs: parseInt(document.getElementById('hp-epochs').value) || 1,
+    batch: parseInt(document.getElementById('hp-batch').value) || 4,
+    effort: document.getElementById('hp-effort').value,
+    lr: parseFloat(document.getElementById('hp-lr').value) || 2
+  };
+}
+
+function calculatePassRate(p) {
+  let score = 71;
+  // epochs (1-5)
+  const epochBonus = [0,3,5,7,6,4];
+  score += epochBonus[Math.min(p.epochs, 5)];
+  // batch
+  const batchBonus = {2:2, 4:4, 8:2};
+  score += batchBonus[p.batch] || 2;
+  // effort
+  const effortBonus = {low:0, medium:4, high:6};
+  score += effortBonus[p.effort] || 4;
+  // lr
+  const lrBonus = {0.5:1, 1:3, 2:5, 3:2};
+  score += lrBonus[p.lr] || 3;
+  return Math.min(score, 94); // never exceed o3
+}
+
+// ─────────────────────────────────────────────
+// Cell output helpers
+// ─────────────────────────────────────────────
+function showOutput(id) {
+  const el = document.getElementById('out-' + id);
+  if (el) el.classList.add('visible');
+}
+function clearCellOutput(id) {
+  const el = document.getElementById('out-' + id);
+  if (el) { el.classList.remove('visible'); el.innerHTML = '<pre class="output-stream">⏳</pre>'; }
+}
+function setCellRunning(id, isRunning) {
+  const btn = document.getElementById('run-' + id);
+  if (!btn) return;
+  if (isRunning) {
+    btn.textContent = '⏸';
+    btn.classList.add('running');
+    btn.disabled = true;
+  } else {
+    btn.textContent = (id === 14) ? '⚙ Apply' : '▶ Run';
+    btn.classList.remove('running');
+    btn.disabled = false;
+  }
+}
+function setCounter(id, n) {
+  const el = document.getElementById('ctr-' + id);
+  if (el) el.textContent = '[' + n + ']';
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─────────────────────────────────────────────
+// Main runCell dispatcher
+// ─────────────────────────────────────────────
+async function runCell(id) {
+  setCellRunning(id, true);
+  execOrder++;
+  setCounter(id, execOrder);
+  executed.add(id);
+  updateCountDisplay();
+
+  const runners = {14: runCell14, 15: runCell15, 16: runCell16, 18: runCell18, 19: runCell19};
+  if (runners[id]) {
+    await runners[id]();
+  } else {
+    // simple instant reveal
+    await delay(400);
+    showOutput(id);
+  }
+
+  setCellRunning(id, false);
+}
+
+// ─────────────────────────────────────────────
+// Cell 14 — apply hyperparameters
+// ─────────────────────────────────────────────
+async function runCell14() {
+  hp = readHp();
+  hpApplied = true;
+  await delay(300);
+
+  const warnings = [];
+  if (hp.epochs >= 4) warnings.push('⚠️  n_epochs > 3 may cause overfitting on small datasets');
+  if (hp.lr >= 3) warnings.push('⚠️  High learning_rate_multiplier can cause training instability');
+  if (hp.effort === 'low') warnings.push('⚠️  reasoning_effort=low may reduce output quality');
+
+  const out = document.getElementById('out-14-text');
+  let msg = `✅ Hyperparameters applied:\n   n_epochs=${hp.epochs} | batch_size=${hp.batch} | reasoning_effort=${hp.effort} | lr_multiplier=${hp.lr}`;
+  if (warnings.length) msg += '\n\n' + warnings.join('\n');
+  out.textContent = msg;
+  showOutput(14);
+}
+
+// ─────────────────────────────────────────────
+// Cell 15 — submit job
+// ─────────────────────────────────────────────
+async function runCell15() {
+  const outEl = document.getElementById('out-15');
+  outEl.innerHTML = '<pre class="output-stream">⏳ Submitting RFT job to Azure OpenAI…</pre>';
+  outEl.classList.add('visible');
+
+  if (!hpApplied) {
+    await delay(200);
+    outEl.innerHTML = '<pre class="output-err">⚠️  Please run the hyperparameter cell (⚙ Apply) before submitting.</pre>';
+    return;
+  }
+
+  await delay(1200);
+  const jobId = 'ftjob-' + Math.random().toString(36).substr(2,16);
+  outEl.innerHTML = `<pre class="output-stream">Fine-tuning job submitted. Job ID: ${jobId}
+Status   : queued
+Model    : o4-mini-2025-04-16
+Suffix   : trail-guide-rft
+n_epochs : ${hp.epochs}
+batch_size: ${hp.batch}
+reasoning_effort: ${hp.effort}
+lr_multiplier: ${hp.lr}</pre>`;
+  jobSubmitted = true;
+}
+
+// ─────────────────────────────────────────────
+// Cell 16 — training monitor (animated)
+// ─────────────────────────────────────────────
+async function runCell16() {
+  // Always rebuild the output structure so training-monitor is guaranteed to exist
+  const outEl16 = document.getElementById('out-16');
+  outEl16.style.padding = '0';
+  outEl16.innerHTML = '<div id="training-monitor" style="padding:10px 14px"><div style="font-size:12px;color:#555;margin-bottom:8px">⏳ Waiting for training to start…</div></div>';
+  outEl16.classList.add('visible');
+
+  const mon = document.getElementById('training-monitor');
+  if (!jobSubmitted) {
+    mon.innerHTML = '<div style="font-size:12px;color:#c0392b">❌ No job found. Please submit the RFT job (cell above) first.</div>';
+    return;
+  }
+  finalPassRate = calculatePassRate(hp);
+
+  // Build the training UI
+  const steps = hp.epochs * 25; // total steps
+  const targetReward = finalPassRate / 100 * 5; // 0-5 scale
+
+  mon.innerHTML = `
+    <div style="font-size:12px;color:#555;margin-bottom:10px">🚂 Training <strong>o4-mini</strong> with RFT · ${hp.epochs} epoch(s) · batch ${hp.batch} · ${hp.effort} reasoning effort</div>
+    <div class="progress-wrap">
+      <div class="progress-label" id="step-label">Step 0 / ${steps}</div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="step-bar"></div></div>
+    </div>
+    <div style="margin-top:10px;font-size:12px;font-weight:600;color:#444">Training Reward</div>
+    <canvas class="reward-chart" id="reward-canvas" width="640" height="200"></canvas>
+    <div style="margin-top:6px" id="train-stats"></div>`;
+
+  const canvas = document.getElementById('reward-canvas');
+  const ctx = canvas.getContext('2d');
+  const rewardHistory = [];
+  const validHistory = [];
+
+  let step = 0;
+  const totalSteps = steps;
+
+  await new Promise(resolve => {
+    const tick = setInterval(() => {
+      step += 1;
+      const progress = step / totalSteps;
+
+      // Simulate reward curve: sigmoid-ish rise with noise
+      const base = targetReward * (1 - Math.exp(-5 * progress));
+      const noise = (Math.random() - 0.5) * 0.4;
+      const reward = Math.max(0, Math.min(5, base + noise));
+      rewardHistory.push(reward);
+
+      // Validation every 5 steps
+      if (step % 5 === 0) {
+        const vNoise = (Math.random() - 0.5) * 0.3;
+        validHistory.push({ step, val: Math.max(0, Math.min(5, base + vNoise - 0.1)) });
+      }
+
+      // Update progress bar
+      document.getElementById('step-bar').style.width = (progress * 100) + '%';
+      document.getElementById('step-label').textContent = `Step ${step} / ${totalSteps}`;
+
+      // Draw chart
+      drawRewardChart(ctx, canvas, rewardHistory, validHistory, totalSteps);
+
+      if (step >= totalSteps) {
+        clearInterval(tick);
+        trainingDone = true;
+        document.getElementById('train-stats').innerHTML = `
+          <span style="color:#16a34a;font-size:12px;font-weight:600">✅ Training complete!</span>
+          <span style="font-size:12px;color:#555;margin-left:8px">Final train reward: ${reward.toFixed(2)}/5.0 · Model deploying…</span>`;
+        resolve();
+      }
+    }, hp.epochs > 2 ? 35 : 55); // faster animation for more epochs
+  });
+}
+
+function drawRewardChart(ctx, canvas, train, valid, totalSteps) {
+  const W = canvas.width, H = canvas.height;
+  const PAD = { top: 14, right: 14, bottom: 28, left: 38 };
+  const cw = W - PAD.left - PAD.right;
+  const ch = H - PAD.top - PAD.bottom;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  ctx.fillStyle = '#f7f7f7';
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#e0e0e0';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = '#e0e0e0';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const y = PAD.top + ch - (i / 5) * ch;
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + cw, y); ctx.stroke();
+    ctx.fillStyle = '#888'; ctx.font = '10px monospace';
+    ctx.fillText(i.toFixed(0), 4, y + 4);
+  }
+
+  // Train reward line
+  if (train.length > 1) {
+    ctx.beginPath();
+    ctx.strokeStyle = '#be185d';
+    ctx.lineWidth = 2;
+    train.forEach((v, i) => {
+      const x = PAD.left + (i / (totalSteps - 1)) * cw;
+      const y = PAD.top + ch - (v / 5) * ch;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  }
+
+  // Validation reward dots
+  valid.forEach(({step, val}) => {
+    const x = PAD.left + ((step - 1) / (totalSteps - 1)) * cw;
+    const y = PAD.top + ch - (val / 5) * ch;
+    ctx.beginPath();
+    ctx.fillStyle = '#2563eb';
+    ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Legend
+  ctx.fillStyle = '#be185d'; ctx.fillRect(PAD.left, H - 14, 10, 3);
+  ctx.fillStyle = '#555'; ctx.font = '10px monospace';
+  ctx.fillText('train reward', PAD.left + 14, H - 10);
+  ctx.fillStyle = '#2563eb'; ctx.beginPath(); ctx.arc(PAD.left + 120, H - 12, 3.5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#555'; ctx.fillText('val reward', PAD.left + 128, H - 10);
+}
+
+// ─────────────────────────────────────────────
+// Cell 18 — ft eval
+// ─────────────────────────────────────────────
+async function runCell18() {
+  const outEl = document.getElementById('out-18');
+  outEl.innerHTML = '<pre class="output-stream">⏳ Launching evaluation for fine-tuned model…</pre>';
+  outEl.classList.add('visible');
+
+  if (!trainingDone) {
+    await delay(300);
+    outEl.innerHTML = '<pre class="output-err">❌ Training not complete. Please run the monitoring cell first.</pre>';
+    return;
+  }
+
+  await delay(800);
+  const ftEvalId = 'eval_trail_ft_' + Math.random().toString(36).substr(2,8);
+  const ftDeployment = 'o4-mini-2025-04-16-trail-guide-rft';
+  outEl.innerHTML = `<pre class="output-stream">Evaluation created successfully with ID: ${ftEvalId}
+📊 Evaluation created: ${ftEvalId}
+Create Eval Run Status for ${ftDeployment}: 201
+🚀 Evaluation launched for: ${ftDeployment}</pre>`;
+}
+
+// ─────────────────────────────────────────────
+// Cell 19 — final comparison
+// ─────────────────────────────────────────────
+async function runCell19() {
+  const outEl = document.getElementById('out-19');
+  outEl.innerHTML = '<pre class="output-stream">⏳ Loading evaluation results…</pre>';
+  outEl.classList.add('visible');
+
+  if (!trainingDone || finalPassRate === null) {
+    await delay(300);
+    outEl.innerHTML = '<pre class="output-err">❌ Training not complete. Please run the monitoring cell first.</pre>';
+    return;
+  }
+
+  await delay(1000);
+
+  const ft = finalPassRate;
+  const improve = ft - 71;
+
+  outEl.innerHTML = `
+    <pre class="output-stream">================================================
+Combined Evaluation Summary
+================================================
+Model                  Status     Pass %   Error %
+------------------------------------------------------
+o3                     completed   94.0%    0.0%
+ft:o4-mini (your run)  completed   ${ft.toFixed(1)}%    0.0%   ← NEW
+o4-mini (base)         completed   71.0%    0.0%
+gpt-4.1                completed    8.0%    0.0%
+gpt-4.1-mini           completed    3.0%    0.0%
+================================================
+📈 ft:o4-mini improved by +${improve.toFixed(1)}% over baseline</pre>
+    <div class="chart-container" style="margin-top:12px">
+      <div class="chart-title">Comparison: Pass Rate (%) — After RFT with your hyperparameters</div>
+      <div class="bar-row"><div class="bar-label">o3</div><div class="bar-track"><div class="bar-fill bar-o3" style="width:94%">94%</div></div></div>
+      <div class="bar-row"><div class="bar-label">ft:o4-mini (your run)</div><div class="bar-track"><div class="bar-fill bar-ft" style="width:${ft}%">${ft.toFixed(1)}%</div></div></div>
+      <div class="bar-row"><div class="bar-label">o4-mini (base)</div><div class="bar-track"><div class="bar-fill bar-base" style="width:71%">71%</div></div></div>
+      <div class="bar-row"><div class="bar-label">gpt-4.1</div><div class="bar-track"><div class="bar-fill bar-gpt" style="width:8%">8%</div></div></div>
+      <div class="bar-row"><div class="bar-label">gpt-4.1-mini</div><div class="bar-track"><div class="bar-fill bar-gpt" style="width:3%">3%</div></div></div>
+    </div>`;
+
+  // Update takeaways
+  const diffFromO3 = 94 - ft;
+  const takeaways = document.getElementById('takeaways-body');
+  takeaways.innerHTML = `
+    <h2>🎯 Key Takeaways</h2>
+    <p><strong>Your run:</strong> n_epochs=${hp.epochs} · batch_size=${hp.batch} · reasoning_effort=${hp.effort} · lr_multiplier=${hp.lr}</p>
+    <p><strong>Result:</strong> ft:o4-mini reached <strong>${ft.toFixed(1)}%</strong> pass rate — an improvement of <strong>+${improve.toFixed(1)}%</strong> over the base model.</p>
+    ${diffFromO3 <= 5 ? '<p class="tip">🌟 <strong>Outstanding!</strong> You got within ' + diffFromO3.toFixed(1) + '% of o3 — at a fraction of the inference cost.</p>' :
+      diffFromO3 <= 12 ? '<p class="tip">✅ <strong>Good result!</strong> You reached ' + ft.toFixed(1) + '%. Try adjusting epochs to 2–3 or reasoning_effort=high to close the gap with o3.</p>' :
+      '<p class="tip">💡 <strong>Room to improve.</strong> Try: n_epochs=3, batch_size=4, reasoning_effort=high, lr_multiplier=2 for a stronger result.</p>'}
+    <h3>Why RFT Worked</h3>
+    <ul>
+      <li><strong>No labels required</strong> — the model learned from reward scores alone</li>
+      <li><strong>Multiple valid answers</strong> — RFT handled itinerary ambiguity better than SFT</li>
+      <li><strong>Constraint satisfaction enforced by reward</strong> — not hardcoded rules</li>
+      <li><strong>Lightweight</strong> — trained on just 100 examples with clear gains</li>
+    </ul>
+    <h3>💡 Hyperparameter Insights</h3>
+    <table>
+      <tr><th>Parameter</th><th>Your choice</th><th>Impact</th></tr>
+      <tr><td>n_epochs</td><td>${hp.epochs}</td><td>${hp.epochs <= 2 ? 'Conservative — good for small datasets' : hp.epochs === 3 ? 'Optimal balance for this dataset size' : 'Risk of overfitting on 100 examples'}</td></tr>
+      <tr><td>batch_size</td><td>${hp.batch}</td><td>${hp.batch === 4 ? 'Optimal — stable gradient estimates' : hp.batch === 2 ? 'Small batch = more noise, can generalise well' : 'Large batch = smooth gradients, may need more epochs'}</td></tr>
+      <tr><td>reasoning_effort</td><td>${hp.effort}</td><td>${hp.effort === 'high' ? 'Best quality, higher cost' : hp.effort === 'medium' ? 'Good balance of quality and cost' : 'Faster but lower output quality'}</td></tr>
+      <tr><td>lr_multiplier</td><td>${hp.lr}</td><td>${hp.lr <= 1 ? 'Conservative — safe but slower learning' : hp.lr === 2 ? 'Optimal — good convergence speed' : 'Aggressive — risk of instability'}</td></tr>
+    </table>
+    <h3>🔁 Try It Again</h3>
+    <p>Go back to the hyperparameter cell, adjust the values, click <code>⚙ Apply</code>, then re-run cells 15 → 16 → 18 → 19 to compare different configurations!</p>`;
+}
+
+// ─────────────────────────────────────────────
+// Run All
+// ─────────────────────────────────────────────
+async function runAll() {
+  for (const id of CODE_CELLS) {
+    await runCell(id);
+    await delay(80);
+  }
+}
+
+// ─────────────────────────────────────────────
+// Restart & Clear
+// ─────────────────────────────────────────────
+function restartKernel() {
+  execOrder = 0;
+  executed.clear();
+  jobSubmitted = false;
+  trainingDone = false;
+  finalPassRate = null;
+  hpApplied = false;
+  hp = { epochs: 1, batch: 4, effort: 'medium', lr: 2 };
+  document.getElementById('hp-epochs').value = 1;
+  document.getElementById('hp-batch').value = 4;
+  document.getElementById('hp-effort').value = 'medium';
+  document.getElementById('hp-lr').value = 2;
+  CODE_CELLS.forEach(id => {
+    clearCellOutput(id);
+    document.getElementById('ctr-'+id).textContent = '[ ]';
+  });
+  document.getElementById('out-14-text').textContent = 'ℹ️  Click ⚙ Apply (above) to lock in your hyperparameters before submitting the job.';
+  document.getElementById('takeaways-body').innerHTML = '<h2>🎯 Key Takeaways</h2><p style="color:#888;font-style:italic">Run the evaluation cells above to see your results, then this section will summarise what you learned.</p>';
+  updateCountDisplay();
+}
+
+function clearAll() {
+  CODE_CELLS.forEach(id => {
+    const el = document.getElementById('out-' + id);
+    if (el) el.classList.remove('visible');
+  });
+}
+</script>
+</body>
+</html>
