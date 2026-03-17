@@ -154,8 +154,8 @@ Add the required agent configuration to your environment variables.
 1. Add the following lines at the end of the file:
 
     ```
-    AGENT_NAME=trail-guide
-    MODEL_NAME=gpt-4.1
+    AGENT_NAME="trail-guide"
+    MODEL_NAME="gpt-4.1"
     ```
 
 1. Save the file.

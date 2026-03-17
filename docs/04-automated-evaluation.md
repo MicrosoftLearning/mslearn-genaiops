@@ -149,8 +149,8 @@ With your Azure resources deployed, install the required Python packages.
     Open the `.env` file in your repository root and add:
 
     ```
-    AGENT_NAME=trail-guide
-    MODEL_NAME=gpt-4.1
+    AGENT_NAME="trail-guide"
+    MODEL_NAME="gpt-4.1"
     ```
 
 ## Understand the evaluation workflow

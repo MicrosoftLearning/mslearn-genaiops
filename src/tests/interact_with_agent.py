@@ -62,7 +62,7 @@ def interact_with_agent():
             response = openai_client.responses.create(
                 # NOTE: the sample uses `conversation=...` (not conversation_id)
                 conversation=conversation.id,
-                extra_body={"agent": {"name": agent_name, "type": "agent_reference"}},
+                extra_body={"agent_reference": {"name": agent_name, "type": "agent_reference"}},
                 input="",  # sample keeps this empty because the message is already in the conversation items
             )
 

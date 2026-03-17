@@ -47,9 +47,7 @@ param location string
 
 @metadata({azd: {
   type: 'location'
-  usageName: [
-    'OpenAI.GlobalStandard.gpt-4o-mini,10'
-  ]}
+  }
 })
 param aiDeploymentsLocation string
 

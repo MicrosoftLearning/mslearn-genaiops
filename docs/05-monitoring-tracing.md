@@ -79,6 +79,13 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
 
     Sign in with your Azure credentials when prompted.
 
+    > ⚠️ **Important**
+    > In some environments, the VS Code integrated terminal may crash or close during the interactive login flow.
+    > If this happens, authenticate using explicit credentials instead:
+    > ```powershell
+    > az login --username <your-username> --password <your-password>
+    > ```
+
 1. Provision resources:
 
     ```powershell
@@ -102,6 +109,17 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
     ```powershell
     azd env get-values > .env
     ```
+
+    This creates a `.env` file in your project root with all the provisioned resource information.
+
+    > ⚠️ **Important – File Encoding**
+    >
+    > After generating the `.env` file, make sure it is saved using **UTF-8** encoding.
+    >
+    > In editors like **VS Code**, check the encoding indicator in the bottom-right corner.  
+    > If it shows **UTF-16 LE** (or any encoding other than UTF-8), click it, choose **Save with Encoding**, and select **UTF-8**.
+    >
+    > Using the wrong encoding may cause environment variables to be read incorrectly.
 
     This creates a `.env` file in your project root with all the provisioned resource information.
 
