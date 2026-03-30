@@ -163,11 +163,14 @@ Start by deploying the first version of the trail guide agent.
 1. Open the agent creation script (`trail_guide_agent.py`) and locate the line that reads the prompt file:
    
     ```python
-    with open('prompts/v1_instructions.txt', 'r') as f:
+    prompt_file = Path(__file__).parent / 'prompts' / 'v1_instructions.txt'
+    with open(prompt_file, 'r') as f:
         instructions = f.read().strip()
     ```
 
     Verify it's configured to read from `v1_instructions.txt`.
+
+    >
 
 1. Run the agent creation script:
 
@@ -185,6 +188,15 @@ Start by deploying the first version of the trail guide agent.
 
 1. Commit your changes and tag the version:
 
+    > ⚠️ **First-time Git setup required**
+    >
+    > Before committing, Git requires your identity to be configured. 
+    > Run the following commands in the terminal, replacing the values with your GitHub username and email:
+    > ```powershell
+    > git config --global user.name "Your GitHub Username"
+    > git config --global user.email "your-email@example.com"
+    > ```
+
     ```powershell
     git add trail_guide_agent.py
     git commit -m "Deploy trail guide agent V1"
@@ -196,8 +208,10 @@ Start by deploying the first version of the trail guide agent.
 Verify your agent is working by testing it in the Microsoft Foundry portal.
 
 1. In a web browser, open the [Microsoft Foundry portal](https://ai.azure.com) at `https://ai.azure.com` and sign in using your Azure credentials.
+1. Ensure you have the **New Foundry** toggle enabled.
+1. In the top navigation bar, select **Build**
 1. Navigate to **Agents** in the left navigation.
-1. Select your trail-guide agent from the list.
+1. Select your **trail-guide** agent from the list.
 1. Test the agent by asking questions like:
    - "What gear do I need for a day hike?"
    - "Recommend a trail near Seattle for beginners"
