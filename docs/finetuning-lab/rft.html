@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scenario 3: Illogical reasoning — RFT data selection</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            max-width: 1060px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #1f2937;
+            background: #fff;
+        }
+        .navigation {
+            background: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            padding: 12px 18px;
+            margin-bottom: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        .nav-link { color: #0969da; text-decoration: none; font-weight: 500; }
+        .nav-link:hover { text-decoration: underline; }
+        .nav-label { color: #57606a; }
+        .header {
+            border-bottom: 1px solid #d0d7de;
+            margin-bottom: 24px;
+            padding-bottom: 18px;
+        }
+        .header h1 { font-size: 24px; font-weight: 600; margin: 0 0 6px; }
+        .header p { color: #57606a; margin: 0; font-size: 14px; }
+        .badge-rft {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #fce7f3;
+            color: #9d174d;
+            margin-bottom: 10px;
+        }
+        .task-box {
+            background: #fdf2f8;
+            border: 1px solid #f9a8d4;
+            border-radius: 6px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        .task-box h3 { margin: 0 0 6px; font-size: 15px; color: #9d174d; }
+        .task-box p { margin: 0; }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin: 24px 0;
+        }
+        @media (max-width: 720px) { .cards-grid { grid-template-columns: 1fr; } }
+        .data-card {
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            padding: 14px;
+            background: #fff;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.1s;
+            display: flex;
+            flex-direction: column;
+            font-size: 13px;
+        }
+        .data-card:hover {
+            border-color: #be185d;
+            box-shadow: 0 3px 10px rgba(190,24,93,0.1);
+            transform: translateY(-1px);
+        }
+        .data-card.selected {
+            border-color: #be185d;
+            background: #fdf2f8;
+            box-shadow: 0 0 0 3px rgba(190,24,93,0.12);
+        }
+        .type-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            width: fit-content;
+        }
+        .type-labeled { background: #dbeafe; color: #1e40af; }
+        .type-pair { background: #d1fae5; color: #065f46; }
+        .type-prompt-grader { background: #fce7f3; color: #9d174d; }
+        .type-incomplete { background: #fef3c7; color: #92400e; }
+        .convo-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+            align-items: flex-start;
+        }
+        .convo-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 2px 5px;
+            border-radius: 3px;
+            white-space: nowrap;
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+        .label-user { background: #f3f4f6; color: #374151; }
+        .label-agent { background: #dbeafe; color: #1e40af; }
+        .label-preferred { background: #d1fae5; color: #065f46; }
+        .label-rejected { background: #fee2e2; color: #991b1b; }
+        .label-grader { background: #fce7f3; color: #9d174d; }
+        .label-missing { background: #fef3c7; color: #92400e; }
+        .convo-text {
+            font-size: 12px;
+            color: #374151;
+            line-height: 1.4;
+            flex-grow: 1;
+        }
+        .convo-text em { color: #9ca3af; font-style: italic; }
+        .divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 8px 0;
+        }
+        .selection-summary {
+            background: #fff;
+            border: 1px solid #be185d;
+            border-radius: 6px;
+            padding: 18px 22px;
+            margin: 24px 0;
+            text-align: center;
+        }
+        .selected-count { font-size: 17px; font-weight: 600; color: #be185d; margin-bottom: 12px; }
+        .submit-btn {
+            background: #be185d;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .submit-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+        .feedback { display: none; margin: 24px 0; }
+        .feedback.show { display: block; }
+        .score-section {
+            background: #fdf2f8;
+            border: 1px solid #be185d;
+            border-radius: 6px;
+            padding: 14px;
+            margin: 14px 0;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #9d174d;
+        }
+        .correct-section { background: #d1fae5; border-left: 4px solid #16a34a; padding: 14px; margin: 12px 0; border-radius: 0 6px 6px 0; }
+        .incorrect-section { background: #fee2e2; border-left: 4px solid #dc2626; padding: 14px; margin: 12px 0; border-radius: 0 6px 6px 0; }
+        .missed-section { background: #fef3c7; border-left: 4px solid #d97706; padding: 14px; margin: 12px 0; border-radius: 0 6px 6px 0; }
+        .overall-feedback { background: #f0f9ff; border: 1px solid #0369a1; border-radius: 6px; padding: 14px; margin: 12px 0; }
+        .feedback h3 { margin-top: 0; font-size: 17px; }
+        .feedback h4 { margin: 0 0 8px; font-size: 14px; }
+        .feedback ul, .feedback ol { margin: 6px 0 0; padding-left: 20px; font-size: 14px; }
+        .feedback li { margin-bottom: 4px; }
+        .finish-btn {
+            display: inline-block;
+            background: #0969da;
+            color: white;
+            padding: 11px 22px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            margin-top: 18px;
+            font-size: 14px;
+        }
+        .finish-btn:hover { background: #0860ca; text-decoration: none; }
+        .download-btn {
+            display: inline-block;
+            background: #ffffff;
+            color: #be185d;
+            border: 2px solid #be185d;
+            padding: 10px 22px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 18px;
+            margin-right: 10px;
+            text-decoration: none;
+        }
+        .download-btn:hover { background: #fdf2f8; }
+        .jsonl-output {
+            display: none;
+            margin-top: 20px;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .jsonl-output-header {
+            background: #f6f8fa;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #57606a;
+            border-bottom: 1px solid #d0d7de;
+        }
+        .jsonl-output pre {
+            margin: 0;
+            padding: 16px;
+            font-size: 12px;
+            line-height: 1.6;
+            background: #1e1e2e;
+            color: #cdd6f4;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        .reset-section { text-align: center; margin: 28px 0; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+        .reset-btn {
+            background: #6b7280; color: white; border: none;
+            padding: 9px 18px; border-radius: 6px; cursor: pointer; font-size: 13px;
+        }
+        .reset-btn:hover { background: #4b5563; }
+    </style>
+</head>
+<body>
+
+<div class="navigation">
+    <a href="index.html" class="nav-link">← Back to scenarios</a>
+    <span class="nav-label">Scenario 3 of 3</span>
+    <a href="rft-notebook.html" class="nav-link">Run the Notebook →</a>
+</div>
+
+<div class="header">
+    <span class="badge-rft">Reinforcement Fine-Tuning (RFT)</span>
+    <h1>Scenario 3: Illogical reasoning in complex planning</h1>
+    <p>Trip plans ignore how constraints interact. Tool Call Accuracy and Relevance scores fall significantly below threshold — the agent lists factors but doesn't reason through them.</p>
+</div>
+
+<div class="task-box">
+    <h3>Your task</h3>
+    <p>RFT requires <strong>prompts paired with a grader function</strong>: the prompt presents a complex, multi-constraint scenario and the grader defines how to score whether the model reasoned through the constraints correctly. Select the <strong>3 samples</strong> that are valid RFT training examples for improving Adventure Works' trip planning logic.</p>
+</div>
+
+<div class="cards-grid" id="cardsGrid">
+
+    <!-- Card 1 — CORRECT: multi-constraint prompt + verifiable grader -->
+    <div class="data-card" data-id="c1" onclick="toggle('c1')">
+        <span class="type-badge type-prompt-grader">Prompt + Grader</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">Plan a 4-day backpacking loop for two people: one experienced, one first-time backpacker. Budget $150 for gear rentals. Trip window: late October in the San Juan Mountains.</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-grader">Grader</span>
+            <span class="convo-text">Score 1 each: accounts for experience gap (1), addresses October weather/snow risk (1), stays within $150 rental budget (1), adjusts daily distances for mixed fitness (1). Max: 4.</span>
+        </div>
+    </div>
+
+    <!-- Card 2 — CORRECT: group with varied fitness + age constraint -->
+    <div class="data-card" data-id="c2" onclick="toggle('c2')">
+        <span class="type-badge type-prompt-grader">Prompt + Grader</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">My group: one runner (high fitness), one returning from injury (low fitness), one child aged 12. We have 3 days and want a memorable mountain experience.</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-grader">Grader</span>
+            <span class="convo-text">Score 1 each: offers route flexibility for different fitness levels (1), addresses injury risk mitigation (1), includes age-appropriate challenge for the child (1), avoids single-route recommendation for whole group (1). Max: 4.</span>
+        </div>
+    </div>
+
+    <!-- Card 3 — CORRECT: budget + experience + time + season constraints -->
+    <div class="data-card" data-id="c3" onclick="toggle('c3')">
+        <span class="type-badge type-prompt-grader">Prompt + Grader</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">I want to summit a 14er. I've done 10-mile day hikes before. Solo trip, $500 gear budget, must fit into one weekend from Denver. Travelling in early June.</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-grader">Grader</span>
+            <span class="convo-text">Score 1 each: recommends an appropriate beginner 14er for solo travel (1), addresses June snowpack risk (1), plans gear within $500 (1), schedules realistic drive + hiking time for a weekend (1). Max: 4.</span>
+        </div>
+    </div>
+
+    <!-- Card 4 — WRONG: single-fact prompt, no constraint interaction -->
+    <div class="data-card" data-id="w1" onclick="toggle('w1')">
+        <span class="type-badge type-prompt-grader">Prompt + Grader</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">What is the elevation of Longs Peak in Colorado?</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-grader">Grader</span>
+            <span class="convo-text">Score 1 if the correct elevation is stated (4,346 m / 14,259 ft), 0 otherwise.</span>
+        </div>
+    </div>
+
+    <!-- Card 5 — WRONG: no grader provided -->
+    <div class="data-card" data-id="w2" onclick="toggle('w2')">
+        <span class="type-badge type-incomplete">Incomplete Example</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">Plan a week-long hiking trip for a family with young children in Glacier National Park, staying within a moderate activity level.</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-missing">Missing</span>
+            <span class="convo-text"><em>No grader function recorded for this example.</em></span>
+        </div>
+    </div>
+
+    <!-- Card 6 — WRONG: labeled example (SFT format) -->
+    <div class="data-card" data-id="w3" onclick="toggle('w3')">
+        <span class="type-badge type-labeled">Labeled Example</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">What waterproof jacket should I buy for Pacific Northwest conditions?</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-agent">Agent</span>
+            <span class="convo-text"><strong>Arc'teryx Beta AR</strong> | Material: GORE-TEX Pro | Weight: 485 g | Price: $799.95 | Stock: Denver (2), Boulder (0 — order online) | Complements: Atom LT midlayer</span>
+        </div>
+    </div>
+
+    <!-- Card 7 — WRONG: preference pair (DPO format) -->
+    <div class="data-card" data-id="w4" onclick="toggle('w4')">
+        <span class="type-badge type-pair">Preference Pair</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">Is it safe to hike alone in bear country?</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-preferred">Preferred</span>
+            <span class="convo-text">Solo hiking in bear country is manageable: carry bear spray accessible (not in pack), make noise on blind corners, and check recent ranger reports before heading out.</span>
+        </div>
+        <div class="convo-row">
+            <span class="convo-label label-rejected">Rejected</span>
+            <span class="convo-text">Solo hiking in bear country is risky and we strongly advise against it without a group.</span>
+        </div>
+    </div>
+
+    <!-- Card 8 — WRONG: prompt has constraints but grader is vague and unverifiable -->
+    <div class="data-card" data-id="w5" onclick="toggle('w5')">
+        <span class="type-badge type-prompt-grader">Prompt + Grader</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">Plan a hiking trip for someone who is fit and experienced and wants a challenge.</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-grader">Grader</span>
+            <span class="convo-text">Score 1 if the plan looks good and is appropriate, 0 if the plan looks bad.</span>
+        </div>
+    </div>
+
+    <!-- Card 9 — WRONG: constraints present but grader measures length, not reasoning -->
+    <div class="data-card" data-id="w6" onclick="toggle('w6')">
+        <span class="type-badge type-prompt-grader">Prompt + Grader</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">Plan a trip for a beginner with a $200 gear budget, targeting winter conditions in the Rockies starting next week.</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-grader">Grader</span>
+            <span class="convo-text">Score 1 if the response is longer than 100 words, score 0 if shorter than 100 words.</span>
+        </div>
+    </div>
+
+</div>
+
+<div class="selection-summary">
+    <div class="selected-count" id="selectedCount">0 of 3 examples selected</div>
+    <p style="font-size:13px; color:#57606a; margin:0 0 14px;">Select exactly 3 valid RFT training examples from the dataset above.</p>
+    <button class="submit-btn" id="submitBtn" onclick="submit()" disabled>Submit selection</button>
+</div>
+
+<div class="feedback" id="feedback"></div>
+
+<div class="reset-section">
+    <button class="reset-btn" onclick="location.reload()">Reset exercise</button>
+</div>
+
+<script>
+    const selected = new Set();
+
+    const titles = {
+        c1: 'Mixed-experience 4-day loop — experience gap, weather, budget, and distance constraints with verifiable grader',
+        c2: 'Group with varied fitness and child — flexibility, injury, age, and route constraints with verifiable grader',
+        c3: 'Solo 14er weekend — experience, snowpack, budget, and schedule constraints with verifiable grader',
+        w1: 'Single-fact elevation query — no constraint interaction, trivially graded',
+        w2: 'Complex family trip — valid prompt but grader is missing',
+        w3: 'Waterproof jacket query — labeled example (SFT format, not RFT)',
+        w4: 'Bear country safety — preference pair (DPO format, not RFT)',
+        w5: 'Fit and experienced hiker — prompt is vague, grader is subjective and unverifiable',
+        w6: 'Beginner winter trip — grader measures response length, not reasoning quality'
+    };
+
+    const correct = new Set(['c1', 'c2', 'c3']);
+
+    const jsonlData = {
+        c1: {
+            prompt: 'Plan a 4-day backpacking loop for two people: one experienced, one first-time backpacker. Budget $150 for gear rentals. Trip window: late October in the San Juan Mountains.',
+            grader_criteria: [
+                'Accounts for experience gap between participants',
+                'Addresses October weather and snow risk',
+                'Stays within $150 gear rental budget',
+                'Adjusts daily distances for mixed fitness levels'
+            ]
+        },
+        c2: {
+            prompt: 'My group: one runner (high fitness), one returning from injury (low fitness), one child aged 12. We have 3 days and want a memorable mountain experience.',
+            grader_criteria: [
+                'Offers route flexibility for different fitness levels',
+                'Addresses injury risk mitigation',
+                'Includes age-appropriate challenge for the child',
+                'Avoids a single-route recommendation for the whole group'
+            ]
+        },
+        c3: {
+            prompt: "I want to summit a 14er. I've done 10-mile day hikes before. Solo trip, $500 gear budget, must fit into one weekend from Denver. Travelling in early June.",
+            grader_criteria: [
+                'Recommends an appropriate beginner 14er for solo travel',
+                'Addresses June snowpack risk',
+                'Plans gear within $500 budget',
+                'Schedules realistic drive and hiking time for a weekend'
+            ]
+        }
+    };
+
+    function generateJSONL() {
+        const lines = Array.from(correct).map(id => JSON.stringify(jsonlData[id]));
+        const block = document.getElementById('jsonlBlock');
+        block.textContent = lines.join('\n');
+        document.getElementById('jsonlOutput').style.display = 'block';
+        document.getElementById('jsonlOutput').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    const explanations = {
+        c1: 'Multiple interacting constraints (experience gap, October conditions, $150 budget, mixed fitness) with a grader that verifies each constraint was addressed independently. This is exactly the structure needed for RFT.',
+        c2: 'The fitness variation, injury risk, child age, and group routing constraints require genuine reasoning about trade-offs. The grader checks for all four independently, making it verifiable.',
+        c3: 'Experience, June snowpack, $500 budget, and weekend logistics all interact. A beginner 14er affects route choice; June snowpack affects gear; the driving distance constrains timing. The grader checks each dimension.',
+        w1: 'A factual lookup requires no reasoning about interacting constraints. RFT trains multi-step logic — using it on single-fact questions wastes expensive training time and teaches nothing about constraint handling.',
+        w2: 'The prompt is good: it has multiple constraints (family, children, moderate activity, week-long). But without a grader, RFT has no signal to optimize against. Both parts are required.',
+        w3: 'A labeled prompt + desired response is SFT format. RFT uses prompts and grader functions, not pre-written desired outputs.',
+        w4: 'A preferred/rejected response pair is DPO format. RFT does not use preference pairs — it uses a grader to score generated outputs iteratively during training.',
+        w5: 'The prompt is too vague ("fit and experienced, wants a challenge") to define what correct reasoning looks like. The grader ("looks good / looks bad") is subjective and cannot be applied consistently — this corrupts training signal.',
+        w6: 'The grader measures word count, not whether the model reasoned through the constraints. A long response that ignores the $200 budget and winter conditions would score 1, reinforcing bad reasoning.'
+    };
+
+    function toggle(id) {
+        const card = document.querySelector(`[data-id="${id}"]`);
+        if (selected.has(id)) {
+            selected.delete(id);
+            card.classList.remove('selected');
+        } else {
+            if (selected.size >= 3) { alert('Deselect one before choosing another.'); return; }
+            selected.add(id);
+            card.classList.add('selected');
+        }
+        const n = selected.size;
+        document.getElementById('selectedCount').textContent = `${n} of 3 examples selected`;
+        document.getElementById('submitBtn').disabled = n !== 3;
+    }
+
+    function submit() {
+        const arr = Array.from(selected);
+        const hits = arr.filter(id => correct.has(id));
+        const wrong = arr.filter(id => !correct.has(id));
+        const missed = Array.from(correct).filter(id => !selected.has(id));
+        const score = hits.length;
+
+        let html = `<h3>Your selection feedback</h3>
+            <div class="score-section">Score: ${score}/3 correct</div>`;
+
+        if (hits.length) {
+            html += `<div class="correct-section"><h4>✅ Correct selections</h4><ul>`;
+            hits.forEach(id => { html += `<li><strong>${titles[id]}</strong> — ${explanations[id]}</li>`; });
+            html += `</ul></div>`;
+        }
+        if (wrong.length) {
+            html += `<div class="incorrect-section"><h4>❌ Incorrect selections</h4><ul>`;
+            wrong.forEach(id => { html += `<li><strong>${titles[id]}</strong> — ${explanations[id]}</li>`; });
+            html += `</ul></div>`;
+        }
+        if (missed.length) {
+            html += `<div class="missed-section"><h4>⚠️ You missed</h4><ul>`;
+            missed.forEach(id => { html += `<li><strong>${titles[id]}</strong> — ${explanations[id]}</li>`; });
+            html += `</ul></div>`;
+        }
+
+        const overall = score === 3
+            ? '<strong>Excellent!</strong> You identified all three valid RFT examples. Key pattern: the prompt contains multiple interacting constraints that require genuine reasoning, and the grader is specific and verifiable — each scoring criterion maps to a distinct constraint the model must reason about.'
+            : score === 2
+            ? '<strong>Good work!</strong> You found most valid examples. Pay attention to grader quality: a grader that is vague, subjective, or measures surface features (like length) provides noise rather than signal.'
+            : '<strong>Keep reviewing.</strong> Valid RFT examples need two parts working together: a prompt with multiple interacting constraints (not single lookups) and a grader that verifiably checks whether each constraint was reasoned through. Both are required.';
+
+        const jsonlBtn = score === 3
+            ? `<button class="download-btn" onclick="generateJSONL()">⚙ Generate JSONL</button>` : '';
+        const notebookBtn = score === 3
+            ? `<a href="rft-notebook.html" class="finish-btn" style="background:#be185d;color:#fff;border-color:#be185d">Run the Notebook →</a>` : '';
+        html += `<div class="overall-feedback"><p>${overall}</p></div>
+            ${jsonlBtn}
+            <a href="index.html" class="finish-btn">← Back to all scenarios</a>
+            ${notebookBtn}`;
+
+        const fb = document.getElementById('feedback');
+        fb.innerHTML = html;
+        fb.insertAdjacentHTML('beforeend', `
+            <div class="jsonl-output" id="jsonlOutput">
+                <div class="jsonl-output-header">rft_training_data.jsonl — 3 prompts with grader criteria</div>
+                <pre id="jsonlBlock"></pre>
+            </div>`);
+        fb.classList.add('show');
+        document.querySelector('.selection-summary').style.display = 'none';
+    }
+</script>
+</body>
+</html>

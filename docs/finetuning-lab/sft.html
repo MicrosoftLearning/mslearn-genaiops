@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scenario 1: Inconsistent response format — SFT data selection</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            max-width: 1060px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #1f2937;
+            background: #fff;
+        }
+        .navigation {
+            background: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            padding: 12px 18px;
+            margin-bottom: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        .nav-link { color: #0969da; text-decoration: none; font-weight: 500; }
+        .nav-link:hover { text-decoration: underline; }
+        .nav-label { color: #57606a; }
+        .header {
+            border-bottom: 1px solid #d0d7de;
+            margin-bottom: 24px;
+            padding-bottom: 18px;
+        }
+        .header h1 { font-size: 24px; font-weight: 600; margin: 0 0 6px; }
+        .header p { color: #57606a; margin: 0; font-size: 14px; }
+        .badge-sft {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #dbeafe;
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+        .task-box {
+            background: #eff6ff;
+            border: 1px solid #93c5fd;
+            border-radius: 6px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        .task-box h3 { margin: 0 0 6px; font-size: 15px; color: #1d4ed8; }
+        .task-box p { margin: 0; }
+        /* cards */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin: 24px 0;
+        }
+        @media (max-width: 720px) { .cards-grid { grid-template-columns: 1fr; } }
+        .data-card {
+            border: 2px solid #d0d7de;
+            border-radius: 8px;
+            padding: 14px;
+            background: #fff;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.1s;
+            display: flex;
+            flex-direction: column;
+            font-size: 13px;
+        }
+        .data-card:hover {
+            border-color: #1d4ed8;
+            box-shadow: 0 3px 10px rgba(29,78,216,0.1);
+            transform: translateY(-1px);
+        }
+        .data-card.selected {
+            border-color: #1d4ed8;
+            background: #eff6ff;
+            box-shadow: 0 0 0 3px rgba(29,78,216,0.12);
+        }
+        .type-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            width: fit-content;
+        }
+        .type-labeled { background: #dbeafe; color: #1e40af; }
+        .type-pair { background: #d1fae5; color: #065f46; }
+        .type-prompt-grader { background: #fce7f3; color: #9d174d; }
+        .type-incomplete { background: #fef3c7; color: #92400e; }
+        .convo-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+            align-items: flex-start;
+        }
+        .convo-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 2px 5px;
+            border-radius: 3px;
+            white-space: nowrap;
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+        .label-user { background: #f3f4f6; color: #374151; }
+        .label-agent { background: #dbeafe; color: #1e40af; }
+        .label-preferred { background: #d1fae5; color: #065f46; }
+        .label-rejected { background: #fee2e2; color: #991b1b; }
+        .label-grader { background: #fce7f3; color: #9d174d; }
+        .label-missing { background: #fef3c7; color: #92400e; }
+        .convo-text {
+            font-size: 12px;
+            color: #374151;
+            line-height: 1.4;
+            flex-grow: 1;
+        }
+        .convo-text em { color: #9ca3af; font-style: italic; }
+        .divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 8px 0;
+        }
+        /* selection summary */
+        .selection-summary {
+            background: #fff;
+            border: 1px solid #1d4ed8;
+            border-radius: 6px;
+            padding: 18px 22px;
+            margin: 24px 0;
+            text-align: center;
+        }
+        .selected-count { font-size: 17px; font-weight: 600; color: #1d4ed8; margin-bottom: 12px; }
+        .submit-btn {
+            background: #1d4ed8;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .submit-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+        /* feedback */
+        .feedback { display: none; margin: 24px 0; }
+        .feedback.show { display: block; }
+        .score-section {
+            background: #eff6ff;
+            border: 1px solid #1d4ed8;
+            border-radius: 6px;
+            padding: 14px;
+            margin: 14px 0;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+        .correct-section { background: #d1fae5; border-left: 4px solid #16a34a; padding: 14px; margin: 12px 0; border-radius: 0 6px 6px 0; }
+        .incorrect-section { background: #fee2e2; border-left: 4px solid #dc2626; padding: 14px; margin: 12px 0; border-radius: 0 6px 6px 0; }
+        .missed-section { background: #fef3c7; border-left: 4px solid #d97706; padding: 14px; margin: 12px 0; border-radius: 0 6px 6px 0; }
+        .overall-feedback { background: #f0f9ff; border: 1px solid #0369a1; border-radius: 6px; padding: 14px; margin: 12px 0; }
+        .feedback h3 { margin-top: 0; font-size: 17px; }
+        .feedback h4 { margin: 0 0 8px; font-size: 14px; }
+        .feedback ul, .feedback ol { margin: 6px 0 0; padding-left: 20px; font-size: 14px; }
+        .feedback li { margin-bottom: 4px; }
+        .next-btn {
+            display: inline-block;
+            background: #059669;
+            color: white;
+            padding: 11px 22px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            margin-top: 18px;
+            font-size: 14px;
+        }
+        .next-btn:hover { background: #047857; text-decoration: none; }
+        .download-btn {
+            display: inline-block;
+            background: #ffffff;
+            color: #1d4ed8;
+            border: 2px solid #1d4ed8;
+            padding: 10px 22px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 18px;
+            margin-right: 10px;
+            text-decoration: none;
+        }
+        .download-btn:hover { background: #eff6ff; }
+        .jsonl-output {
+            display: none;
+            margin-top: 20px;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .jsonl-output-header {
+            background: #f6f8fa;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #57606a;
+            border-bottom: 1px solid #d0d7de;
+        }
+        .jsonl-output pre {
+            margin: 0;
+            padding: 16px;
+            font-size: 12px;
+            line-height: 1.6;
+            background: #1e1e2e;
+            color: #cdd6f4;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        .reset-section { text-align: center; margin: 28px 0; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+        .reset-btn {
+            background: #6b7280; color: white; border: none;
+            padding: 9px 18px; border-radius: 6px; cursor: pointer; font-size: 13px;
+        }
+        .reset-btn:hover { background: #4b5563; }
+    </style>
+</head>
+<body>
+
+<div class="navigation">
+    <a href="index.html" class="nav-link">← Back to scenarios</a>
+    <span class="nav-label">Scenario 1 of 3</span>
+    <a href="sft-notebook.html" class="nav-link">Run the Notebook →</a>
+    <a href="dpo.html" class="nav-link">Next scenario →</a>
+</div>
+
+<div class="header">
+    <span class="badge-sft">Supervised Fine-Tuning (SFT)</span>
+    <h1>Scenario 1: Inconsistent response format</h1>
+    <p>Gear specification responses vary unpredictably — sometimes vague, sometimes detailed. Coherence and Fluency scores fall below threshold.</p>
+</div>
+
+<div class="task-box">
+    <h3>Your task</h3>
+    <p>SFT requires <strong>labeled examples</strong>: each example pairs a prompt with the complete, desired response. Select the <strong>3 samples</strong> from the dataset below that are valid SFT training examples for teaching the Adventure Works gear specification format.</p>
+</div>
+
+<div class="cards-grid" id="cardsGrid">
+
+    <!-- Card 1 — CORRECT: full structured labeled example -->
+    <div class="data-card" data-id="c1" onclick="toggle('c1')">
+        <span class="type-badge type-labeled">Labeled Example</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">What's the best 3-season tent for solo backpacking under $400?</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-agent">Agent</span>
+            <span class="convo-text"><strong>Black Diamond Hilight 2P</strong> | Weight: 1.36 kg | Poles: 7001 aluminum | Season: 3 | Floor: 70D ripstop nylon | Price: $379.95 | Stock: Denver (3), Boulder (1), Aspen (online only) | Complements: BD Distance Z sleeping bag, footprint add-on</span>
+        </div>
+    </div>
+
+    <!-- Card 2 — CORRECT: full comparison, structured -->
+    <div class="data-card" data-id="c2" onclick="toggle('c2')">
+        <span class="type-badge type-labeled">Labeled Example</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">Compare Merrell Moab 3 vs Salomon X Ultra 4 for rocky trails.</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-agent">Agent</span>
+            <span class="convo-text"><strong>Merrell Moab 3 GTX</strong> | Sole: Vibram TC5+ | Weight: 910 g | Waterproof: Yes | $159.95 | Stock: Denver (6) <br><strong>Salomon X Ultra 4 GTX</strong> | Sole: Contagrip MA | Weight: 820 g | Waterproof: Yes | $189.95 | Stock: Boulder (4) | Recommendation: Salomon for technical terrain; Merrell for all-day comfort.</span>
+        </div>
+    </div>
+
+    <!-- Card 3 — CORRECT: full gear list with specs -->
+    <div class="data-card" data-id="c3" onclick="toggle('c3')">
+        <span class="type-badge type-labeled">Labeled Example</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">What gear do I need for a full-day summer hike in Rocky Mountain National Park?</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-agent">Agent</span>
+            <span class="convo-text">• <strong>Pack:</strong> Osprey Stratos 24 | 24L | 1.25 kg | $160 | Denver (5) <br>• <strong>Shoes:</strong> Salomon X Ultra 4 GTX | $189.95 | Boulder (4) <br>• <strong>Hydration:</strong> Platypus 2L reservoir | $35 | All locations <br>• <strong>Poles:</strong> Black Diamond Trail Ergo | $79.95 | Denver (3) <br>Complements: sun hoody, electrolyte tabs</span>
+        </div>
+    </div>
+
+    <!-- Card 4 — WRONG: vague, no specs or structure -->
+    <div class="data-card" data-id="w1" onclick="toggle('w1')">
+        <span class="type-badge type-labeled">Labeled Example</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">Best rain jacket for hiking?</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-agent">Agent</span>
+            <span class="convo-text">We have some great rain jacket options in store! The Arc'teryx jackets are really popular with customers and work great in all kinds of weather. Come check out our selection!</span>
+        </div>
+    </div>
+
+    <!-- Card 5 — WRONG: incomplete, response missing -->
+    <div class="data-card" data-id="w2" onclick="toggle('w2')">
+        <span class="type-badge type-incomplete">Incomplete Example</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">What trekking poles would you recommend for a multi-day trail?</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-missing">Missing</span>
+            <span class="convo-text"><em>No agent response recorded for this interaction.</em></span>
+        </div>
+    </div>
+
+    <!-- Card 6 — WRONG: preference pair format (DPO, not SFT) -->
+    <div class="data-card" data-id="w3" onclick="toggle('w3')">
+        <span class="type-badge type-pair">Preference Pair</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">Is the Cascade Mountain safe for beginners?</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-preferred">Preferred</span>
+            <span class="convo-text">The Cascade involves some exposed sections — doable for beginners with proper footwear and a clear weather window...</span>
+        </div>
+        <div class="convo-row">
+            <span class="convo-label label-rejected">Rejected</span>
+            <span class="convo-text">Cascade Mountain is extremely dangerous and not recommended for beginners under any circumstances.</span>
+        </div>
+    </div>
+
+    <!-- Card 7 — WRONG: wrong domain (trail info, not gear) -->
+    <div class="data-card" data-id="w4" onclick="toggle('w4')">
+        <span class="type-badge type-labeled">Labeled Example</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">What's the trail difficulty rating for the Maroon Bells loop?</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-agent">Agent</span>
+            <span class="convo-text">The Maroon Bells–Snowmass Wilderness loop is rated moderate to strenuous. The full Four Pass Loop covers approximately 64 km with 2,400 m of elevation gain and is typically completed over 4–5 days.</span>
+        </div>
+    </div>
+
+    <!-- Card 8 — WRONG: partial structure, missing pricing and availability -->
+    <div class="data-card" data-id="w5" onclick="toggle('w5')">
+        <span class="type-badge type-labeled">Labeled Example</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">Tell me about the MSR Hubba Hubba NX tent.</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-agent">Agent</span>
+            <span class="convo-text"><strong>MSR Hubba Hubba NX</strong> | Weight: 1.72 kg | Poles: DAC Featherlite NSL | Season rating: 3 | Floor material: 30D ripstop nylon</span>
+        </div>
+    </div>
+
+    <!-- Card 9 — WRONG: prompt + grader (RFT format, not SFT) -->
+    <div class="data-card" data-id="w6" onclick="toggle('w6')">
+        <span class="type-badge type-prompt-grader">Prompt + Grader</span>
+        <div class="convo-row">
+            <span class="convo-label label-user">User</span>
+            <span class="convo-text">Plan a 3-day hiking trip for two people: moderate fitness, $200 gear rental budget, late September in the Rockies.</span>
+        </div>
+        <div class="divider"></div>
+        <div class="convo-row">
+            <span class="convo-label label-grader">Grader</span>
+            <span class="convo-text">Score 1 point each: all constraints addressed (1), gear within budget (1), seasonal conditions considered (1), safety notes included (1). Max: 4.</span>
+        </div>
+    </div>
+
+</div>
+
+<div class="selection-summary">
+    <div class="selected-count" id="selectedCount">0 of 3 examples selected</div>
+    <p style="font-size:13px; color:#57606a; margin:0 0 14px;">Select exactly 3 valid SFT labeled examples from the dataset above.</p>
+    <button class="submit-btn" id="submitBtn" onclick="submit()" disabled>Submit selection</button>
+</div>
+
+<div class="feedback" id="feedback"></div>
+
+<div class="reset-section">
+    <button class="reset-btn" onclick="location.reload()">Reset exercise</button>
+</div>
+
+<script>
+    const selected = new Set();
+
+    const titles = {
+        c1: 'Tent query — full spec + pricing + availability + complements',
+        c2: 'Boot comparison — side-by-side spec table + recommendation',
+        c3: 'Day hike gear list — full item specs + stock + complements',
+        w1: 'Vague jacket response — no specs, pricing, or structure',
+        w2: 'Incomplete example — agent response missing',
+        w3: 'Preference pair — DPO format, not a labeled example',
+        w4: 'Trail difficulty query — wrong domain for gear format training',
+        w5: 'Partial tent specs — missing pricing, availability, complements',
+        w6: 'Prompt + grader — RFT format, not a labeled example'
+    };
+
+    const correct = new Set(['c1', 'c2', 'c3']);
+
+    const jsonlData = {
+        c1: { messages: [
+            { role: 'user', content: "What's the best 3-season tent for solo backpacking under $400?" },
+            { role: 'assistant', content: 'Black Diamond Hilight 2P | Weight: 1.36 kg | Poles: 7001 aluminum | Season: 3 | Floor: 70D ripstop nylon | Price: $379.95 | Stock: Denver (3), Boulder (1), Aspen (online only) | Complements: BD Distance Z sleeping bag, footprint add-on' }
+        ]},
+        c2: { messages: [
+            { role: 'user', content: 'Compare Merrell Moab 3 vs Salomon X Ultra 4 for rocky trails.' },
+            { role: 'assistant', content: 'Merrell Moab 3 GTX | Sole: Vibram TC5+ | Weight: 910 g | Waterproof: Yes | $159.95 | Stock: Denver (6)\nSalomon X Ultra 4 GTX | Sole: Contagrip MA | Weight: 820 g | Waterproof: Yes | $189.95 | Stock: Boulder (4) | Recommendation: Salomon for technical terrain; Merrell for all-day comfort.' }
+        ]},
+        c3: { messages: [
+            { role: 'user', content: 'What gear do I need for a full-day summer hike in Rocky Mountain National Park?' },
+            { role: 'assistant', content: 'Pack: Osprey Stratos 24 | 24L | 1.25 kg | $160 | Denver (5)\nShoes: Salomon X Ultra 4 GTX | $189.95 | Boulder (4)\nHydration: Platypus 2L reservoir | $35 | All locations\nPoles: Black Diamond Trail Ergo | $79.95 | Denver (3)\nComplements: sun hoody, electrolyte tabs' }
+        ]}
+    };
+
+    function generateJSONL() {
+        const lines = Array.from(correct).map(id => JSON.stringify(jsonlData[id]));
+        const block = document.getElementById('jsonlBlock');
+        block.textContent = lines.join('\n');
+        document.getElementById('jsonlOutput').style.display = 'block';
+        document.getElementById('jsonlOutput').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    const explanations = {
+        c1: 'Complete labeled example: product name, specs, price, multi-location stock, and complementary items — the full Adventure Works format.',
+        c2: 'Structured comparison with specs, pricing, and a recommendation — exactly the format the model needs to learn across product queries.',
+        c3: 'Multi-item gear list with consistent spec structure, pricing, and availability — reinforces the format pattern across different query types.',
+        w1: 'The response is vague and conversational with no specifications, pricing, or structure. This teaches the wrong pattern.',
+        w2: 'A labeled example needs both a prompt <em>and</em> the desired response. Missing responses cannot teach the model anything.',
+        w3: 'This is a preference pair (preferred vs. rejected responses) — the data format for DPO, not SFT.',
+        w4: 'Trail difficulty information is a different query type. Training on this teaches trail description format, not gear specification format.',
+        w5: 'Missing pricing and availability means the model learns an incomplete format, undermining consistency across required fields.',
+        w6: 'A prompt with a grader rubric is the data format for RFT. SFT requires the actual desired response, not scoring criteria.'
+    };
+
+    function toggle(id) {
+        const card = document.querySelector(`[data-id="${id}"]`);
+        if (selected.has(id)) {
+            selected.delete(id);
+            card.classList.remove('selected');
+        } else {
+            if (selected.size >= 3) { alert('Deselect one before choosing another.'); return; }
+            selected.add(id);
+            card.classList.add('selected');
+        }
+        const n = selected.size;
+        document.getElementById('selectedCount').textContent = `${n} of 3 examples selected`;
+        document.getElementById('submitBtn').disabled = n !== 3;
+    }
+
+    function submit() {
+        const arr = Array.from(selected);
+        const hits = arr.filter(id => correct.has(id));
+        const wrong = arr.filter(id => !correct.has(id));
+        const missed = Array.from(correct).filter(id => !selected.has(id));
+        const score = hits.length;
+
+        let html = `<h3>Your selection feedback</h3>
+            <div class="score-section">Score: ${score}/3 correct</div>`;
+
+        if (hits.length) {
+            html += `<div class="correct-section"><h4>✅ Correct selections</h4><ul>`;
+            hits.forEach(id => { html += `<li><strong>${titles[id]}</strong> — ${explanations[id]}</li>`; });
+            html += `</ul></div>`;
+        }
+        if (wrong.length) {
+            html += `<div class="incorrect-section"><h4>❌ Incorrect selections</h4><ul>`;
+            wrong.forEach(id => { html += `<li><strong>${titles[id]}</strong> — ${explanations[id]}</li>`; });
+            html += `</ul></div>`;
+        }
+        if (missed.length) {
+            html += `<div class="missed-section"><h4>⚠️ You missed</h4><ul>`;
+            missed.forEach(id => { html += `<li><strong>${titles[id]}</strong> — ${explanations[id]}</li>`; });
+            html += `</ul></div>`;
+        }
+
+        const overall = score === 3
+            ? '<strong>Excellent!</strong> You identified all three valid SFT examples. The key pattern: a complete prompt paired with the full, structured desired response covering specs, pricing, availability, and complementary items.'
+            : score === 2
+            ? '<strong>Good work!</strong> You found most of the valid examples. For SFT, every field in the target format must be present — partial responses teach incomplete patterns.'
+            : '<strong>Keep reviewing.</strong> Valid SFT examples must include both a prompt and a complete, structured response in the exact target format. Format, price, stock, and complements all contribute to consistency training.';
+
+        const jsonlBtn = score === 3
+            ? `<button class="download-btn" onclick="generateJSONL()">⚙ Generate JSONL</button>` : '';
+        html += `<div class="overall-feedback"><p>${overall}</p></div>
+            ${jsonlBtn}
+            <a href="sft-notebook.html" class="next-btn" style="background:#1d4ed8;margin-right:10px">📓 Run the SFT Notebook →</a>
+            <a href="dpo.html" class="next-btn">Continue to Scenario 2: Inappropriate tone →</a>`;
+
+        const fb = document.getElementById('feedback');
+        fb.innerHTML = html;
+        fb.insertAdjacentHTML('beforeend', `
+            <div class="jsonl-output" id="jsonlOutput">
+                <div class="jsonl-output-header">sft_training_data.jsonl — 3 labeled examples</div>
+                <pre id="jsonlBlock"></pre>
+            </div>`);
+        fb.classList.add('show');
+        document.querySelector('.selection-summary').style.display = 'none';
+    }
+</script>
+</body>
+</html>

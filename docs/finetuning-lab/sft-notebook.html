@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SFT Notebook – Trail Guide Agent</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── TOP NAV ── */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1d4ed8;
+      color: #fff;
+      padding: 12px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .top-nav a { color: #fff; text-decoration: none; font-size: 13px; opacity: .85; }
+    .top-nav a:hover { opacity: 1; }
+    .top-nav .title { font-weight: 600; font-size: 15px; }
+    .top-nav .meta { font-size: 12px; opacity: .75; }
+
+    /* ── NOTEBOOK WRAPPER ── */
+    .notebook-wrapper {
+      max-width: 980px;
+      margin: 24px auto;
+      padding: 0 16px 80px;
+    }
+
+    /* ── KERNEL BAR ── */
+    .kernel-bar {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px 6px 0 0;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: #666;
+    }
+    .kernel-dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; }
+    .kernel-bar span:last-child { margin-left: auto; }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      border-top: none;
+      padding: 6px 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .tb-btn {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 3px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #333;
+      transition: background .15s;
+    }
+    .tb-btn:hover { background: #e8e8e8; }
+    .tb-sep { width: 1px; height: 20px; background: #ccc; margin: 0 4px; }
+    .run-all-btn {
+      margin-left: auto;
+      background: #1d4ed8;
+      border-color: #1d4ed8;
+      color: #fff;
+      padding: 4px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      border: none;
+      transition: background .15s;
+    }
+    .run-all-btn:hover { background: #1e40af; }
+
+    /* ── CELL ── */
+    .nb-cell {
+      display: flex;
+      border-left: 3px solid transparent;
+      margin-bottom: 0;
+      transition: border-color .15s;
+    }
+    .nb-cell.active { border-left-color: #1d4ed8; }
+    .nb-cell:focus-within { border-left-color: #1d4ed8; }
+
+    .cell-counter {
+      width: 52px;
+      min-width: 52px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12px;
+      color: #999;
+      padding: 8px 6px 8px 8px;
+      text-align: right;
+      user-select: none;
+    }
+    .cell-counter span { display: block; }
+    .cell-body { flex: 1; min-width: 0; }
+
+    /* markdown cells */
+    .md-cell .cell-body {
+      background: #fff;
+      padding: 12px 16px;
+      border: 1px solid #e8e8e8;
+    }
+    .md-cell .cell-counter { padding-top: 12px; }
+
+    /* code cells */
+    .code-cell .cell-body {
+      border: 1px solid #e0e0e0;
+      position: relative;
+    }
+    .code-area {
+      background: #f7f7f7;
+      padding: 10px 14px;
+      font-family: "SFMono-Regular", Consolas, "Courier New", monospace;
+      font-size: 12.5px;
+      line-height: 1.65;
+      color: #333;
+      white-space: pre;
+      overflow-x: auto;
+      border-bottom: 1px solid #e8e8e8;
+    }
+    .code-cell.optional-cell .code-area { opacity: .6; }
+
+    .run-btn {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: #1d4ed8;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 11px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity .2s, background .15s;
+    }
+    .code-cell:hover .run-btn { opacity: 1; }
+    .run-btn:hover { background: #1e40af; }
+    .run-btn.running { background: #666; cursor: default; }
+
+    /* output */
+    .cell-output {
+      display: none;
+      background: #fff;
+      border-top: 1px solid #e0e0e0;
+      padding: 10px 14px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #333;
+      overflow-x: auto;
+    }
+    .cell-output.visible { display: block; }
+    .cell-output pre { white-space: pre-wrap; }
+    .output-stream { color: #555; }
+    .output-err  { color: #c0392b; }
+    .output-success { color: #16a34a; }
+
+    /* progress */
+    .progress-wrap { margin: 6px 0; }
+    .progress-label { font-size: 11px; color: #666; margin-bottom: 3px; }
+    .progress-bar-outer { height: 12px; background: #e5e5e5; border-radius: 6px; overflow: hidden; width: 100%; }
+    .progress-bar-inner {
+      height: 100%;
+      background: #1d4ed8;
+      border-radius: 6px;
+      width: 0%;
+      transition: width .08s linear;
+    }
+
+    /* bar chart */
+    .chart-container { padding: 8px 0 4px; }
+    .chart-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #444; }
+    .bar-row { display: flex; align-items: center; margin-bottom: 6px; gap: 8px; }
+    .bar-label { width: 220px; min-width: 220px; font-size: 11.5px; color: #555; text-align: right; }
+    .bar-track { flex: 1; height: 22px; background: #f0f0f0; border-radius: 3px; position: relative; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; transition: width .6s ease; display: flex; align-items: center; padding-left: 6px; font-size: 11px; font-weight: 600; color: #fff; }
+    .bar-sft   { background: #1d4ed8; }
+    .bar-gpt41 { background: #2563eb; }
+    .bar-base  { background: #9ca3af; }
+
+    /* syntax colours */
+    .kw { color: #0033b3; font-weight: 600; }
+    .fn { color: #000080; }
+    .st { color: #067d17; }
+    .cm { color: #8c8c8c; font-style: italic; }
+    .nm { color: #1750eb; }
+    .op { color: #555; }
+    .pr { color: #7a3e9d; }
+    .va { color: #333; }
+
+    /* interactive hp inputs */
+    .hp-input {
+      background: #fff;
+      border: 1px solid #bbb;
+      border-radius: 3px;
+      color: #067d17;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12.5px;
+      padding: 1px 5px;
+      width: auto;
+    }
+    .hp-input:focus { outline: none; border-color: #1d4ed8; background: #eff6ff; }
+    select.hp-input { padding: 1px 4px; cursor: pointer; }
+
+    /* md styles */
+    .md-cell h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: #111; }
+    .md-cell h3 { font-size: 15px; font-weight: 600; margin: 12px 0 6px; color: #222; }
+    .md-cell p  { margin-bottom: 8px; color: #444; }
+    .md-cell ul, .md-cell ol { margin: 6px 0 8px 20px; color: #444; }
+    .md-cell li { margin-bottom: 3px; }
+    .md-cell code { background: #eff6ff; border-radius: 3px; padding: 1px 5px; font-family: monospace; font-size: 12px; color: #1d4ed8; }
+    .md-cell pre  { background: #f7f7f7; color: #333; padding: 10px 14px; border-radius: 4px; font-size: 12px; overflow-x: auto; margin: 8px 0; border: 1px solid #e8e8e8; }
+    .md-cell table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12.5px; }
+    .md-cell th { background: #eff6ff; padding: 6px 10px; border: 1px solid #bfdbfe; text-align: left; font-weight: 600; color: #1e40af; }
+    .md-cell td { padding: 5px 10px; border: 1px solid #e5e5e5; }
+    .md-cell tr:nth-child(even) td { background: #fafafa; }
+    .md-cell strong { font-weight: 600; color: #111; }
+    .md-cell em { font-style: italic; }
+    .md-cell .tip { background: #eff6ff; border-left: 3px solid #1d4ed8; padding: 8px 12px; border-radius: 0 4px 4px 0; margin: 8px 0; font-size: 13px; }
+    .md-cell blockquote { border-left: 3px solid #1d4ed8; padding: 6px 12px; background: #eff6ff; margin: 8px 0; color: #555; border-radius: 0 4px 4px 0; }
+    .md-cell .optional-note { background: #fef9c3; border-left: 3px solid #ca8a04; padding: 8px 12px; border-radius: 0 4px 4px 0; margin: 8px 0; font-size: 13px; }
+
+    .section-divider { height: 20px; }
+    canvas.loss-chart { width: 100%; max-width: 640px; height: 200px; display: block; margin: 8px 0; }
+
+    .scenario-tag {
+      display: inline-block;
+      background: #1d4ed8;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-bottom: 4px;
+    }
+
+    /* format sample cards */
+    .format-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+    .format-card { border-radius: 5px; padding: 10px 12px; font-size: 12px; line-height: 1.55; }
+    .format-good { background: #eff6ff; border: 1px solid #93c5fd; }
+    .format-bad  { background: #fef2f2; border: 1px solid #fca5a5; }
+    .format-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
+    .label-good { color: #1e40af; }
+    .label-bad  { color: #991b1b; }
+    .format-code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 11.5px; background: #f8faff; border-radius: 4px; padding: 6px 8px; margin-top: 4px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════ TOP NAV ══════════════════════════════════ -->
+<nav class="top-nav">
+  <a href="sft.html">← Back to data selection</a>
+  <span class="title">SFT Notebook — Adventure Works Trail Guide</span>
+  <span class="meta">Kernel: Python 3 (Azure OpenAI) · gpt-4.1-mini</span>
+</nav>
+
+<div class="notebook-wrapper">
+
+  <!-- kernel bar -->
+  <div class="kernel-bar">
+    <div class="kernel-dot"></div>
+    <span>Kernel: Python 3</span>
+    <span>|</span>
+    <span>Azure OpenAI SDK</span>
+    <span>Run All Cells →</span>
+    <button class="run-all-btn" onclick="runAll()">▶ Run All</button>
+  </div>
+
+  <!-- toolbar -->
+  <div class="toolbar">
+    <button class="tb-btn" onclick="restartKernel()">↺ Restart</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="clearAll()">✕ Clear All Output</button>
+    <div class="tb-sep"></div>
+    <span style="font-size:12px;color:#888">Cells: <span id="exec-count">0</span> / <span id="total-count">0</span> executed</span>
+  </div>
+
+  <!-- ═══════════ CELL 0 — Agenda ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-0">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <div class="scenario-tag">Scenario 1 · Supervised Fine-Tuning</div>
+      <h2>🎒 SFT Fine-Tuning the Adventure Works Trail Guide</h2>
+      <p>This notebook demonstrates end-to-end <strong>Supervised Fine-Tuning (SFT)</strong> of <code>gpt-4.1-mini</code> on Microsoft Foundry, applied to our trail gear recommendation agent.</p>
+      <h3>🧭 Agenda</h3>
+      <ol>
+        <li><strong>Dataset &amp; the Format Problem</strong> — what inconsistent output looks like and why it matters</li>
+        <li><strong>Setup &amp; Install</strong> — environment, packages, credentials</li>
+        <li><strong>Connect &amp; Upload Files</strong> — push training data to Foundry</li>
+        <li><strong>Create the SFT Job</strong> — configure hyperparameters and submit</li>
+        <li><strong>Monitor Training</strong> — watch the loss curve live</li>
+        <li><strong>Deploy, Test &amp; Evaluate</strong> — did format consistency improve?</li>
+        <li><strong>Key Takeaways</strong> — when SFT is the right choice</li>
+      </ol>
+      <p><em>Execute each cell in sequence. Use <strong>⚙ Apply</strong> in Section 4 to lock in hyperparameters before submitting.</em></p>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══════════ CELL 1 — Section 1 MD ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-1">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <h2>📋 Section 1: Dataset &amp; the Format Problem</h2>
+      <p>Adventure Works customers use the trail guide agent to get <strong>gear recommendations</strong> for upcoming hikes. The agent knows its products well — but its response format is wildly inconsistent:</p>
+      <ul>
+        <li>Sometimes it uses the expected <strong>pipe-delimited spec format</strong>: <code>Pack: Osprey Stratos 24 | 24L | 1.25 kg | $160 | Denver (5)</code></li>
+        <li>Sometimes it writes <strong>free-form prose</strong>: <em>"I'd recommend the Osprey Stratos 24 — a great 24L pack at $160…"</em></li>
+        <li>Sometimes it <strong>omits fields</strong> entirely: <em>"Salomon X Ultra 4 GTX — $189.95"</em></li>
+      </ul>
+      <p>The downstream app parses the pipe-separated format to populate product cards, so format inconsistency directly causes <strong>broken UI and failed integrations</strong>.</p>
+      <h3>✅ Why SFT for This Problem?</h3>
+      <p>SFT is the right tool when:</p>
+      <ul>
+        <li>There is a <strong>single correct output format</strong> for a given input</li>
+        <li>You can write (or collect) examples of the exact expected output</li>
+        <li>The model's knowledge is fine — only its <em>behaviour</em> (formatting) needs to change</li>
+      </ul>
+      <blockquote>✅ SFT is the right tool when you <em>know exactly what the output should look like</em> and can write it down.</blockquote>
+      <h3>📦 Training Data Format</h3>
+      <p>Each record in <code>training.jsonl</code> is a chat conversation that demonstrates the correct format:</p>
+      <pre>{
+  "messages": [
+    {"role": "system",    "content": "You are the Adventure Works gear advisor..."},
+    {"role": "user",      "content": "Gear list for a 3-day rocky trail with heavy load?"},
+    {"role": "assistant", "content": "Pack: Osprey Atmos AG 65 | 65L | 2.0 kg | $340 | Denver (4)\nShoes: Salomon X Ultra 4 GTX | Wide | $189.95 | Boulder (4)\nPoles: Black Diamond Trail Ergo | Adj | $79.95 | Denver (3)\nComplements: blister kit, trekking gaiters"}
+  ]
+}</pre>
+      <h3>🗂 Example: Good vs. Bad Response</h3>
+      <div class="format-pair">
+        <div class="format-card format-good">
+          <div class="format-label label-good">✅ Correct (pipe-delimited spec format)</div>
+          <div class="format-code">Pack: Osprey Stratos 24 | 24L | 1.25 kg | $160 | Denver (5)
+Shoes: Salomon X Ultra 4 GTX | $189.95 | Boulder (4)
+Hydration: Platypus 2L reservoir | $35 | All (★)
+Poles: Black Diamond Trail Ergo | $79.95 | Denver (3)
+Complements: sun hoody, electrolyte tabs</div>
+        </div>
+        <div class="format-card format-bad">
+          <div class="format-label label-bad">❌ Incorrect (inconsistent prose)</div>
+          <div class="format-code">For your trail I'd recommend the Osprey Stratos 24 backpack (24 litres, around $160). You'll also want some good shoes — the Salomon X Ultra 4 GTX are solid at $189. Don't forget hydration! A Platypus 2L reservoir costs $35 and is available everywhere.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 2 — Inspect dataset ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-2">
+    <div class="cell-counter"><span id="ctr-2">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-2" onclick="runCell(2)">▶ Run</button>
+      <div class="code-area"><span class="kw">import</span> json, random
+
+<span class="cm"># Inspect the SFT gear-format training dataset</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="st">"training.jsonl"</span>) <span class="kw">as</span> f:
+    records = [json.loads(line) <span class="kw">for</span> line <span class="kw">in</span> f]
+
+<span class="pr">print</span>(<span class="st">f"Trail Guide SFT Dataset — {len(records)} examples\n"</span> + <span class="st">"-"</span> * <span class="nm">60</span>)
+<span class="kw">for</span> rec <span class="kw">in</span> random.sample(records, <span class="nm">3</span>):
+    user_msg  = next(m[<span class="st">"content"</span>] <span class="kw">for</span> m <span class="kw">in</span> rec[<span class="st">"messages"</span>] <span class="kw">if</span> m[<span class="st">"role"</span>] == <span class="st">"user"</span>)
+    asst_msg  = next(m[<span class="st">"content"</span>] <span class="kw">for</span> m <span class="kw">in</span> rec[<span class="st">"messages"</span>] <span class="kw">if</span> m[<span class="st">"role"</span>] == <span class="st">"assistant"</span>)
+    first_line = asst_msg.split(<span class="st">"\n"</span>)[<span class="nm">0</span>]
+    <span class="pr">print</span>(<span class="st">f"User      : {user_msg}"</span>)
+    <span class="pr">print</span>(<span class="st">f"Assistant : {first_line}…"</span>)
+    <span class="pr">print</span>(<span class="st">"-"</span> * <span class="nm">60</span>)</div>
+      <div class="cell-output" id="out-2">
+        <pre class="output-stream">Trail Guide SFT Dataset — 450 examples
+------------------------------------------------------------
+User      : Gear list for a 3-day rocky trail with heavy load?
+Assistant : Pack: Osprey Atmos AG 65 | 65L | 2.0 kg | $340 | Denver (4)…
+------------------------------------------------------------
+User      : Compare Merrell Moab 3 vs Salomon X Ultra 4 for rocky trails.
+Assistant : Pack: N/A | — | — | — | — …
+------------------------------------------------------------
+User      : What gear do I need for a winter day hike above 3000m?
+Assistant : Pack: Osprey Talon 22 | 22L | 0.86 kg | $140 | All (★)…
+------------------------------------------------------------</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══════════ CELL 3 — Section 2 MD ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-3">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <h2>⚙️ Section 2: Setup &amp; Installation</h2>
+      <p>Install all required packages. We need:</p>
+      <ul>
+        <li><code>azure-ai-projects</code> — Microsoft Foundry project client</li>
+        <li><code>azure-ai-evaluation</code> — automated quality metrics</li>
+        <li><code>azure-mgmt-cognitiveservices</code> — deploy the fine-tuned model</li>
+        <li><code>openai</code> — fine-tuning jobs API and inference</li>
+        <li><code>python-dotenv</code> — load environment config from <code>.env</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 4 — pip install ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-4">
+    <div class="cell-counter"><span id="ctr-4">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-4" onclick="runCell(4)">▶ Run</button>
+      <div class="code-area"><span class="fn">pip</span> install -r requirements.txt</div>
+      <div class="cell-output" id="out-4">
+        <pre class="output-stream">Collecting azure-ai-projects>=2.0.0b1 ... ✅
+Collecting azure-ai-evaluation>=1.13.0 ... ✅
+Collecting azure-mgmt-cognitiveservices ... ✅
+Collecting openai ... ✅
+Collecting python-dotenv ... ✅
+Successfully installed all packages.
+Note: you may need to restart the kernel to use updated packages.</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 5 — Imports + env ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-5">
+    <div class="cell-counter"><span id="ctr-5">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-5" onclick="runCell(5)">▶ Run</button>
+      <div class="code-area"><span class="kw">import</span> os
+<span class="kw">from</span> <span class="fn">dotenv</span> <span class="kw">import</span> load_dotenv
+<span class="kw">from</span> <span class="fn">azure.identity</span> <span class="kw">import</span> DefaultAzureCredential
+<span class="kw">from</span> <span class="fn">azure.ai.projects</span> <span class="kw">import</span> AIProjectClient
+
+load_dotenv()
+
+endpoint   = os.environ[<span class="st">"MICROSOFT_FOUNDRY_PROJECT_ENDPOINT"</span>]
+model_name = os.environ[<span class="st">"MODEL_NAME"</span>]           <span class="cm"># gpt-4.1-mini</span>
+
+training_file_path   = <span class="st">"training.jsonl"</span>
+validation_file_path = <span class="st">"validation.jsonl"</span>
+
+<span class="pr">print</span>(<span class="st">"✅ All libraries imported successfully"</span>)
+<span class="pr">print</span>(<span class="st">f"   Endpoint   : {endpoint[:40]}…"</span>)
+<span class="pr">print</span>(<span class="st">f"   Model      : {model_name}"</span>)</div>
+      <div class="cell-output" id="out-5">
+        <pre class="output-stream output-success">✅ All libraries imported successfully
+   Endpoint   : https://myproject.api.azureml.ms/…
+   Model      : gpt-4.1-mini</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 6 — Connect to Foundry ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-6">
+    <div class="cell-counter"><span id="ctr-6">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-6" onclick="runCell(6)">▶ Run</button>
+      <div class="code-area"><span class="cm"># Connect to Microsoft Foundry Project</span>
+<span class="cm"># Requires: Azure AI User role on the Foundry project resource</span>
+credential     = DefaultAzureCredential()
+project_client = AIProjectClient(endpoint=endpoint, credential=credential)
+openai_client  = project_client.get_openai_client()
+
+<span class="pr">print</span>(<span class="st">"✅ Connected to Microsoft Foundry Project"</span>)</div>
+      <div class="cell-output" id="out-6">
+        <pre class="output-stream output-success">✅ Connected to Microsoft Foundry Project</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══════════ CELL 7 — Section 3 MD ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-7">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <h2>📤 Section 3: Upload Training Files</h2>
+      <p>Upload the training and validation JSONL files to Microsoft Foundry. Each file is assigned a unique ID that will be referenced when creating the fine-tuning job.</p>
+      <div class="tip">📋 <strong>Tip:</strong> If your training data is already in Azure Blob Storage, skip to the optional blob import cell below instead of re-uploading.</div>
+      <div class="tip">📋 <strong>Environment:</strong> Copy <code>.env.template</code> to <code>.env</code> and fill in:
+        <br><code>MICROSOFT_FOUNDRY_PROJECT_ENDPOINT</code>, <code>MODEL_NAME</code>, <code>AZURE_SUBSCRIPTION_ID</code>, <code>AZURE_RESOURCE_GROUP</code>, <code>AZURE_AOAI_ACCOUNT</code></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 8 — Upload files ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-8">
+    <div class="cell-counter"><span id="ctr-8">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-8" onclick="runCell(8)">▶ Run</button>
+      <div class="code-area"><span class="pr">print</span>(<span class="st">"Uploading training file…"</span>)
+<span class="kw">with</span> <span class="fn">open</span>(training_file_path, <span class="st">"rb"</span>) <span class="kw">as</span> f:
+    train_file = openai_client.files.create(file=f, purpose=<span class="st">"fine-tune"</span>)
+
+<span class="pr">print</span>(<span class="st">"Uploading validation file…"</span>)
+<span class="kw">with</span> <span class="fn">open</span>(validation_file_path, <span class="st">"rb"</span>) <span class="kw">as</span> f:
+    validation_file = openai_client.files.create(file=f, purpose=<span class="st">"fine-tune"</span>)
+
+train_file_id = train_file.id
+val_file_id   = validation_file.id
+
+<span class="pr">print</span>(<span class="st">f"Training file ID   : {train_file_id}"</span>)
+<span class="pr">print</span>(<span class="st">f"Validation file ID : {val_file_id}"</span>)</div>
+      <div class="cell-output" id="out-8">
+        <pre class="output-stream">Uploading training file…
+Uploading validation file…
+Training file ID   : file-a1b2c3d4e5f6478a9b0c1d2e3f4a5b6c
+Validation file ID : file-b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 9 — Blob import MD (optional) ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-9">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <div class="optional-note">⏭ <strong>Optional — Import from Azure Blob Storage.</strong> If you already uploaded files above (cell 8), skip cells 10–11. Only use this path if your training data lives in Blob Storage.</div>
+      <h3>📦 Import from Azure Blob Storage (Optional)</h3>
+      <p>If your training data is already stored in Azure Blob Storage, you can import it directly without re-uploading, using the <code>/openai/files/import</code> preview endpoint.</p>
+      <p><strong>Prerequisites:</strong> Generate SAS tokens with read permissions, then set:</p>
+      <pre>TRAINING_FILE_BLOB_URL=https://&lt;storage&gt;.blob.core.windows.net/&lt;container&gt;/training.jsonl?&lt;sas&gt;
+VALIDATION_FILE_BLOB_URL=https://&lt;storage&gt;.blob.core.windows.net/&lt;container&gt;/validation.jsonl?&lt;sas&gt;</pre>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 10 — Blob import code (optional) ═══════════ -->
+  <div class="nb-cell code-cell optional-cell" id="cell-10">
+    <div class="cell-counter"><span id="ctr-10">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-10" onclick="runCell(10)">▶ Run</button>
+      <div class="code-area"><span class="kw">import</span> httpx
+
+training_blob_url   = os.environ.get(<span class="st">"TRAINING_FILE_BLOB_URL"</span>)
+validation_blob_url = os.environ.get(<span class="st">"VALIDATION_FILE_BLOB_URL"</span>)
+
+<span class="kw">if</span> training_blob_url:
+    <span class="pr">print</span>(<span class="st">"Importing files from Azure Blob Storage…"</span>)
+    import_url = <span class="st">f"{endpoint}/openai/files/import?api-version=2025-11-15-preview"</span>
+    token   = credential.get_token(<span class="st">"https://ai.azure.com/.default"</span>)
+    headers = {<span class="st">"Authorization"</span>: <span class="st">f"Bearer {token.token}"</span>, <span class="st">"Content-Type"</span>: <span class="st">"application/json"</span>}
+
+    <span class="kw">with</span> httpx.Client() <span class="kw">as</span> client:
+        <span class="pr">print</span>(<span class="st">"Importing training file…"</span>)
+        resp = client.post(import_url, headers=headers, json={
+            <span class="st">"filename"</span>: <span class="st">"training.jsonl"</span>, <span class="st">"purpose"</span>: <span class="st">"fine-tune"</span>, <span class="st">"content_url"</span>: training_blob_url
+        })
+        resp.raise_for_status()
+        train_file_id = resp.json()[<span class="st">"id"</span>]
+        <span class="pr">print</span>(<span class="st">f"  Training file imported : {train_file_id}"</span>)
+
+        <span class="kw">if</span> validation_blob_url:
+            <span class="pr">print</span>(<span class="st">"Importing validation file…"</span>)
+            resp = client.post(import_url, headers=headers, json={
+                <span class="st">"filename"</span>: <span class="st">"validation.jsonl"</span>, <span class="st">"purpose"</span>: <span class="st">"fine-tune"</span>, <span class="st">"content_url"</span>: validation_blob_url
+            })
+            resp.raise_for_status()
+            val_file_id = resp.json()[<span class="st">"id"</span>]
+            <span class="pr">print</span>(<span class="st">f"  Validation file imported: {val_file_id}"</span>)
+
+    <span class="pr">print</span>(<span class="st">"Import completed! Files are being processed…"</span>)
+<span class="kw">else</span>:
+    <span class="pr">print</span>(<span class="st">"ℹ️  Blob URLs not set — using files uploaded in the previous cell."</span>)</div>
+      <div class="cell-output" id="out-10">
+        <pre class="output-stream">ℹ️  Blob URLs not set — using files uploaded in the previous cell.</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 11 — Wait for processing ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-11">
+    <div class="cell-counter"><span id="ctr-11">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-11" onclick="runCell(11)">▶ Run</button>
+      <div class="code-area"><span class="cm"># Wait until Foundry has validated and indexed the uploaded files</span>
+<span class="pr">print</span>(<span class="st">"Waiting for files to be processed…"</span>)
+openai_client.files.wait_for_processing(train_file_id)
+openai_client.files.wait_for_processing(val_file_id)
+<span class="pr">print</span>(<span class="st">"✅ Files ready!"</span>)</div>
+      <div class="cell-output" id="out-11">
+        <pre class="output-stream">Waiting for files to be processed…
+✅ Files ready!</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══════════ CELL 12 — Section 4 MD ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-12">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <h2>🚀 Section 4: Create the SFT Job</h2>
+      <p>With our training data uploaded, we launch a supervised fine-tuning job. The job uses <code>method.type = "supervised"</code> and a <code>suffix</code> that gets appended to the deployed model name.</p>
+      <h3>🎛 SFT Hyperparameters</h3>
+      <table>
+        <tr><th>Parameter</th><th>What it controls</th></tr>
+        <tr><td><strong>n_epochs</strong></td><td>Full passes through the training data. More epochs → better format retention, but risks overfitting to training examples. Typical range: 1–10.</td></tr>
+        <tr><td><strong>batch_size</strong></td><td>Examples per gradient step. Smaller = more updates per epoch, often better for format tasks. Typical range: 1–8.</td></tr>
+        <tr><td><strong>learning_rate_multiplier</strong></td><td>Scales the default learning rate. Too high risks destroying existing knowledge; too low slows format adoption. Typical range: 0.1–2.0.</td></tr>
+      </table>
+      <blockquote>🎛 <strong>Try it:</strong> Adjust the hyperparameters below, click <code>⚙ Apply</code>, then re-run the job and monitor cells!</blockquote>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 13 — Hyperparameters (INTERACTIVE) ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-13">
+    <div class="cell-counter"><span id="ctr-13">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-13" onclick="runCell(13)" style="opacity:1;background:#7c3aed">⚙ Apply</button>
+      <div class="code-area" style="padding-bottom:14px"><span class="cm"># ⚙️  SFT Hyperparameters — edit these values and click Apply!</span>
+
+method = {
+    <span class="st">"type"</span>: <span class="st">"supervised"</span>,
+    <span class="st">"supervised"</span>: {
+        <span class="st">"hyperparameters"</span>: {
+            <span class="st">"n_epochs"</span>:                  <input class="hp-input" id="hp-epochs" type="number" min="1" max="10" value="3" style="width:42px" onchange="markHpDirty()">,
+            <span class="st">"batch_size"</span>:               <select class="hp-input" id="hp-batch" onchange="markHpDirty()"><option value="1" selected>1</option><option value="2">2</option><option value="4">4</option><option value="8">8</option></select>,
+            <span class="st">"learning_rate_multiplier"</span>: <select class="hp-input" id="hp-lr" onchange="markHpDirty()"><option value="0.1">0.1</option><option value="0.5">0.5</option><option value="1.0" selected>1.0</option><option value="2.0">2.0</option></select>
+        }
+    }
+}
+
+suffix = <span class="st">"trail-gear-format"</span></div>
+      <div class="cell-output" id="out-13">
+        <pre class="output-stream" id="out-13-text">ℹ️  Click ⚙ Apply (above) to lock in your hyperparameters before submitting the job.</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 14 — Submit SFT job ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-14">
+    <div class="cell-counter"><span id="ctr-14">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-14" onclick="runCell(14)">▶ Run</button>
+      <div class="code-area"><span class="pr">print</span>(<span class="st">"Creating supervised fine-tuning job…"</span>)
+
+fine_tune_job = openai_client.fine_tuning.jobs.create(
+    model=model_name,
+    training_file=train_file_id,
+    validation_file=val_file_id,
+    method=method,
+    extra_body={<span class="st">"trainingType"</span>: <span class="st">"Standard"</span>},
+    suffix=suffix
+)
+
+<span class="pr">print</span>(<span class="st">f"Fine-tuning job created!"</span>)
+<span class="pr">print</span>(<span class="st">f"Job ID : {fine_tune_job.id}"</span>)
+<span class="pr">print</span>(<span class="st">f"Status : {fine_tune_job.status}"</span>)
+<span class="pr">print</span>(<span class="st">f"Model  : {fine_tune_job.model}"</span>)</div>
+      <div class="cell-output" id="out-14">
+        <pre class="output-stream" id="out-14-text">⏳ Submitting SFT job to Azure OpenAI…</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 15 — Training monitor ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-15">
+    <div class="cell-counter"><span id="ctr-15">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-15" onclick="runCell(15)">▶ Run</button>
+      <div class="code-area"><span class="cm"># 📉 Monitor SFT training progress</span>
+job_status = openai_client.fine_tuning.jobs.retrieve(fine_tune_job.id)
+<span class="pr">print</span>(<span class="st">f"Status: {job_status.status}"</span>)
+
+events = <span class="fn">list</span>(openai_client.fine_tuning.jobs.list_events(fine_tune_job.id, limit=<span class="nm">10</span>))
+<span class="kw">for</span> event <span class="kw">in</span> events:
+    <span class="pr">print</span>(event.message)</div>
+      <div class="cell-output" id="out-15" style="padding:0">
+        <div id="training-monitor" style="padding:10px 14px">
+          <div style="font-size:12px;color:#555;margin-bottom:8px">⏳ Waiting for training to start…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══════════ CELL 16 — Section 5 MD ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-16">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body">
+      <h2>🧠 Section 5: Retrieve, Deploy &amp; Test</h2>
+      <p>Training is complete. We retrieve the fine-tuned model ID, deploy it to Azure OpenAI, and run a quick inference test to verify format consistency has improved.</p>
+      <blockquote>Did your hyperparameter choices pay off? Run the cells below to find out!</blockquote>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 17 — Retrieve model ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-17">
+    <div class="cell-counter"><span id="ctr-17">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-17" onclick="runCell(17)">▶ Run</button>
+      <div class="code-area">completed_job = openai_client.fine_tuning.jobs.retrieve(fine_tune_job.id)
+
+<span class="kw">if</span> completed_job.status == <span class="st">"succeeded"</span>:
+    fine_tuned_model_id = completed_job.fine_tuned_model
+    <span class="pr">print</span>(<span class="st">f"✅ Fine-tuned Model ID: {fine_tuned_model_id}"</span>)
+<span class="kw">else</span>:
+    <span class="pr">print</span>(<span class="st">f"Status: {completed_job.status}"</span>)</div>
+      <div class="cell-output" id="out-17">
+        <pre class="output-stream" id="out-17-text">⏳ Waiting for training to complete…</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 18 — Deploy ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-18">
+    <div class="cell-counter"><span id="ctr-18">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-18" onclick="runCell(18)">▶ Run</button>
+      <div class="code-area"><span class="kw">from</span> <span class="fn">azure.mgmt.cognitiveservices</span> <span class="kw">import</span> CognitiveServicesManagementClient
+<span class="kw">from</span> <span class="fn">azure.mgmt.cognitiveservices.models</span> <span class="kw">import</span> Deployment, DeploymentProperties, DeploymentModel, Sku
+
+deployment_name = <span class="st">"gpt-4.1-mini-trail-gear-sft"</span>
+
+<span class="kw">with</span> CognitiveServicesManagementClient(credential=credential,
+        subscription_id=os.environ[<span class="st">"AZURE_SUBSCRIPTION_ID"</span>]) <span class="kw">as</span> cogsvc:
+    cogsvc.deployments.begin_create_or_update(
+        resource_group_name=os.environ[<span class="st">"AZURE_RESOURCE_GROUP"</span>],
+        account_name=os.environ[<span class="st">"AZURE_AOAI_ACCOUNT"</span>],
+        deployment_name=deployment_name,
+        deployment=Deployment(
+            sku=Sku(name=<span class="st">"GlobalStandard"</span>, capacity=<span class="nm">50</span>),
+            properties=DeploymentProperties(
+                model=DeploymentModel(format=<span class="st">"OpenAI"</span>, name=fine_tuned_model_id, version=<span class="st">"1"</span>))
+        )
+    ).result()
+<span class="pr">print</span>(<span class="st">f"✅ Deployed as: {deployment_name}"</span>)</div>
+      <div class="cell-output" id="out-18">
+        <pre class="output-stream" id="out-18-text">⏳ Waiting for training to complete before deploying…</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 19 — Test the model ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-19">
+    <div class="cell-counter"><span id="ctr-19">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-19" onclick="runCell(19)">▶ Run</button>
+      <div class="code-area"><span class="cm"># 🔍 Quick inference test: does the model now use the pipe format?</span>
+response = openai_client.responses.create(
+    model=deployment_name,
+    input=[
+        {<span class="st">"role"</span>: <span class="st">"system"</span>, <span class="st">"content"</span>: <span class="st">"You are the Adventure Works gear advisor."</span>},
+        {<span class="st">"role"</span>: <span class="st">"user"</span>,   <span class="st">"content"</span>: <span class="st">"Gear list for a 3-day rocky trail with heavy load?"</span>}
+    ]
+)
+<span class="pr">print</span>(<span class="st">"Fine-tuned model response:"</span>)
+<span class="pr">print</span>(response.output_text)</div>
+      <div class="cell-output" id="out-19">
+        <pre class="output-stream" id="out-19-text">⏳ Waiting for deployment to be ready…</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 20 — Evaluate + compare ═══════════ -->
+  <div class="nb-cell code-cell" id="cell-20">
+    <div class="cell-counter"><span id="ctr-20">[ ]</span></div>
+    <div class="cell-body">
+      <button class="run-btn" id="run-20" onclick="runCell(20)">▶ Run</button>
+      <div class="code-area"><span class="kw">from</span> <span class="fn">azure.ai.evaluation</span> <span class="kw">import</span> evaluate, CoherenceEvaluator, FluencyEvaluator, GroundednessEvaluator
+<span class="kw">from</span> <span class="fn">openai</span> <span class="kw">import</span> AzureOpenAI
+
+eval_model_cfg = {
+    <span class="st">"azure_endpoint"</span>:    os.getenv(<span class="st">"AZURE_OPENAI_ENDPOINT"</span>),
+    <span class="st">"api_key"</span>:           os.getenv(<span class="st">"AZURE_OPENAI_KEY"</span>),
+    <span class="st">"azure_deployment"</span>:  os.getenv(<span class="st">"DEPLOYMENT_NAME"</span>),
+    <span class="st">"api_version"</span>:       <span class="st">"2024-08-01-preview"</span>,
+}
+
+<span class="pr">print</span>(<span class="st">f"Evaluating fine-tuned model: {deployment_name}\n"</span>)
+results = evaluate(
+    data=<span class="st">"./eval_data.jsonl"</span>,
+    evaluators={
+        <span class="st">"coherence"</span>:     CoherenceEvaluator(model_config=eval_model_cfg),
+        <span class="st">"fluency"</span>:       FluencyEvaluator(model_config=eval_model_cfg),
+        <span class="st">"groundedness"</span>: GroundednessEvaluator(model_config=eval_model_cfg),
+    },
+    output_path=<span class="st">"./eval_results_sft"</span>
+)</div>
+      <div class="cell-output" id="out-20">
+        <pre class="output-stream" id="out-20-text">⏳ Run the training and deployment cells first…</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CELL 21 — Key Takeaways ═══════════ -->
+  <div class="nb-cell md-cell" id="cell-21">
+    <div class="cell-counter"><span></span></div>
+    <div class="cell-body" id="takeaways-body">
+      <h2>🎯 Key Takeaways</h2>
+      <p style="color:#888;font-style:italic">Run the training and evaluation cells above to see your results, then this section will summarise what you learned.</p>
+    </div>
+  </div>
+
+  <!-- back link -->
+  <div style="margin-top:32px;text-align:center">
+    <a href="index.html" style="color:#1d4ed8;text-decoration:none;font-size:14px">← Back to all fine-tuning scenarios</a>
+  </div>
+
+</div><!-- /notebook-wrapper -->
+
+<script>
+// ─────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────
+const CODE_CELLS = [2,4,5,6,8,10,11,13,14,15,17,18,19,20];
+let execOrder = 0;
+let executed = new Set();
+let jobSubmitted = false;
+let trainingDone = false;
+
+let hp = { epochs: 3, batch: 1, lr: 1.0 };
+let hpApplied = false;
+
+let ftFormatScore = null;
+let ftCoherence   = null;
+let ftFluency     = null;
+let ftGroundedness = null;
+
+function updateCountDisplay() {
+  document.getElementById('exec-count').textContent = executed.size;
+  document.getElementById('total-count').textContent = CODE_CELLS.length;
+}
+updateCountDisplay();
+
+// ─────────────────────────────────────────────
+// Hyperparameter helpers
+// ─────────────────────────────────────────────
+function markHpDirty() {
+  hpApplied = false;
+  document.getElementById('out-13-text').textContent = '⚠️  Hyperparameters changed — click ⚙ Apply to update.';
+  if (trainingDone) {
+    trainingDone = false;
+    jobSubmitted = false;
+    ftFormatScore = ftCoherence = ftFluency = ftGroundedness = null;
+    [14,15,17,18,19,20].forEach(id => {
+      clearCellOutput(id);
+      const ctr = document.getElementById('ctr-'+id);
+      if (ctr) ctr.textContent = '[ ]';
+      executed.delete(id);
+    });
+    updateCountDisplay();
+    resetTakeaways();
+  }
+}
+
+function readHp() {
+  return {
+    epochs: parseInt(document.getElementById('hp-epochs').value) || 3,
+    batch:  parseInt(document.getElementById('hp-batch').value)  || 1,
+    lr:     parseFloat(document.getElementById('hp-lr').value)   || 1.0
+  };
+}
+
+/**
+ * Format consistency score (% of responses using pipe-delimited spec format).
+ * Base: 22%. Best ~92% with epochs=3, batch=1, lr=1.0.
+ *
+ * epoch bonus: 1→+24, 2→+36, 3→+42, 4→+35, 5→+26, ≥6→+18 (overfit)
+ * batch bonus: 1→+14, 2→+9, 4→+5, 8→+2
+ * lr bonus:    0.1→+4, 0.5→+8, 1.0→+11, 2.0→+6
+ */
+function calcFormatScore(p) {
+  const base = 22;
+  const epochBonus = [0,24,36,42,35,26,18,14,12,10,8];
+  const batchBonus = { 1: 14, 2: 9, 4: 5, 8: 2 };
+  const lrBonus    = { '0.1': 4, '0.5': 8, '1.0': 11, '2.0': 6 };
+  const score = base
+    + (epochBonus[Math.min(p.epochs, 10)] || 8)
+    + (batchBonus[p.batch] || 2)
+    + (lrBonus[String(p.lr)] || 5);
+  return Math.min(score, 92);
+}
+
+/** Coherence improves with SFT (structured format is more coherent) */
+function calcCoherence(p) {
+  let c = 3.85;
+  if (p.epochs >= 2) c += 0.30;
+  if (p.epochs >= 3) c += 0.15;
+  if (p.epochs >= 5) c -= 0.20; // overfit
+  if (p.lr >= 2.0)   c -= 0.15;
+  return Math.min(Math.max(c, 3.00), 4.60).toFixed(2);
+}
+
+/** Fluency: slight degradation with very aggressive settings */
+function calcFluency(p) {
+  let fl = 4.10;
+  if (p.epochs >= 5) fl -= 0.25;
+  if (p.lr >= 2.0)   fl -= 0.15;
+  return Math.max(fl, 3.40).toFixed(2);
+}
+
+/** Groundedness improves with SFT — structured outputs cite specific product details */
+function calcGroundedness(p) {
+  let g = 3.55;
+  if (p.epochs >= 2) g += 0.35;
+  if (p.epochs >= 3) g += 0.20;
+  if (p.epochs >= 5) g -= 0.15;
+  if (p.lr >= 2.0)   g -= 0.10;
+  return Math.min(Math.max(g, 3.00), 4.50).toFixed(2);
+}
+
+// ─────────────────────────────────────────────
+// Cell output helpers
+// ─────────────────────────────────────────────
+function showOutput(id) {
+  const el = document.getElementById('out-' + id);
+  if (el) el.classList.add('visible');
+}
+function clearCellOutput(id) {
+  const el = document.getElementById('out-' + id);
+  if (!el) return;
+  el.classList.remove('visible');
+  el.innerHTML = '<pre class="output-stream">⏳</pre>';
+}
+function setCellRunning(id, running) {
+  const btn = document.getElementById('run-' + id);
+  if (!btn) return;
+  if (running) { btn.textContent = '⏸'; btn.classList.add('running'); btn.disabled = true; }
+  else         { btn.textContent = (id === 13) ? '⚙ Apply' : '▶ Run'; btn.classList.remove('running'); btn.disabled = false; }
+}
+function setCounter(id, n) {
+  const el = document.getElementById('ctr-' + id);
+  if (el) el.textContent = '[' + n + ']';
+}
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─────────────────────────────────────────────
+// Main dispatcher
+// ─────────────────────────────────────────────
+async function runCell(id) {
+  setCellRunning(id, true);
+  execOrder++;
+  setCounter(id, execOrder);
+  executed.add(id);
+  updateCountDisplay();
+
+  const runners = {
+    13: runCell13, 14: runCell14, 15: runCell15,
+    17: runCell17, 18: runCell18, 19: runCell19, 20: runCell20
+  };
+  if (runners[id]) await runners[id]();
+  else { await delay(400); showOutput(id); }
+
+  setCellRunning(id, false);
+}
+
+// ─────────────────────────────────────────────
+// Cell 13 — apply hyperparameters
+// ─────────────────────────────────────────────
+async function runCell13() {
+  hp = readHp();
+  hpApplied = true;
+  await delay(300);
+
+  const warnings = [];
+  if (hp.epochs >= 5)  warnings.push('⚠️  n_epochs ≥ 5 risks overfitting on a 450-example format dataset');
+  if (hp.lr >= 2.0)    warnings.push('⚠️  learning_rate_multiplier=2.0 may degrade fluency/coherence');
+  if (hp.batch >= 4)   warnings.push('ℹ️  batch_size ≥ 4 smoothes gradients but slows format adoption');
+  if (hp.lr <= 0.1)    warnings.push('ℹ️  learning_rate_multiplier=0.1 is very conservative — may need more epochs');
+
+  let msg = `✅ SFT hyperparameters applied:\n   n_epochs=${hp.epochs} | batch_size=${hp.batch} | learning_rate_multiplier=${hp.lr}\n   suffix=trail-gear-format`;
+  if (warnings.length) msg += '\n\n' + warnings.join('\n');
+  document.getElementById('out-13-text').textContent = msg;
+  showOutput(13);
+}
+
+// ─────────────────────────────────────────────
+// Cell 14 — submit SFT job
+// ─────────────────────────────────────────────
+async function runCell14() {
+  const outEl = document.getElementById('out-14');
+  outEl.innerHTML = '<pre class="output-stream">⏳ Submitting SFT job to Azure OpenAI…</pre>';
+  outEl.classList.add('visible');
+
+  if (!hpApplied) {
+    await delay(200);
+    outEl.innerHTML = '<pre class="output-err">⚠️  Please run the hyperparameter cell (⚙ Apply) before submitting.</pre>';
+    return;
+  }
+
+  await delay(900);
+  const jobId = 'ftjob-' + Math.random().toString(36).substr(2,16);
+  outEl.innerHTML = `<pre class="output-stream">Creating supervised fine-tuning job…
+Fine-tuning job created!
+Job ID : ${jobId}
+Status : pending
+Model  : gpt-4.1-mini
+Method : supervised
+n_epochs=${hp.epochs}  batch_size=${hp.batch}  lr_multiplier=${hp.lr}
+Suffix : trail-gear-format
+Type   : Standard</pre>`;
+  jobSubmitted = true;
+}
+
+// ─────────────────────────────────────────────
+// Cell 15 — training monitor (loss curve)
+// ─────────────────────────────────────────────
+async function runCell15() {
+  const outEl = document.getElementById('out-15');
+  outEl.style.padding = '0';
+  outEl.innerHTML = '<div id="training-monitor" style="padding:10px 14px"><div style="font-size:12px;color:#555;margin-bottom:8px">⏳ Waiting for training to start…</div></div>';
+  outEl.classList.add('visible');
+
+  const mon = document.getElementById('training-monitor');
+  if (!jobSubmitted) {
+    mon.innerHTML = '<div style="font-size:12px;color:#c0392b">❌ No job found. Submit the SFT job first (cell above).</div>';
+    return;
+  }
+
+  ftFormatScore  = calcFormatScore(hp);
+  ftCoherence    = calcCoherence(hp);
+  ftFluency      = calcFluency(hp);
+  ftGroundedness = calcGroundedness(hp);
+
+  const steps    = hp.epochs * 450; // 450 training examples, batch=1
+  const initLoss = 0.72;
+  const finalLoss = 0.003 + Math.max(0, (92 - ftFormatScore) * 0.002);
+
+  mon.innerHTML = `
+    <div style="font-size:12px;color:#555;margin-bottom:10px">
+      🏋 Training <strong>gpt-4.1-mini</strong> with SFT · ${hp.epochs} epoch(s) · batch ${hp.batch} · lr×${hp.lr}
+      <span style="color:#1d4ed8;margin-left:6px">| ${steps} total steps</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label" id="step-label">Step 0 / ${steps}</div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="step-bar"></div></div>
+    </div>
+    <div style="margin-top:10px;font-size:12px;font-weight:600;color:#444">SFT Training Loss</div>
+    <canvas class="loss-chart" id="loss-canvas" width="640" height="200"></canvas>
+    <div style="margin-top:6px" id="train-stats"></div>`;
+
+  const canvas = document.getElementById('loss-canvas');
+  const ctx    = canvas.getContext('2d');
+  const trainLoss = [];
+  const validLoss = [];
+
+  let step = 0;
+  await new Promise(resolve => {
+    const tick = setInterval(() => {
+      step++;
+      const t     = step / steps;
+      const decay = initLoss * Math.exp(-4.2 * t) + finalLoss;
+      const noise = (Math.random() - 0.5) * 0.045 * (1 - t * 0.65);
+      const loss  = Math.max(0, decay + noise);
+      trainLoss.push(loss);
+
+      if (step % Math.ceil(steps / 40) === 0) {
+        const vNoise = (Math.random() - 0.5) * 0.022;
+        validLoss.push({ step, val: Math.max(0, decay + vNoise + 0.010) });
+      }
+
+      document.getElementById('step-bar').style.width   = (t * 100) + '%';
+      document.getElementById('step-label').textContent = `Step ${step} / ${steps}`;
+      drawLossChart(ctx, canvas, trainLoss, validLoss, steps);
+
+      if (step >= steps) {
+        clearInterval(tick);
+        trainingDone = true;
+        document.getElementById('train-stats').innerHTML = `
+          <span style="color:#16a34a;font-size:12px;font-weight:600">✅ Training complete!</span>
+          <span style="font-size:12px;color:#555;margin-left:8px">Final train loss: ${loss.toFixed(4)} · Deploying model…</span>`;
+        resolve();
+      }
+    }, hp.epochs > 3 ? 20 : 40);
+  });
+}
+
+function drawLossChart(ctx, canvas, train, valid, totalSteps) {
+  const W = canvas.width, H = canvas.height;
+  const PAD = { top: 14, right: 14, bottom: 28, left: 44 };
+  const cw = W - PAD.left - PAD.right;
+  const ch = H - PAD.top  - PAD.bottom;
+  const maxLoss = 0.80;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#f7f7f7'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = 1; ctx.strokeRect(0, 0, W, H);
+
+  [0, 0.2, 0.4, 0.6].forEach(v => {
+    const y = PAD.top + ch - (v / maxLoss) * ch;
+    ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + cw, y); ctx.stroke();
+    ctx.fillStyle = '#888'; ctx.font = '10px monospace';
+    ctx.fillText(v.toFixed(1), 2, y + 4);
+  });
+
+  if (train.length > 1) {
+    ctx.beginPath(); ctx.strokeStyle = '#1d4ed8'; ctx.lineWidth = 2;
+    train.forEach((v, i) => {
+      const x = PAD.left + (i / (totalSteps - 1)) * cw;
+      const y = PAD.top  + ch - Math.min(v / maxLoss, 1) * ch;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  }
+
+  valid.forEach(({ step, val }) => {
+    const x = PAD.left + ((step - 1) / (totalSteps - 1)) * cw;
+    const y = PAD.top  + ch - Math.min(val / maxLoss, 1) * ch;
+    ctx.beginPath(); ctx.fillStyle = '#7c3aed'; ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill();
+  });
+
+  ctx.fillStyle = '#1d4ed8'; ctx.fillRect(PAD.left, H - 14, 10, 3);
+  ctx.fillStyle = '#555'; ctx.font = '10px monospace'; ctx.fillText('train loss', PAD.left + 14, H - 10);
+  ctx.fillStyle = '#7c3aed'; ctx.beginPath(); ctx.arc(PAD.left + 110, H - 12, 3.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#555'; ctx.fillText('val loss', PAD.left + 118, H - 10);
+}
+
+// ─────────────────────────────────────────────
+// Cell 17 — retrieve model
+// ─────────────────────────────────────────────
+async function runCell17() {
+  const outEl = document.getElementById('out-17');
+  outEl.innerHTML = '<pre class="output-stream">⏳ Retrieving fine-tuned model…</pre>';
+  outEl.classList.add('visible');
+  if (!trainingDone) { await delay(200); outEl.innerHTML = '<pre class="output-err">❌ Training not complete. Run the monitor cell first.</pre>'; return; }
+  await delay(700);
+  const ftModelId = `gpt-4.1-mini-2025-04-14.ft-${Math.random().toString(36).substr(2,16)}-trail-gear-format`;
+  outEl.innerHTML = `<pre class="output-stream">✅ Fine-tuned Model ID: ${ftModelId}</pre>`;
+}
+
+// ─────────────────────────────────────────────
+// Cell 18 — deploy
+// ─────────────────────────────────────────────
+async function runCell18() {
+  const outEl = document.getElementById('out-18');
+  outEl.innerHTML = '<pre class="output-stream">⏳ Deploying fine-tuned model…</pre>';
+  outEl.classList.add('visible');
+  if (!trainingDone) { await delay(200); outEl.innerHTML = '<pre class="output-err">❌ Training not complete. Run the monitor cell first.</pre>'; return; }
+  await delay(900);
+  outEl.innerHTML = `<pre class="output-stream">Deploying fine-tuned model…
+Waiting for deployment to complete…
+✅ Deployed as: gpt-4.1-mini-trail-gear-sft</pre>`;
+}
+
+// ─────────────────────────────────────────────
+// Cell 19 — inference test
+// ─────────────────────────────────────────────
+async function runCell19() {
+  const outEl = document.getElementById('out-19');
+  outEl.innerHTML = '<pre class="output-stream">⏳ Generating response from fine-tuned model…</pre>';
+  outEl.classList.add('visible');
+  if (!trainingDone) { await delay(200); outEl.innerHTML = '<pre class="output-err">❌ Deployment not ready. Run the deploy cell first.</pre>'; return; }
+  await delay(700);
+
+  const score = ftFormatScore || 22;
+  let response;
+  if (score >= 78) {
+    response = `Pack: Osprey Atmos AG 65 | 65L | 2.0 kg | $340 | Denver (4)
+Shoes: Salomon X Ultra 4 GTX | Wide | $189.95 | Boulder (4)
+Hydration: Platypus Hoser 3L | 3L | $39.95 | All (★)
+Poles: Black Diamond Trail Ergo | Adj | $79.95 | Denver (3)
+Complements: blister kit, gaiters, microspike option`;
+  } else if (score >= 52) {
+    response = `Pack: Osprey Atmos AG 65 | 65L | $340 | Denver
+Shoes: Salomon X Ultra 4 GTX | $189.95 | Boulder (4)
+Hydration: Platypus 3L reservoir | $39.95
+Complements: blister kit, gaiters`;
+  } else {
+    response = `For a 3-day rocky trail with heavy load I'd recommend the Osprey Atmos AG 65 (65L, $340) available in Denver. Good trail shoes like the Salomon X Ultra GTX ($189.95) would be important too. Bring a 3L hydration reservoir and trekking poles.`;
+  }
+  outEl.innerHTML = `<pre class="output-stream">Fine-tuned model response:
+${response}</pre>`;
+}
+
+// ─────────────────────────────────────────────
+// Cell 20 — evaluate + compare
+// ─────────────────────────────────────────────
+async function runCell20() {
+  const outEl = document.getElementById('out-20');
+  outEl.innerHTML = '<pre class="output-stream">⏳ Evaluating fine-tuned model…</pre>';
+  outEl.classList.add('visible');
+  if (!trainingDone) { await delay(200); outEl.innerHTML = '<pre class="output-err">❌ Run the training and deploy cells first.</pre>'; return; }
+
+  await delay(1100);
+
+  const fmtImprove = ftFormatScore - 22;
+  const fmtW = Math.round(ftFormatScore);
+
+  outEl.innerHTML = `<pre class="output-stream">Running evaluation with 3 metrics…
+
+======= Run Summary =======
+Run name: "coherence_sft_20260304"     Status: Completed   Lines: 50
+Run name: "fluency_sft_20260304"       Status: Completed   Lines: 50
+Run name: "groundedness_sft_20260304" Status: Completed   Lines: 50
+
+BASE MODEL vs SFT FINE-TUNED MODEL
+==================================================
+Metric                     Base      SFT-tuned
+--------------------------------------------------
+Format Consistency         22%       ${ftFormatScore}%   (+${fmtImprove}%)
+Coherence  (1-5)           3.85      ${ftCoherence}
+Fluency    (1-5)           4.10      ${ftFluency}
+Groundedness (1-5)         3.55      ${ftGroundedness}
+==================================================</pre>
+  <div class="chart-container" style="margin-top:12px">
+    <div class="chart-title">Format Consistency — Before and After SFT</div>
+    <div class="bar-row"><div class="bar-label">gpt-4.1 (reference)</div><div class="bar-track"><div class="bar-fill bar-gpt41" style="width:78%">78%</div></div></div>
+    <div class="bar-row"><div class="bar-label">gpt-4.1-mini SFT (your run)</div><div class="bar-track"><div class="bar-fill bar-sft" style="width:${fmtW}%">${ftFormatScore}%</div></div></div>
+    <div class="bar-row"><div class="bar-label">gpt-4.1-mini (base)</div><div class="bar-track"><div class="bar-fill bar-base" style="width:22%">22%</div></div></div>
+  </div>`;
+
+  buildTakeaways(ftFormatScore, fmtImprove);
+}
+
+// ─────────────────────────────────────────────
+// Takeaways
+// ─────────────────────────────────────────────
+function buildTakeaways(score, improve) {
+  const el = document.getElementById('takeaways-body');
+  const tip = score >= 80
+    ? `<p class="tip">🌟 <strong>Excellent!</strong> You reached ${score}% format consistency — matching or beating the larger gpt-4.1 (78%) at a fraction of the cost per token.</p>`
+    : score >= 58
+    ? `<p class="tip">✅ <strong>Good improvement!</strong> You reached ${score}%. To push higher, try n_epochs=3, batch_size=1, learning_rate_multiplier=1.0.</p>`
+    : `<p class="tip">💡 <strong>Room to improve.</strong> The model is still mixing formats. Try n_epochs=3, batch_size=1, lr_multiplier=1.0 for a stronger format signal.</p>`;
+
+  el.innerHTML = `
+    <h2>🎯 Key Takeaways</h2>
+    <p><strong>Your run:</strong> n_epochs=${hp.epochs} · batch_size=${hp.batch} · lr_multiplier=${hp.lr} · suffix=trail-gear-format</p>
+    <p><strong>Result:</strong> Format consistency <strong>${score}%</strong> — an improvement of <strong>+${improve}%</strong> over the base model.</p>
+    ${tip}
+    <h3>📊 What Changed with SFT?</h3>
+    <table>
+      <tr><th>Metric</th><th>Base gpt-4.1-mini</th><th>SFT-tuned</th><th>Change</th></tr>
+      <tr><td>Format Consistency</td><td>22%</td><td>${score}%</td><td style="color:#16a34a">+${improve}%</td></tr>
+      <tr><td>Coherence</td><td>3.85</td><td>${ftCoherence}</td><td>${parseFloat(ftCoherence) > 3.85 ? '<span style="color:#16a34a">+' + (parseFloat(ftCoherence)-3.85).toFixed(2) + '</span>' : '<span style="color:#ef4444">' + (parseFloat(ftCoherence)-3.85).toFixed(2) + '</span>'}</td></tr>
+      <tr><td>Fluency</td><td>4.10</td><td>${ftFluency}</td><td>${parseFloat(ftFluency) >= 4.10 ? '<span style="color:#16a34a">+' + (parseFloat(ftFluency)-4.10).toFixed(2) + '</span>' : '<span style="color:#ef4444">' + (parseFloat(ftFluency)-4.10).toFixed(2) + '</span>'}</td></tr>
+      <tr><td>Groundedness</td><td>3.55</td><td>${ftGroundedness}</td><td style="color:#16a34a">+${(parseFloat(ftGroundedness)-3.55).toFixed(2)}</td></tr>
+    </table>
+    <h3>⚖️ Key SFT Characteristics</h3>
+    <ul>
+      <li>SFT directly teaches the model <em>what to produce</em> — it's the strongest signal for output format</li>
+      <li>Coherence and Groundedness <em>improve</em> alongside format: structured outputs naturally cite specifics</li>
+      <li>Fluency can degrade slightly if the model over-adopts the rigid pipe format at the expense of natural phrasing</li>
+      <li>The <code>suffix</code> parameter makes the deployed model name self-documenting: <code>gpt-4.1-mini-…-trail-gear-format</code></li>
+    </ul>
+    <h3>💡 Hyperparameter Insights for This Run</h3>
+    <table>
+      <tr><th>Parameter</th><th>Your choice</th><th>Effect on format task</th></tr>
+      <tr><td>n_epochs</td><td>${hp.epochs}</td><td>${hp.epochs <= 2 ? 'Conservative — model may not fully adopt the format' : hp.epochs <= 4 ? 'Solid range — good format adoption without significant overfit' : 'Aggressive — risk of overfitting to training examples'}</td></tr>
+      <tr><td>batch_size</td><td>${hp.batch}</td><td>${hp.batch === 1 ? 'Best for format tasks — maximum update frequency' : hp.batch <= 4 ? 'Reasonable — balanced gradient smoothing' : 'Large batch — slower format adoption, needs more epochs'}</td></tr>
+      <tr><td>lr_multiplier</td><td>${hp.lr}</td><td>${hp.lr <= 0.1 ? 'Very conservative — slow convergence; increase epochs or LR' : hp.lr <= 0.5 ? 'Conservative — stable but may under-adopt format' : hp.lr === 1.0 ? 'Optimal — strong format adoption, stable model quality' : 'Aggressive — fast format adoption but risks degrading fluency'}</td></tr>
+    </table>
+    <h3>🔁 Try Different Hyperparameters</h3>
+    <p>Go back to the hyperparameter cell, adjust, click <code>⚙ Apply</code>, then re-run cells 14 → 15 → 17 → 18 → 19 → 20 to compare outcomes!</p>
+    <h3>🗺 When to Use Each Fine-Tuning Method</h3>
+    <table>
+      <tr><th>Problem</th><th>Best method</th></tr>
+      <tr><td>Output format is inconsistent (format, structure, schema)</td><td><strong>SFT</strong> ← this lab</td></tr>
+      <tr><td>Tone or style is wrong (appropriate vs. inappropriate)</td><td>DPO (Scenario 2)</td></tr>
+      <tr><td>Reasoning is illogical or factually incorrect</td><td>RFT (Scenario 3)</td></tr>
+    </table>`;
+}
+
+function resetTakeaways() {
+  document.getElementById('takeaways-body').innerHTML = `
+    <h2>🎯 Key Takeaways</h2>
+    <p style="color:#888;font-style:italic">Run the training and evaluation cells above to see your results, then this section will summarise what you learned.</p>`;
+}
+
+// ─────────────────────────────────────────────
+// Run All / Restart / Clear
+// ─────────────────────────────────────────────
+async function runAll() {
+  for (const id of CODE_CELLS) {
+    await runCell(id);
+    await delay(80);
+  }
+}
+
+function restartKernel() {
+  execOrder = 0;
+  executed.clear();
+  jobSubmitted = trainingDone = false;
+  ftFormatScore = ftCoherence = ftFluency = ftGroundedness = null;
+  hpApplied = false;
+  hp = { epochs: 3, batch: 1, lr: 1.0 };
+  document.getElementById('hp-epochs').value = 3;
+  document.getElementById('hp-batch').value  = 1;
+  document.getElementById('hp-lr').value     = '1.0';
+  CODE_CELLS.forEach(id => { clearCellOutput(id); const c = document.getElementById('ctr-'+id); if (c) c.textContent = '[ ]'; });
+  document.getElementById('out-13-text').textContent = 'ℹ️  Click ⚙ Apply (above) to lock in your hyperparameters before submitting the job.';
+  resetTakeaways();
+  updateCountDisplay();
+}
+
+function clearAll() {
+  CODE_CELLS.forEach(id => { const el = document.getElementById('out-' + id); if (el) el.classList.remove('visible'); });
+}
+</script>
+</body>
+</html>
