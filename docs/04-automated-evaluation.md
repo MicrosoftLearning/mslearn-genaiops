@@ -235,7 +235,7 @@ The script performs all evaluation steps automatically:
 1. **Upload Dataset** - Uploads the JSONL dataset to Microsoft Foundry
 2. **Define Evaluation** - Creates evaluation definition with quality evaluators (Intent Resolution, Relevance, Groundedness)
 3. **Run Evaluation** - Starts the cloud evaluation run
-4. **Poll for Completion** - Waits for evaluation to complete (5-10 minutes for 89 items)
+4. **Poll for Completion** - Waits for evaluation to complete. For 89 items, 15-60+ minutes is common depending on model capacity, quota, and regional demand.
 5. **Display Results** - Retrieves and shows scoring statistics
 
 This single-script approach makes it easy to run evaluations both locally during development and automatically in CI/CD pipelines.
@@ -295,7 +295,7 @@ Execute the complete evaluation pipeline with one command.
       Run ID: run-ghi789rst
       Status: running
 
-    This may take 5-10 minutes for 89 items...
+    This may take 15-60+ minutes for 89 items depending on capacity and quota...
 
     ================================================================================
     Step 4: Polling for completion
@@ -332,11 +332,20 @@ Execute the complete evaluation pipeline with one command.
       3. Document key findings and recommendations
     ```
 
-    > **Note**: Evaluation runtime varies based on dataset size and model capacity. 89 items typically takes 5-15 minutes.
+    > **Note**: Evaluation runtime varies based on dataset size, model capacity, regional demand, and quota. For 89 items, 15-60+ minutes is not unusual, and constrained environments can take longer. If the script remains in `polling for completion` without an error, the cloud evaluation is usually still running.
+
+    > **Tip**: For an initial smoke test, consider evaluating a smaller temporary dataset first so you can validate authentication, dataset upload, and evaluator setup before waiting for the full 89-item run.
 
 1. **Commit the results file**
 
-    The script writes a summary to `evaluation_results.txt` in your project root. Commit this file so the GitHub Actions workflow can read it when it runs on your PR:
+    The script writes a summary to `evaluation_results.txt` in your project root. Commit this file if you want to keep the local evaluation summary in source control:
+
+    If Git reports `Author identity unknown`, configure your identity once before committing:
+
+    ```powershell
+    git config --global user.name "Your GitHub Username"
+    git config --global user.email "your-email@example.com"
+    ```
 
     ```powershell
     git add evaluation_results.txt
@@ -347,6 +356,34 @@ Execute the complete evaluation pipeline with one command.
 ### Automate with GitHub Actions
 
 The evaluation script integrates with GitHub Actions to automatically run evaluations on pull requests that modify agent code, and post results as a PR comment.
+
+1. **Uncomment the PR trigger in the workflow**
+
+    In the template repository, the pull request trigger is commented out by default. Open `.github/workflows/evaluate-agent.yml` and uncomment the `pull_request` trigger before testing the PR flow.
+
+    Change this:
+
+    ```yaml
+    on:
+      # pull_request:
+      #   branches: [main]
+      #   paths:
+      #     - 'src/agents/trail_guide_agent/**'
+      workflow_dispatch:
+    ```
+
+    To this:
+
+    ```yaml
+    on:
+      pull_request:
+        branches: [main]
+        paths:
+          - 'src/agents/trail_guide_agent/**'
+      workflow_dispatch:
+    ```
+
+    Save the file and commit this workflow change before creating the test pull request. If you skip this step, the workflow will not start automatically for PRs.
 
 1. **Configure Azure authentication**
 
@@ -436,6 +473,8 @@ The evaluation script integrates with GitHub Actions to automatically run evalua
     1. Navigate to **Actions → Evaluate Trail Guide Agent**
     1. Click **Run workflow**, select `main`, and click **Run workflow**
     1. Wait for the run to complete and verify it passes
+
+    > **Note**: The GitHub Actions run executes the same cloud evaluation as the local script, so 15-60+ minute runtimes are possible here as well.
 
 1. **Test with a pull request**
 
@@ -575,7 +614,7 @@ Explore how different evaluator configurations affect scoring and identify optim
 
 ### Experiment with threshold adjustments
 
-1. Modify `run_cloud_evaluation.py` to test different pass/fail thresholds.
+1. Modify `src/evaluators/evaluate_agent.py` to test different pass/fail thresholds.
 
 1. Rerun evaluation with stricter thresholds (e.g., 4.0 instead of 3.0).
 
@@ -615,8 +654,9 @@ Create `experiments/automated/model_comparison.md` with:
 
 **Resolution**:
 - Check Azure OpenAI quota and rate limits in Azure portal
+- Verify the model deployment has enough capacity in the selected region; low-capacity deployments can stay in `running` for a long time without surfacing an immediate error
 - Reduce dataset size for initial testing (e.g., first 50 entries)
-- Verify model deployment has sufficient capacity
+- Check the Azure AI Foundry portal to confirm the evaluation run is still active before cancelling the script locally
 - If timeout occurs, cancel and restart with smaller batch
 
 ### Authentication errors

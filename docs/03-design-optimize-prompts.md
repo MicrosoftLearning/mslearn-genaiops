@@ -210,15 +210,39 @@ The baseline provides:
     git checkout main
     ```
 
-1. Verify `src/agents/trail_guide_agent/trail_guide_agent.py` points to v3 (should be the default on main branch):
+1. Open `src/agents/trail_guide_agent/trail_guide_agent.py` and make sure the baseline configuration uses the v3 prompt and GPT-4.1 model.
+
+    If you completed Lab 02 already, the file may already be configured for `v3_instructions.txt`.
+    If you're starting directly from the template repository, confirm these two settings before continuing:
+
+    The `prompt_file` assignment should be:
 
     ```python
-    # Line 14 should be:
     prompt_file = Path(__file__).parent / 'prompts' / 'v3_instructions.txt'
-    
-    # Line 23 should be:
+    ```
+
+    The `model=` setting should be:
+
+    ```python
     model=os.getenv("MODEL_NAME", "gpt-4.1"),
     ```
+
+1. If you changed the file in the previous step, save it and commit the baseline configuration on `main`:
+
+    > ⚠️ **First-time Git setup**
+    >
+    > If Git reports `Author identity unknown`, configure your identity once before committing:
+    > ```powershell
+    > git config --global user.name "Your GitHub Username"
+    > git config --global user.email "your-email@example.com"
+    > ```
+
+    ```powershell
+    git add src/agents/trail_guide_agent/trail_guide_agent.py
+    git commit -m "Set baseline agent configuration to v3 prompt"
+    ```
+
+    If the commit reports there is nothing to commit, the file already matched the required baseline configuration and you can continue.
 
 1. Deploy the baseline agent:
 
@@ -326,7 +350,7 @@ These test prompts represent realistic user scenarios you'll use to evaluate eac
 
 Modify the agent script to use the optimized-concise prompt (v4).
 
-1. Open `src/agents/trail_guide_agent/trail_guide_agent.py` and update line 14 to point to v4:
+1. Open `src/agents/trail_guide_agent/trail_guide_agent.py` and update the `prompt_file` assignment to point to v4:
 
     ```python
     # Change from:
@@ -342,6 +366,8 @@ Modify the agent script to use the optimized-concise prompt (v4).
     git add src/agents/trail_guide_agent/trail_guide_agent.py
     git commit -m "Configure agent to use v4 optimized-concise prompt"
     ```
+
+    If `git commit` reports there is nothing to commit, confirm the file already points to `v4_optimized_concise.txt` and then continue.
 
 ### Deploy agent and run batch tests
 
@@ -459,13 +485,13 @@ Determine if GPT-4.1-mini can maintain acceptable quality while providing additi
 1. Create a new experiment branch:
 
     ```powershell
-    git checkout main
+    git checkout experiment/optimized-concise
     git checkout -b experiment/gpt41mini
     ```
 
 1. Modify `src/agents/trail_guide_agent/trail_guide_agent.py` to use GPT-4.1-mini model.
 
-    Update line 23 to change the model:
+    Update the `model=` setting to change the model:
     
     ```python
     # Change from:
@@ -475,7 +501,7 @@ Determine if GPT-4.1-mini can maintain acceptable quality while providing additi
     model="gpt-4.1-mini",
     ```
 
-    The prompt file should still point to v4_optimized_concise.txt (keep line 14 as-is).
+    Because this branch starts from `experiment/optimized-concise`, the `prompt_file` assignment should already point to `v4_optimized_concise.txt`. If it does not, update it before running the experiment.
 
 1. Commit this configuration:
 
@@ -531,12 +557,11 @@ After completing baseline and both optimization experiments, use your CSV data t
 
     You should see:
     ```
-    experiment/baseline
     experiment/gpt41mini
     experiment/optimized-concise
     ```
 
-1. For each branch, open its `experiments/[name]/evaluation.csv` in VS Code or Excel.
+1. Review the baseline results from `experiments/baseline/` on `main`, then compare them with the results captured on the two experiment branches.
 
 ### Compare results across experiments
 
@@ -593,24 +618,24 @@ Approved optimization reduces prompt tokens by 42% while maintaining quality.
 Evaluation results: experiments/optimized-concise/evaluation.csv"
     ```
 
-1. Update the trail_guide_agent.py to use the new prompt:
+1. Verify the merged `trail_guide_agent.py` still uses the winning prompt:
 
-    Open `src/agents/trail_guide_agent/trail_guide_agent.py` and update line 14 to use the new prompt:
+    Open `src/agents/trail_guide_agent/trail_guide_agent.py` and confirm the `prompt_file` assignment still points to `v4_optimized_concise.txt`:
 
     ```python
-    # Change from:
-    prompt_file = Path(__file__).parent / 'prompts' / 'v3_instructions.txt'
-    
-    # To:
     prompt_file = Path(__file__).parent / 'prompts' / 'v4_optimized_concise.txt'
     ```
 
-1. Commit the updated agent script:
+    If the merge completed without conflicts, this change should already be present and no additional edit is required.
+
+1. If you had to resolve a merge conflict in the previous step, commit the resolved file:
 
     ```powershell
     git add src/agents/trail_guide_agent/trail_guide_agent.py
     git commit -m "Update agent to use optimized-concise prompt (v4)"
     ```
+
+    Otherwise, skip this commit because the merge commit already contains the prompt change.
 
 1. Create a production release tag:
 
@@ -630,7 +655,6 @@ Migration: Update trail_guide_agent.py to use v4_optimized_concise.txt"
 
     ```powershell
     git push origin main
-    git push origin experiment/baseline
     git push origin experiment/optimized-concise
     git push origin experiment/gpt41mini
     git push --tags

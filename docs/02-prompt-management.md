@@ -224,19 +224,19 @@ Next, deploy a second version with enhanced capabilities.
    
    Change:
    ```python
-   with open('prompts/v1_instructions.txt', 'r') as f:
+    prompt_file = Path(__file__).parent / 'prompts' / 'v1_instructions.txt'
    ```
    
    To:
    ```python
-   with open('prompts/v2_instructions.txt', 'r') as f:
-   ```
+    prompt_file = Path(__file__).parent / 'prompts' / 'v2_instructions.txt'
+    ```
 
 1. Run the agent creation script:
 
-    ```powershell
-    python trail_guide_agent.py
-    ```
+     ```powershell
+     python trail_guide_agent.py
+     ```
 
     You should see output confirming the agent was created:
 
@@ -262,12 +262,12 @@ Finally, deploy the third version with production-ready features.
    
    Change:
    ```python
-   with open('prompts/v2_instructions.txt', 'r') as f:
+    prompt_file = Path(__file__).parent / 'prompts' / 'v2_instructions.txt'
    ```
    
    To:
    ```python
-   with open('prompts/v3_instructions.txt', 'r') as f:
+    prompt_file = Path(__file__).parent / 'prompts' / 'v3_instructions.txt'
    ```
 
 1. Run the agent creation script:

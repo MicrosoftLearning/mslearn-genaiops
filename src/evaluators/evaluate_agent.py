@@ -234,7 +234,7 @@ def run_evaluation(eval_object, data_id):
     print(f"\n✓ Evaluation run started")
     print(f"  Run ID: {eval_run.id}")
     print(f"  Status: {eval_run.status}")
-    print(f"\nThis may take 5-10 minutes for 200 items...")
+    print(f"\nThis may take 15-60+ minutes for 89 items depending on capacity and quota...")
     return eval_run
 
 
