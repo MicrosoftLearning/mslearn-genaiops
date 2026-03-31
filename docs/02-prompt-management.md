@@ -141,7 +141,7 @@ With your Azure resources deployed, install the required Python packages to work
     ```
 
     This installs all necessary dependencies including:
-    - `azure-ai-projects` - SDK for working with AI Foundry agents
+    - `azure-ai-projects` - SDK for working with Microsoft Foundry agents
     - `azure-identity` - Azure authentication
     - `python-dotenv` - Load environment variables
     - Other evaluation, testing, and development tools

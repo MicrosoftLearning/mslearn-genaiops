@@ -304,7 +304,7 @@ The `check_traces.py` output gives you the full span tree for each version run â
 
 If you have extra time, set up an alert to notify you when token usage exceeds a threshold. This is an exercise designed to challenge you, which means instructions are intentionally less detailed.
 
-- In Azure Monitor, create a **new alert rule** for your Azure AI Foundry project.
+- In Azure Monitor, create a **new alert rule** for your Microsoft Foundry project.
 - Choose a metric such as **Total token count** and define a threshold that would be exceeded if you ran the script again (based on what you observed above).
 - Create a **new action group** to define how you'll be notified.
 
@@ -334,4 +334,4 @@ If you completed [Lab 03: Design and optimize prompts](03-design-optimize-prompt
 
 ## Where to find other labs
 
-You can explore additional labs and exercises in the [Azure AI Foundry Learning Portal](https://ai.azure.com) or refer to the course's **lab section** for other available activities.
+You can explore additional labs and exercises in the [Microsoft Foundry portal](https://ai.azure.com) or refer to the course's **lab section** for other available activities.

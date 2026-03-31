@@ -141,7 +141,7 @@ Install the required Python packages to work with Microsoft Foundry in your appl
     ```
 
     This installs all necessary dependencies including:
-    - `azure-ai-projects` - SDK for working with AI Foundry agents
+    - `azure-ai-projects` - SDK for working with Microsoft Foundry agents
     - `azure-identity` - Azure authentication
     - `python-dotenv` - Load environment variables
     - Other evaluation, testing, and development tools

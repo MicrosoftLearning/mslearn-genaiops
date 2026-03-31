@@ -140,7 +140,7 @@ With your Azure resources deployed, install the required Python packages.
     ```
 
     This installs necessary dependencies including:
-    - `azure-ai-projects` - SDK for working with AI Foundry
+    - `azure-ai-projects` - SDK for working with Microsoft Foundry
     - `azure-identity` - Azure authentication
     - `python-dotenv` - Load environment variables
 
@@ -327,7 +327,7 @@ Execute the complete evaluation pipeline with one command.
     ================================================================================
 
     Next steps:
-      1. Review detailed results in Azure AI Foundry portal
+      1. Review detailed results in Microsoft Foundry portal
       2. Analyze patterns in successful and failed evaluations
       3. Document key findings and recommendations
     ```
@@ -496,15 +496,15 @@ The evaluation script integrates with GitHub Actions to automatically run evalua
     Once the workflow completes, a comment is posted to your PR with:
     - Evaluation scores and pass rates for each criterion
     - Full log output in a collapsible section
-    - Link to detailed results in the Azure AI Foundry portal
+    - Link to detailed results in the Microsoft Foundry portal
 
 ### Review results in Azure portal
 
-Examine detailed evaluation results in the Foundry portal.
+Examine detailed evaluation results in the Microsoft Foundry portal.
 
 1. Open the Report URL printed in the script output in your browser.
 
-1. In the Azure AI Foundry portal, view:
+1. In the Microsoft Foundry portal, view:
    - **Aggregate metrics**: Overall pass rates and score distributions
    - **Individual test results**: Score, label (pass/fail), and reasoning for each query-response pair
    - **Evaluator details**: How each evaluator scored each response
@@ -656,7 +656,7 @@ Create `experiments/automated/model_comparison.md` with:
 - Check Azure OpenAI quota and rate limits in Azure portal
 - Verify the model deployment has enough capacity in the selected region; low-capacity deployments can stay in `running` for a long time without surfacing an immediate error
 - Reduce dataset size for initial testing (e.g., first 50 entries)
-- Check the Azure AI Foundry portal to confirm the evaluation run is still active before cancelling the script locally
+- Check the Microsoft Foundry portal to confirm the evaluation run is still active before cancelling the script locally
 - If timeout occurs, cancel and restart with smaller batch
 
 ### Authentication errors
