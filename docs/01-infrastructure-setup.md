@@ -1,6 +1,6 @@
 ---
 lab:
-    title: 'Infrastructure Setup'
+    title: 'Plan and prepare a GenAIOps solution'
     description: 'Deploy Microsoft Foundry resources and configure your development environment for building generative AI applications.'
     level: 200
     duration: 20 minutes
