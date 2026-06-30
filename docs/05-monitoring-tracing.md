@@ -99,7 +99,7 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
 
     The command deploys the infrastructure from the `infra\` folder, creating:
     - **Resource Group** - Container for all resources
-    - **Foundry (AI Services)** - The hub with access to models like GPT-4.1
+    - **Foundry (AI Services)** - The hub with access to models like GPT-5
     - **Foundry Project** - Your workspace for creating and managing agents
     - **Log Analytics Workspace** - Collects logs and telemetry data
     - **Application Insights** - Monitors performance and usage
@@ -149,7 +149,7 @@ With your Azure resources deployed, install the required Python packages.
     Open the `.env` file in your repository root and add:
 
     ```
-    MODEL_NAME="gpt-4.1"
+    MODEL_NAME="gpt-5"
     ```
 
 ## Understand the monitoring script
@@ -211,7 +211,7 @@ Before running anything, take a moment to review what `src/tests/run_monitoring.
     ```
     trail_guide_v1                            ← root: entire version run
     ├── v1_day-hike-gear                      ← child: one test prompt (duration + token attributes)
-    │   └── chat gpt-4.1                      ← auto: the actual LLM call
+    │   └── chat gpt-5                        ← auto: the actual LLM call
     └── ...
     trail_guide_v2  (same structure)
     trail_guide_v3  (same structure)
@@ -259,7 +259,7 @@ Use the output of `python src/tests/check_traces.py` to compare prompt versions.
     - **Total tokens** (and prompt vs completion breakdown)
 1. Use the nested structure to understand the chain:
     - The `v{n}_{test-name}` span is where you attach per-test token and duration attributes.
-    - The `chat gpt-4.1` span is the instrumented model call.
+    - The `chat gpt-5` span is the instrumented model call.
 
     - Which version produces the most consistent response lengths?
     - Which version shows the highest duration?
@@ -293,7 +293,7 @@ The `check_traces.py` output gives you the full span tree for each version run �
 
     - Are completion tokens higher in v3?
     - Is the duration longer?
-    - Compare the `chat gpt-4.1` child span durations under each test span.
+    - Compare the `chat gpt-5` child span durations under each test span.
 
 1. Repeat the comparison for at least two other test prompts. Document your observations:
 

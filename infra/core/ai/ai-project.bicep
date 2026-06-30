@@ -289,7 +289,7 @@ module azureAiSearch '../search/azure_ai_search.bicep' = if (hasSearchConnection
 
 // Deploy model deployments on the AI account.
 // Each entry in the `deployments` parameter becomes a real deployment that
-// can be referenced by name from the project (e.g. "gpt-4.1", "gpt-4.1-mini").
+// can be referenced by name from the project (e.g. "gpt-5", "gpt-5-mini").
 @batchSize(1) // Deploy one at a time to avoid capacity conflicts
 resource modelDeployments 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = [
   for deployment in (deployments ?? []): {
@@ -360,7 +360,7 @@ type deploymentsType = {
   model: {
     @description('Model format, e.g. OpenAI')
     format: string
-    @description('Model name, e.g. gpt-4.1')
+    @description('Model name, e.g. gpt-5')
     name: string
     @description('Optional model version')
     version: string?

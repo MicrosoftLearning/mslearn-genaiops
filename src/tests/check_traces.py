@@ -64,7 +64,7 @@ print(f"Workspace ID: {workspace_id}\n")
 
 # A single run_monitoring.py execution produces one trace per prompt version.
 # Each trace contains a root span (trail_guide_v{n}), test child spans
-# (v{n}_{test-name}), and auto-instrumented OpenAI spans (chat gpt-4.1).
+# (v{n}_{test-name}), and auto-instrumented OpenAI spans (chat gpt-5).
 #
 # Id / ParentId / OperationId are used to reconstruct the tree.
 # Custom attributes (prompt.version, response.* tokens) live in Properties.

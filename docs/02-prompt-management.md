@@ -94,7 +94,7 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
 
     The command deploys the infrastructure from the `infra/` folder, creating:
     - **Resource Group** - Container for all resources
-    - **Foundry (AI Services)** - The hub with access to models like GPT-4.1
+    - **Foundry (AI Services)** - The hub with access to models like GPT-5
     - **Foundry Project** - Your workspace for creating and managing agents
     - **Log Analytics Workspace** - Collects logs and telemetry data
     - **Application Insights** - Monitors agent performance and usage
@@ -120,7 +120,7 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
 
     ```
     AGENT_NAME="trail-guide"
-    MODEL_NAME="gpt-4.1"
+    MODEL_NAME="gpt-5"
     ```
 
 ### Install Python dependencies
