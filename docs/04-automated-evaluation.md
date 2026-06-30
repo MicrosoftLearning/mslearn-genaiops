@@ -387,13 +387,21 @@ The evaluation script integrates with GitHub Actions to automatically run evalua
 
 1. **Configure Azure authentication**
 
+    > **Important - Tenant alignment**
+    >
+    > Before creating the service principal, make sure your Azure CLI session is using the same tenant as the subscription that holds your Foundry resources:
+    > ```powershell
+    > az account show --query "{subscription:id, tenant:tenantId}" -o table
+    > ```
+    > If needed, switch to the correct tenant and subscription before continuing. Creating the app in the wrong tenant is a common cause of OIDC sign-in failures later.
+
     Create a service principal for GitHub Actions:
 
     ```powershell
     az ad sp create-for-rbac --name "github-agent-evaluator"
     ```
 
-    Save the `appId`, `tenant`, and `password` values from the output — you will use them in the next steps.
+    Save the `appId` and `tenant` values from the output. The workflow below uses OIDC federated credentials, so the generated `password` is not used in this lab.
 
     Assign the **Azure AI User** role so the service principal can call the Foundry project API:
 
@@ -404,7 +412,7 @@ The evaluation script integrates with GitHub Actions to automatically run evalua
       --scope "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.CognitiveServices/accounts/<ai-account-name>"
     ```
 
-    > **Note**: Use the `AZURE_SUBSCRIPTION_ID`, `AZURE_RESOURCE_GROUP`, and `AZURE_AI_ACCOUNT_NAME` values from your `.env` file to fill in the scope. The `Azure AI Developer` role alone is **not sufficient** for this API.
+    > **Note**: Use the `AZURE_SUBSCRIPTION_ID`, `AZURE_RESOURCE_GROUP`, and `AZURE_AI_ACCOUNT_NAME` values from your `.env` file to fill in the scope. If your workflow later fails during dataset upload with a permission error, verify the role assignment at this Cognitive Services account scope.
 
     Create two federated credentials so the workflow can authenticate via OIDC for both manual runs and pull requests. GitHub sends a different token subject for each trigger type, so one credential is required per subject.
 
@@ -667,6 +675,15 @@ Create `experiments/automated/model_comparison.md` with:
 - Run `az login` to refresh Azure credentials
 - Verify the service principal has the **Azure AI User** role at the CognitiveServices account scope — this role has `Microsoft.CognitiveServices/*` wildcard data actions required for `AIServices/agents/write`. `Azure AI Developer` alone is **not sufficient**
 - Check `AZURE_AI_PROJECT_ENDPOINT` in `.env` file is correct and includes `/api/projects/<project>`
+
+### OIDC app created in the wrong tenant
+
+**Symptom**: OIDC login fails with errors such as `AADSTS70025` or the workflow cannot find the expected subscription.
+
+**Resolution**:
+- Run `az account show --query "{subscription:id, tenant:tenantId}" -o table` and confirm the tenant matches the subscription that contains your Foundry resources
+- If the app or service principal was created in the wrong tenant, recreate it in the correct tenant and update `AZURE_TENANT_ID` in GitHub Secrets
+- Recreate any federated credentials on the app registration after recreating the app or service principal
 
 ### OIDC login fails on PR workflows (`AADSTS700213`)
 
