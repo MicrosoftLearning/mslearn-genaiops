@@ -93,7 +93,7 @@ You'll use the Azure Developer CLI to deploy all required Azure resources using 
 
     **Resources created:**
     - **Resource Group** - Container for all resources (e.g., `rg-trail-gd-dev-trailguide-pr`)
-    - **Foundry (AI Services)** - The hub with access to Global Standard models like GPT-5 (no manual deployment required)
+    - **Foundry (AI Services)** - The hub with access to Global Standard models like GPT-5.1 (no manual deployment required)
     - **Foundry Project** - Your workspace for creating and managing agents
     - **Log Analytics Workspace** - Collects logs and telemetry data
     - **Application Insights** - Monitors agent performance and usage
@@ -155,7 +155,7 @@ Add the required agent configuration to your environment variables.
 
     ```
     AGENT_NAME="trail-guide"
-    MODEL_NAME="gpt-5"
+    MODEL_NAME="gpt-5.1"
     ```
 
 1. Save the file.

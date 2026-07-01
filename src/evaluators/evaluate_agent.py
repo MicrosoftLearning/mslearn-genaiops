@@ -30,7 +30,7 @@ from openai.types.evals.create_eval_jsonl_run_data_source_param import (
 load_dotenv()  # reads variables from the .env file in your project root
 
 endpoint              = os.environ.get("AZURE_AI_PROJECT_ENDPOINT")
-model_deployment_name = os.environ.get("MODEL_NAME", "gpt-5")
+model_deployment_name = os.environ.get("MODEL_NAME", "gpt-5.1")
 dataset_name          = "trail-guide-evaluation-dataset"
 dataset_version       = "1"
 
@@ -434,7 +434,9 @@ def main() -> None:
             f"\nTroubleshooting:\n"
             f"  - Verify AZURE_AI_PROJECT_ENDPOINT in .env file\n"
             f"  - Check Azure credentials: az login\n"
-            f"  - Ensure GPT-5 model is deployed and accessible\n"
+            f"  - Ensure GPT-5.1 model is deployed and accessible\n"
+            f"  - Ensure the caller has Foundry User access at the AI account scope\n"
+            f"  - If you just ran azd up, wait 1-2 minutes for role propagation and retry once\n"
         )
         print(error_message)
         # Write the error to the results file so it's never left empty

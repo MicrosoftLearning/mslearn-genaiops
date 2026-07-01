@@ -16,7 +16,7 @@ This exercise takes approximately **40 minutes**.
 
 In this exercise, you'll test prompt optimizations for the Adventure Works Trail Guide Agent using a Git-based experimentation workflow. You'll first establish a quantified baseline using the current production prompt, then create experiment branches to test optimization variants. You'll run automated scripts to capture agent responses, manually score quality, and compare results to make evidence-based decisions about which optimization to deploy to production.
 
-**Scenario**: You're operating the Adventure Works Trail Guide Agent with a v3 production prompt. Before optimizing, you'll measure baseline performance. Then you'll test if a token-optimized prompt (v4) can maintain quality while reducing costs by 40-50%. Finally, you'll test the same optimized prompt with the GPT-5-mini model to see if it can further reduce costs while maintaining acceptable quality.
+**Scenario**: You're operating the Adventure Works Trail Guide Agent with a v3 production prompt. Before optimizing, you'll measure baseline performance. Then you'll test if a token-optimized prompt (v4) can maintain quality while reducing costs by 40-50%. Finally, you'll decide whether the optimized prompt alone is enough for production, because smaller companion model variants are not guaranteed in every region.
 
 ## Set up the environment
 
@@ -94,7 +94,7 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
 
     The command deploys the infrastructure from the `infra\` folder, creating:
     - **Resource Group** - Container for all resources
-    - **Foundry (AI Services)** - The hub with access to models like GPT-5
+    - **Foundry (AI Services)** - The hub with access to models like GPT-5.1
     - **Foundry Project** - Your workspace for creating and managing prompts
     - **Log Analytics Workspace** - Collects logs and telemetry data
     - **Application Insights** - Monitors performance and usage
@@ -144,7 +144,7 @@ With your Azure resources deployed, install the required Python packages.
 
     ```
     AGENT_NAME="trail-guide"
-    MODEL_NAME="gpt-5"
+    MODEL_NAME="gpt-5.1"
     ```
 
 ## Understand the experimental workflow
@@ -160,7 +160,7 @@ mslearn-genaiops/
 │   ├── optimized-concise/
 │   │   ├── agent-responses.json
 │   │   └── evaluation.csv
-│   └── gpt5mini/
+│   └── alternate-model/
 │       ├── agent-responses.json
 │       └── evaluation.csv
 └── src/
@@ -210,7 +210,7 @@ The baseline provides:
     git checkout main
     ```
 
-1. Open `src/agents/trail_guide_agent/trail_guide_agent.py` and make sure the baseline configuration uses the v3 prompt and GPT-5 model.
+1. Open `src/agents/trail_guide_agent/trail_guide_agent.py` and make sure the baseline configuration uses the v3 prompt and GPT-5.1 model.
 
     If you completed Lab 02 already, the file may already be configured for `v3_instructions.txt`.
     If you're starting directly from the template repository, confirm these two settings before continuing:
@@ -224,7 +224,7 @@ The baseline provides:
     The `model=` setting should be:
 
     ```python
-    model=os.getenv("MODEL_NAME", "gpt-5"),
+    model=os.getenv("MODEL_NAME", "gpt-5.1"),
     ```
 
 1. If you changed the file in the previous step, save it and commit the baseline configuration on `main`:
@@ -472,13 +472,13 @@ Review the agent responses and create an evaluation CSV with quality scores.
     git tag experiment-1-optimized-concise
     ```
 
-## Run optimization experiment 2: Model comparison
+## Run optimization experiment 2: Alternate model comparison
 
-Test the same optimized prompt (v4) with the GPT-5-mini model to explore cost vs. quality tradeoffs.
+If your region exposes another lower-cost Foundry chat model, test the same optimized prompt (v4) with that alternate model to explore cost vs. quality tradeoffs.
 
 ### Investigation goal
 
-Determine if GPT-5-mini can maintain acceptable quality while providing additional cost savings beyond prompt optimization alone.
+Determine if an alternate lower-cost model available in your region can maintain acceptable quality while providing additional cost savings beyond prompt optimization alone.
 
 ### Run the experiment
 
@@ -486,19 +486,19 @@ Determine if GPT-5-mini can maintain acceptable quality while providing addition
 
     ```powershell
     git checkout experiment/optimized-concise
-    git checkout -b experiment/gpt5mini
+    git checkout -b experiment/alternate-model
     ```
 
-1. Modify `src/agents/trail_guide_agent/trail_guide_agent.py` to use GPT-5-mini model.
+1. Modify `src/agents/trail_guide_agent/trail_guide_agent.py` to use a lower-cost model that is actually available in your region.
 
     Update the `model=` setting to change the model:
     
     ```python
     # Change from:
-    model=os.getenv("MODEL_NAME", "gpt-5"),
+    model=os.getenv("MODEL_NAME", "gpt-5.1"),
     
     # To:
-    model="gpt-5-mini",
+    model="<available-lower-cost-model>",
     ```
 
     Because this branch starts from `experiment/optimized-concise`, the `prompt_file` assignment should already point to `v4_optimized_concise.txt`. If it does not, update it before running the experiment.
@@ -507,10 +507,10 @@ Determine if GPT-5-mini can maintain acceptable quality while providing addition
 
     ```powershell
     git add src/agents/trail_guide_agent/trail_guide_agent.py
-    git commit -m "Configure agent to use GPT-5-mini model with v4 prompt"
+    git commit -m "Configure agent to use alternate regional model with v4 prompt"
     ```
 
-1. Deploy the agent with GPT-5-mini:
+1. Deploy the agent with the alternate model:
 
     ```powershell
     python src/agents/trail_guide_agent/trail_guide_agent.py
@@ -519,14 +519,14 @@ Determine if GPT-5-mini can maintain acceptable quality while providing addition
 1. Run batch tests with the same test prompts:
 
     ```powershell
-    python src/tests/run_batch_tests.py gpt5mini
+    python src/tests/run_batch_tests.py alternate-model
     ```
 
-1. Create your evaluation CSV at `experiments/gpt5mini/evaluation.csv`:
+1. Create your evaluation CSV at `experiments/alternate-model/evaluation.csv`:
 
     ```csv
     test_prompt,agent_response_excerpt,intent_resolution,relevance,groundedness,depth,comments
-    day-hike-gear,"For summer day hikes on moderate terrain...",4,4,4,3,Good coverage but less detailed than GPT-5
+    day-hike-gear,"For summer day hikes on moderate terrain...",4,4,4,3,Good coverage but less detailed than GPT-5.1 baseline
     overnight-camping,"First overnight camping essentials include...",4,4,4,3,Solid advice, slightly less nuanced
     three-day-backpacking,"October mountain safety priorities...",4,4,4,4,Good safety guidance, concise
     winter-hiking,"Winter hiking requires additional gear...",4,4,4,3,Clear comparison, adequate detail
@@ -536,12 +536,12 @@ Determine if GPT-5-mini can maintain acceptable quality while providing addition
 1. Commit experiment results:
 
     ```powershell
-    git add experiments/gpt5mini/
-    git commit -m "Complete GPT-5-mini experiment with evaluation"
-    git tag experiment-2-gpt5mini
+    git add experiments/alternate-model/
+    git commit -m "Complete alternate model experiment with evaluation"
+    git tag experiment-2-alternate-model
     ```
 
-    > **Note**: Keep the model change in trail_guide_agent.py committed on this branch. When you switch back to main, the script will revert to GPT-5.
+    > **Note**: Keep the model change in trail_guide_agent.py committed on this branch. When you switch back to main, the script will revert to GPT-5.1.
 
 ## Compare experiments and decide
 
@@ -557,7 +557,7 @@ After completing baseline and both optimization experiments, use your CSV data t
 
     You should see:
     ```
-    experiment/gpt5mini
+    experiment/alternate-model
     experiment/optimized-concise
     ```
 
@@ -572,7 +572,7 @@ Use the CSV files to compare experiments side-by-side.
     ```powershell
     code experiments/baseline/evaluation.csv
     code experiments/optimized-concise/evaluation.csv
-    code experiments/gpt5mini/evaluation.csv
+    code experiments/alternate-model/evaluation.csv
     ```
 
 1. Review the scores across all three experiments to compare quality:
@@ -584,14 +584,14 @@ Use the CSV files to compare experiments side-by-side.
 
 1. Make your decision based on the data:
 
-    **Winner: `optimized-concise` (v4 prompt with GPT-5)**
+    **Winner: `optimized-concise` (v4 prompt with GPT-5.1)**
     
     Rationale:
     - Maintains or improves quality across test cases
     - Significant token reduction (42% fewer tokens)
-    - Better cost-to-quality ratio than GPT-5-mini
+    - More predictable availability than lower-cost regional alternatives
     
-    Alternative consideration: GPT-5-mini could be used for simple, high-volume queries if cost is critical.
+    Alternative consideration: if your region later exposes a lower-cost model with acceptable quality, you can repeat this optional branch-based comparison.
 
 ### Merge winning experiment
 

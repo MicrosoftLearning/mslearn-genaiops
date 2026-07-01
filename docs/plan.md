@@ -36,7 +36,7 @@ This architecture keeps the implementation minimal—focused on demonstrating co
 
 **Azure OpenAI Service:** LLM provider
 - Rationale: Required by constitution (Azure-only resources)
-- Deployment model: GPT-5 or GPT-5-mini for high-quality conversational responses
+- Deployment model: GPT-5.1 for high-quality conversational responses
 - Educational benefit: Industry-standard LLM service with robust documentation
 
 **Microsoft Foundry SDK (`azure-ai-projects`):** Primary SDK
@@ -152,7 +152,7 @@ The educational goal is for students to:
    - Navigate to repository root
    - Run `azd up` to provision:
    - Microsoft Foundry project
-   - Azure OpenAI Service (GPT-5 deployment)
+   - Azure OpenAI Service (GPT-5.1 deployment)
      - Trail Guide Agent deployed to Foundry
    - azd creates `.env` file with connection details
    - Estimated time: 5-10 minutes (automated deployment)
@@ -183,7 +183,7 @@ The educational goal is for students to:
    - `/bicep/main.bicep`: Azure resource definitions
    - Microsoft Foundry project
      - Azure OpenAI Service
-   - GPT-5 deployment
+   - GPT-5.1 deployment
    - `/bicep/agent.bicep`: Agent definition and deployment
 
 2. **Agent Implementation** (`/src/agents/trail_guide_agent/`)
@@ -307,15 +307,15 @@ This technical plan aligns with the project constitution as follows:
 ### Assumptions
 
 1. **Azure OpenAI Access:** Learner has access to Azure OpenAI Service (subscription approved)
-2. **GPT-5 Availability:** Learner's Azure region supports GPT-5 or GPT-5-mini deployment
+2. **GPT-5.1 Availability:** Learner's Azure region supports GPT-5.1 deployment
 3. **Azure CLI Installed:** Learner has Azure CLI installed and configured (`az login` works)
 4. **Python Environment:** Learner can create Python virtual environments
 5. **Terminal Access:** Learner is comfortable running Python scripts from command line
-6. **Trail Knowledge:** Agent has general knowledge about hiking trails from GPT-5 training data
+6. **Trail Knowledge:** Agent has general knowledge about hiking trails from GPT-5.1 training data
    - No custom knowledge base required for MVP
    - Agent may not have detailed information about all trails
 7. **No RAG Required:** MVP uses LLM's built-in knowledge; vector search deferred to stretch module
-8. **Token Limits:** The selected GPT-5 model context window is sufficient for conversation history
+8. **Token Limits:** The selected GPT-5.1 model context window is sufficient for conversation history
 9. **Response Time:** Azure OpenAI responses typically <3 seconds with standard tier
 10. **Single User:** Agent handles one conversation at a time (no concurrency requirements)
 
@@ -354,8 +354,8 @@ This technical plan aligns with the project constitution as follows:
    - **Recommendation:** Rely on system prompt instructions; LLM is capable of declining out-of-scope requests
 
 8. **Deployment Model Selection**
-   - Should we specify GPT-5, GPT-5-mini, or allow learner to choose?
-   - **Recommendation:** Document both options; recommend GPT-5-mini when speed and cost matter more than peak quality
+   - Should we specify GPT-5.1 only, or document optional regional alternatives?
+   - **Recommendation:** Use GPT-5.1 as the documented baseline; mention alternate lower-cost models only when regionally available
 
 ## Technical Risks and Mitigations
 

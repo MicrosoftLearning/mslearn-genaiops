@@ -67,21 +67,10 @@ param aiFoundryProjectName string = 'ai-project-${environmentName}'
 param aiProjectDeploymentsJson string = '''
 [
   {
-    "name": "gpt-5-mini",
+    "name": "gpt-5.1",
     "model": {
       "format": "OpenAI",
-      "name": "gpt-5-mini"
-    },
-    "sku": {
-      "name": "GlobalStandard",
-      "capacity": 10
-    }
-  },
-  {
-    "name": "gpt-5",
-    "model": {
-      "format": "OpenAI",
-      "name": "gpt-5"
+      "name": "gpt-5.1"
     },
     "sku": {
       "name": "GlobalStandard",
@@ -108,7 +97,7 @@ param enableHostedAgents bool
 @description('Enable monitoring for the AI project')
 param enableMonitoring bool = true
 
-@description('Optional. Object ID of the GitHub Actions service principal to grant Azure AI User role for CI/CD evaluation workflows.')
+@description('Optional. Object ID of the GitHub Actions service principal to grant Foundry User role for CI/CD evaluation workflows.')
 param githubActionsPrincipalId string = ''
 
 // Tags that should be applied to all resources.

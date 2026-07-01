@@ -100,7 +100,7 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
 
     The command deploys the infrastructure from the `infra\` folder, creating:
     - **Resource Group** - Container for all resources
-    - **Foundry (AI Services)** - The hub with access to models like GPT-5
+    - **Foundry (AI Services)** - The hub with access to models like GPT-5.1
     - **Foundry Project** - Your workspace for creating and managing prompts
     - **Log Analytics Workspace** - Collects logs and telemetry data
     - **Application Insights** - Monitors performance and usage
@@ -150,7 +150,7 @@ With your Azure resources deployed, install the required Python packages.
 
     ```
     AGENT_NAME="trail-guide"
-    MODEL_NAME="gpt-5"
+    MODEL_NAME="gpt-5.1"
     ```
 
 ## Understand the evaluation workflow
@@ -191,7 +191,7 @@ You'll use Microsoft Foundry's built-in quality evaluators:
 | **Relevance** | Response addresses query | 1-5 score | Validate query-response alignment |
 | **Groundedness** | Factual accuracy | 1-5 score | Ensure reliable information |
 
-All evaluators use GPT-5 as an LLM judge and return:
+All evaluators use GPT-5.1 as an LLM judge and return:
 
 - **Score**: 1-5 scale (5 = excellent)
 - **Label**: Pass/Fail based on threshold (default: 3)
@@ -261,7 +261,7 @@ Execute the complete evaluation pipeline with one command.
 
     Configuration:
       Project: https://<account>.services.ai.azure.com/api/projects/<project>
-      Model: gpt-5
+      Model: gpt-5.1
       Dataset: trail-guide-evaluation-dataset (v1)
 
     ================================================================================
@@ -279,7 +279,7 @@ Execute the complete evaluation pipeline with one command.
     ================================================================================
 
     Configuration:
-      Judge Model: gpt-5
+      Judge Model: gpt-5.1
       Evaluators: Intent Resolution, Relevance, Groundedness
 
     Creating evaluation...
@@ -403,12 +403,12 @@ The evaluation script integrates with GitHub Actions to automatically run evalua
 
     Save the `appId` and `tenant` values from the output. The workflow below uses OIDC federated credentials, so the generated `password` is not used in this lab.
 
-    Assign the **Azure AI User** role so the service principal can call the Foundry project API:
+    Assign the **Foundry User** role so the service principal can call the Foundry project API:
 
     ```powershell
     az role assignment create `
       --assignee "<appId>" `
-      --role "Azure AI User" `
+      --role "Foundry User" `
       --scope "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.CognitiveServices/accounts/<ai-account-name>"
     ```
 
@@ -471,7 +471,7 @@ The evaluation script integrates with GitHub Actions to automatically run evalua
 
     Optionally, add a repository variable (not secret) for the model name:
     - **Settings → Secrets and variables → Actions → Variables → New repository variable**
-    - Name: `MODEL_NAME`, Value: `gpt-5` (or `gpt-5-mini`)
+    - Name: `MODEL_NAME`, Value: `gpt-5.1`
 
 1. **Test the workflow manually**
 
@@ -547,7 +547,7 @@ Document your findings and create an analysis report.
     
     Evaluated: 89 test cases  
     Time: ~10 minutes  
-    Scoring: GPT-5 as an LLM judge (1-5 scale)
+    Scoring: GPT-5.1 as an LLM judge (1-5 scale)
     
     | Evaluator | Average Score | Pass Rate | Assessment |
     |-----------|---------------|-----------|------------|
@@ -638,11 +638,11 @@ Create `experiments/automated/threshold_analysis.md` with:
 
 ### Investigation goal
 
-Compare evaluation results between GPT-5 and GPT-5-mini to understand quality-cost tradeoffs for your specific use case.
+Compare evaluation results between GPT-5.1 and another lower-cost regional model, if one is available in your environment, to understand quality-cost tradeoffs for your specific use case.
 
-### Run evaluation on GPT-5-mini responses
+### Run evaluation on responses from an alternate regional model
 
-1. Generate 89 responses from GPT-5-mini for the same queries.
+1. Generate 89 responses from a lower-cost model that is available in your region for the same queries.
 
 1. Run cloud evaluation on both sets.
 
@@ -673,8 +673,9 @@ Create `experiments/automated/model_comparison.md` with:
 
 **Resolution**:
 - Run `az login` to refresh Azure credentials
-- Verify the service principal has the **Azure AI User** role at the CognitiveServices account scope — this role has `Microsoft.CognitiveServices/*` wildcard data actions required for `AIServices/agents/write`. `Azure AI Developer` alone is **not sufficient**
+- Verify the service principal has the **Foundry User** role at the CognitiveServices account scope — this role has `Microsoft.CognitiveServices/*` wildcard data actions required for `AIServices/agents/write`. `Foundry Developer` alone is **not sufficient**
 - Check `AZURE_AI_PROJECT_ENDPOINT` in `.env` file is correct and includes `/api/projects/<project>`
+- If the first run happens immediately after `azd up`, wait 1-2 minutes and retry once so the role assignment can propagate
 
 ### OIDC app created in the wrong tenant
 
