@@ -92,6 +92,8 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
     azd up
     ```
 
+    > **Note**: If `azd up` fails because the default model deployment is unavailable in your region, update the `aiProjectDeploymentsJson` block in `infra/main.bicep` to a compatible model and rerun the command.
+
     When prompted, provide:
     - **Environment name** (e.g., `dev`, `test`) - Used to name all resources
     - **Azure subscription** - Where resources will be created
@@ -99,7 +101,7 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
 
     The command deploys the infrastructure from the `infra\` folder, creating:
     - **Resource Group** - Container for all resources
-    - **Foundry (AI Services)** - The hub with access to models like GPT-4.1
+    - **Foundry (AI Services)** - The hub with access to models like GPT-5.1
     - **Foundry Project** - Your workspace for creating and managing agents
     - **Log Analytics Workspace** - Collects logs and telemetry data
     - **Application Insights** - Monitors performance and usage
@@ -149,8 +151,10 @@ With your Azure resources deployed, install the required Python packages.
     Open the `.env` file in your repository root and add:
 
     ```
-    MODEL_NAME="gpt-4.1"
+    MODEL_NAME="<model_name>"
     ```
+
+    > **Note**: Set `MODEL_NAME` to the deployed model you want to trace in your environment. For example, if you kept the template default and it is available in your region, you can use `gpt-5.1`.
 
 ## Understand the monitoring script
 
@@ -211,7 +215,7 @@ Before running anything, take a moment to review what `src/tests/run_monitoring.
     ```
     trail_guide_v1                            ← root: entire version run
     ├── v1_day-hike-gear                      ← child: one test prompt (duration + token attributes)
-    │   └── chat gpt-4.1                      ← auto: the actual LLM call
+    │   └── chat gpt-5.1                      ← auto: the actual LLM call
     └── ...
     trail_guide_v2  (same structure)
     trail_guide_v3  (same structure)
@@ -259,7 +263,7 @@ Use the output of `python src/tests/check_traces.py` to compare prompt versions.
     - **Total tokens** (and prompt vs completion breakdown)
 1. Use the nested structure to understand the chain:
     - The `v{n}_{test-name}` span is where you attach per-test token and duration attributes.
-    - The `chat gpt-4.1` span is the instrumented model call.
+    - The `chat gpt-5.1` span is the instrumented model call.
 
     - Which version produces the most consistent response lengths?
     - Which version shows the highest duration?
@@ -293,7 +297,7 @@ The `check_traces.py` output gives you the full span tree for each version run �
 
     - Are completion tokens higher in v3?
     - Is the duration longer?
-    - Compare the `chat gpt-4.1` child span durations under each test span.
+    - Compare the `chat gpt-5.1` child span durations under each test span.
 
 1. Repeat the comparison for at least two other test prompts. Document your observations:
 

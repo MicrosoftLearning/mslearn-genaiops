@@ -26,7 +26,7 @@ load_dotenv()
 
 project_endpoint = os.environ["AZURE_AI_PROJECT_ENDPOINT"]
 openai_endpoint = os.environ["AZURE_OPENAI_ENDPOINT"]
-model_name = os.getenv("MODEL_NAME", "gpt-4.1")
+model_name = os.getenv("MODEL_NAME", "gpt-5.1")
 
 # Connect to Azure AI Project and retrieve Application Insights connection string
 project_client = AIProjectClient(

@@ -152,8 +152,8 @@ module aiConnections './connection.bicep' = [for (connection, index) in connecti
   }
 }]
 
-// Azure AI User (53ca6127-db72-4b80-b1b0-d745d6d5456d) has Microsoft.CognitiveServices/* wildcard
-// data actions, covering AIServices/agents/write required by the Foundry project API.
+// Foundry User (53ca6127-db72-4b80-b1b0-d745d6d5456d) has Microsoft.CognitiveServices/* wildcard
+// data actions, covering the Foundry project API access needed by this lab.
 // Assign at the account scope so it applies to all projects under this account.
 resource localUserAiUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: aiAccount
@@ -186,9 +186,9 @@ resource localUserCognitiveServicesUserRoleAssignment 'Microsoft.Authorization/r
   }
 }
 
-// Optional: assign Azure AI User to a GitHub Actions service principal so CI/CD
-// workflows can call the Foundry project API (AIServices/agents/write).
-@description('Optional. Object ID of the GitHub Actions service principal to grant Azure AI User role.')
+// Optional: assign Foundry User to a GitHub Actions service principal so CI/CD
+// workflows can call the Foundry project API.
+@description('Optional. Object ID of the GitHub Actions service principal to grant Foundry User role.')
 param githubActionsPrincipalId string = ''
 
 resource githubActionsAiUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(githubActionsPrincipalId)) {
@@ -289,7 +289,7 @@ module azureAiSearch '../search/azure_ai_search.bicep' = if (hasSearchConnection
 
 // Deploy model deployments on the AI account.
 // Each entry in the `deployments` parameter becomes a real deployment that
-// can be referenced by name from the project (e.g. "gpt-4.1", "gpt-4.1-mini").
+// can be referenced by name from the project (e.g. "gpt-5.1").
 @batchSize(1) // Deploy one at a time to avoid capacity conflicts
 resource modelDeployments 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = [
   for deployment in (deployments ?? []): {
@@ -360,7 +360,7 @@ type deploymentsType = {
   model: {
     @description('Model format, e.g. OpenAI')
     format: string
-    @description('Model name, e.g. gpt-4.1')
+    @description('Model name, e.g. gpt-5.1')
     name: string
     @description('Optional model version')
     version: string?

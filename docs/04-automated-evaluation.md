@@ -93,6 +93,8 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
     azd up
     ```
 
+    > **Note**: If `azd up` fails because the default model deployment is unavailable in your region, update the `aiProjectDeploymentsJson` block in `infra/main.bicep` to a compatible model and rerun the command.
+
     When prompted, provide:
     - **Environment name** (e.g., `dev`, `test`) - Used to name all resources
     - **Azure subscription** - Where resources will be created
@@ -100,7 +102,7 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
 
     The command deploys the infrastructure from the `infra\` folder, creating:
     - **Resource Group** - Container for all resources
-    - **Foundry (AI Services)** - The hub with access to models like GPT-4.1
+    - **Foundry (AI Services)** - The hub with access to models such as GPT-5.1
     - **Foundry Project** - Your workspace for creating and managing prompts
     - **Log Analytics Workspace** - Collects logs and telemetry data
     - **Application Insights** - Monitors performance and usage
@@ -150,8 +152,10 @@ With your Azure resources deployed, install the required Python packages.
 
     ```
     AGENT_NAME="trail-guide"
-    MODEL_NAME="gpt-4.1"
+    MODEL_NAME="<model_name>"
     ```
+
+    > **Note**: Set `MODEL_NAME` to the deployed model you want to use for the lab and evaluation. For example, if you kept the template default and it is available in your region, you can use `gpt-5.1`.
 
 ## Understand the evaluation workflow
 
@@ -159,17 +163,17 @@ Cloud evaluation follows a structured workflow:
 
 ```text
 1. Prepare Dataset
-   ↓
+          ↓
 2. Define Evaluation Criteria (Evaluators)
-   ↓
+          ↓
 3. Create Evaluation Definition
-   ↓
+          ↓
 4. Run Evaluation against Dataset
-   ↓
+          ↓
 5. Poll for Completion
-   ↓
+          ↓
 6. Retrieve & Interpret Results
-   ↓
+          ↓
 7. Analyze and Document Findings
 ```
 
@@ -191,7 +195,7 @@ You'll use Microsoft Foundry's built-in quality evaluators:
 | **Relevance** | Response addresses query | 1-5 score | Validate query-response alignment |
 | **Groundedness** | Factual accuracy | 1-5 score | Ensure reliable information |
 
-All evaluators use GPT-4.1 as an LLM judge and return:
+All evaluators use the configured judge model as an LLM judge and return. The examples below use GPT-5.1:
 
 - **Score**: 1-5 scale (5 = excellent)
 - **Label**: Pass/Fail based on threshold (default: 3)
@@ -261,7 +265,7 @@ Execute the complete evaluation pipeline with one command.
 
     Configuration:
       Project: https://<account>.services.ai.azure.com/api/projects/<project>
-      Model: gpt-4.1
+      Model: gpt-5.1
       Dataset: trail-guide-evaluation-dataset (v1)
 
     ================================================================================
@@ -279,7 +283,7 @@ Execute the complete evaluation pipeline with one command.
     ================================================================================
 
     Configuration:
-      Judge Model: gpt-4.1
+      Judge Model: gpt-5.1
       Evaluators: Intent Resolution, Relevance, Groundedness
 
     Creating evaluation...
@@ -387,24 +391,32 @@ The evaluation script integrates with GitHub Actions to automatically run evalua
 
 1. **Configure Azure authentication**
 
+    > **Important - Tenant alignment**
+    >
+    > Before creating the service principal, make sure your Azure CLI session is using the same tenant as the subscription that holds your Foundry resources:
+    > ```powershell
+    > az account show --query "{subscription:id, tenant:tenantId}" -o table
+    > ```
+    > If needed, switch to the correct tenant and subscription before continuing. Creating the app in the wrong tenant is a common cause of OIDC sign-in failures later.
+
     Create a service principal for GitHub Actions:
 
     ```powershell
     az ad sp create-for-rbac --name "github-agent-evaluator"
     ```
 
-    Save the `appId`, `tenant`, and `password` values from the output — you will use them in the next steps.
+    Save the `appId` and `tenant` values from the output. The workflow below uses OIDC federated credentials, so the generated `password` is not used in this lab.
 
-    Assign the **Azure AI User** role so the service principal can call the Foundry project API:
+    Assign the **Foundry User** role so the service principal can call the Foundry project API:
 
     ```powershell
     az role assignment create `
       --assignee "<appId>" `
-      --role "Azure AI User" `
+      --role "Foundry User" `
       --scope "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.CognitiveServices/accounts/<ai-account-name>"
     ```
 
-    > **Note**: Use the `AZURE_SUBSCRIPTION_ID`, `AZURE_RESOURCE_GROUP`, and `AZURE_AI_ACCOUNT_NAME` values from your `.env` file to fill in the scope. The `Azure AI Developer` role alone is **not sufficient** for this API.
+    > **Note**: Use the `AZURE_SUBSCRIPTION_ID`, `AZURE_RESOURCE_GROUP`, and `AZURE_AI_ACCOUNT_NAME` values from your `.env` file to fill in the scope. If your workflow later fails during dataset upload with a permission error, verify the role assignment at this Cognitive Services account scope.
 
     Create two federated credentials so the workflow can authenticate via OIDC for both manual runs and pull requests. GitHub sends a different token subject for each trigger type, so one credential is required per subject.
 
@@ -463,7 +475,7 @@ The evaluation script integrates with GitHub Actions to automatically run evalua
 
     Optionally, add a repository variable (not secret) for the model name:
     - **Settings → Secrets and variables → Actions → Variables → New repository variable**
-    - Name: `MODEL_NAME`, Value: `gpt-4.1` (or `gpt-4.1-mini`)
+    - Name: `MODEL_NAME`, Value: `gpt-5.1` or another compatible deployed model
 
 1. **Test the workflow manually**
 
@@ -539,7 +551,7 @@ Document your findings and create an analysis report.
     
     Evaluated: 89 test cases  
     Time: ~10 minutes  
-    Scoring: GPT-4.1 as LLM judge (1-5 scale)
+    Scoring: GPT-5.1 as an LLM judge (1-5 scale)
     
     | Evaluator | Average Score | Pass Rate | Assessment |
     |-----------|---------------|-----------|------------|
@@ -630,11 +642,11 @@ Create `experiments/automated/threshold_analysis.md` with:
 
 ### Investigation goal
 
-Compare evaluation results between GPT-4.1 and GPT-4.1-mini to understand quality-cost tradeoffs for your specific use case.
+Compare evaluation results between GPT-5.1 and another lower-cost regional model, if one is available in your environment, to understand quality-cost tradeoffs for your specific use case.
 
-### Run evaluation on GPT-4.1-mini responses
+### Run evaluation on responses from an alternate regional model
 
-1. Generate 89 responses from GPT-4.1-mini for the same queries.
+1. Generate 89 responses from a lower-cost model that is available in your region for the same queries.
 
 1. Run cloud evaluation on both sets.
 
@@ -665,8 +677,18 @@ Create `experiments/automated/model_comparison.md` with:
 
 **Resolution**:
 - Run `az login` to refresh Azure credentials
-- Verify the service principal has the **Azure AI User** role at the CognitiveServices account scope — this role has `Microsoft.CognitiveServices/*` wildcard data actions required for `AIServices/agents/write`. `Azure AI Developer` alone is **not sufficient**
+- Verify the service principal has the **Foundry User** role at the CognitiveServices account scope — this role has `Microsoft.CognitiveServices/*` wildcard data actions required for `AIServices/agents/write`. `Foundry Developer` alone is **not sufficient**
 - Check `AZURE_AI_PROJECT_ENDPOINT` in `.env` file is correct and includes `/api/projects/<project>`
+- If the first run happens immediately after `azd up`, wait 1-2 minutes and retry once so the role assignment can propagate
+
+### OIDC app created in the wrong tenant
+
+**Symptom**: OIDC login fails with errors such as `AADSTS70025` or the workflow cannot find the expected subscription.
+
+**Resolution**:
+- Run `az account show --query "{subscription:id, tenant:tenantId}" -o table` and confirm the tenant matches the subscription that contains your Foundry resources
+- If the app or service principal was created in the wrong tenant, recreate it in the correct tenant and update `AZURE_TENANT_ID` in GitHub Secrets
+- Recreate any federated credentials on the app registration after recreating the app or service principal
 
 ### OIDC login fails on PR workflows (`AADSTS700213`)
 
