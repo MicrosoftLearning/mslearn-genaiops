@@ -87,6 +87,8 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
     azd up
     ```
 
+    > **Note**: If `azd up` fails because the default model deployment is unavailable in your region, update the `aiProjectDeploymentsJson` block in `infra/main.bicep` to a compatible model and rerun the command.
+
     When prompted, provide:
     - **Environment name** (e.g., `dev`, `test`) - Used to name all resources
     - **Azure subscription** - Where resources will be created
@@ -120,8 +122,10 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
 
     ```
     AGENT_NAME="trail-guide"
-    MODEL_NAME="gpt-5.1"
+    MODEL_NAME="<model_name>"
     ```
+
+    > **Note**: Set `MODEL_NAME` to the deployed model you want to use in your environment. For example, if you kept the template default and it is available in your region, you can use `gpt-5.1`.
 
 ### Install Python dependencies
 

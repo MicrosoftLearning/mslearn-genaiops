@@ -93,6 +93,8 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
     azd up
     ```
 
+    > **Note**: If `azd up` fails because the default model deployment is unavailable in your region, update the `aiProjectDeploymentsJson` block in `infra/main.bicep` to a compatible model and rerun the command.
+
     When prompted, provide:
     - **Environment name** (e.g., `dev`, `test`) - Used to name all resources
     - **Azure subscription** - Where resources will be created
@@ -100,7 +102,7 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
 
     The command deploys the infrastructure from the `infra\` folder, creating:
     - **Resource Group** - Container for all resources
-    - **Foundry (AI Services)** - The hub with access to models like GPT-5.1
+    - **Foundry (AI Services)** - The hub with access to models such as GPT-5.1
     - **Foundry Project** - Your workspace for creating and managing prompts
     - **Log Analytics Workspace** - Collects logs and telemetry data
     - **Application Insights** - Monitors performance and usage
@@ -150,8 +152,10 @@ With your Azure resources deployed, install the required Python packages.
 
     ```
     AGENT_NAME="trail-guide"
-    MODEL_NAME="gpt-5.1"
+    MODEL_NAME="<model_name>"
     ```
+
+    > **Note**: Set `MODEL_NAME` to the deployed model you want to use for the lab and evaluation. For example, if you kept the template default and it is available in your region, you can use `gpt-5.1`.
 
 ## Understand the evaluation workflow
 
@@ -191,7 +195,7 @@ You'll use Microsoft Foundry's built-in quality evaluators:
 | **Relevance** | Response addresses query | 1-5 score | Validate query-response alignment |
 | **Groundedness** | Factual accuracy | 1-5 score | Ensure reliable information |
 
-All evaluators use GPT-5.1 as an LLM judge and return:
+All evaluators use the configured judge model as an LLM judge and return. The examples below use GPT-5.1:
 
 - **Score**: 1-5 scale (5 = excellent)
 - **Label**: Pass/Fail based on threshold (default: 3)
@@ -471,7 +475,7 @@ The evaluation script integrates with GitHub Actions to automatically run evalua
 
     Optionally, add a repository variable (not secret) for the model name:
     - **Settings → Secrets and variables → Actions → Variables → New repository variable**
-    - Name: `MODEL_NAME`, Value: `gpt-5.1`
+    - Name: `MODEL_NAME`, Value: `gpt-5.1` or another compatible deployed model
 
 1. **Test the workflow manually**
 

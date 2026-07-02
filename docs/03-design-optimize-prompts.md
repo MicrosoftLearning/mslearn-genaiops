@@ -87,6 +87,8 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
     azd up
     ```
 
+    > **Note**: If `azd up` fails because the default model deployment is unavailable in your region, update the `aiProjectDeploymentsJson` block in `infra/main.bicep` to a compatible model and rerun the command.
+
     When prompted, provide:
     - **Environment name** (e.g., `dev`, `test`) - Used to name all resources
     - **Azure subscription** - Where resources will be created
@@ -144,8 +146,10 @@ With your Azure resources deployed, install the required Python packages.
 
     ```
     AGENT_NAME="trail-guide"
-    MODEL_NAME="gpt-5.1"
+    MODEL_NAME="<model_name>"
     ```
+
+    > **Note**: Set `MODEL_NAME` to the deployed baseline model you want to use in your environment. For example, if you kept the template default and it is available in your region, you can use `gpt-5.1`.
 
 ## Understand the experimental workflow
 
@@ -210,7 +214,7 @@ The baseline provides:
     git checkout main
     ```
 
-1. Open `src/agents/trail_guide_agent/trail_guide_agent.py` and make sure the baseline configuration uses the v3 prompt and GPT-5.1 model.
+1. Open `src/agents/trail_guide_agent/trail_guide_agent.py` and make sure the baseline configuration uses the v3 prompt and your chosen baseline model.
 
     If you completed Lab 02 already, the file may already be configured for `v3_instructions.txt`.
     If you're starting directly from the template repository, confirm these two settings before continuing:
