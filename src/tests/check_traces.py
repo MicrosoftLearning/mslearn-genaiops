@@ -40,8 +40,7 @@ print(f"Application Insights key: {instrumentation_key}")
 
 # Resolve Log Analytics workspace customer ID (required by LogsQueryClient)
 print("Resolving Log Analytics workspace...")
-sub_client = SubscriptionClient(credential)
-subscription_id = next(sub_client.subscriptions.list()).subscription_id
+subscription_id = os.environ.get("AZURE_SUBSCRIPTION_ID")
 
 ai_mgmt = ApplicationInsightsManagementClient(credential, subscription_id)
 workspace_resource_id = None
