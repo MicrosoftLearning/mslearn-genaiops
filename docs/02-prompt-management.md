@@ -234,7 +234,7 @@ Next, deploy a second version with enhanced capabilities.
    To:
    ```python
     prompt_file = Path(__file__).parent / 'prompts' / 'v2_instructions.txt'
-    ```
+   ```
 
 1. Run the agent creation script:
 
