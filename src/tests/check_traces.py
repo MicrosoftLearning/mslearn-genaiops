@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from azure.identity import DefaultAzureCredential
 from azure.monitor.query import LogsQueryClient, LogsQueryStatus
 from azure.mgmt.applicationinsights import ApplicationInsightsManagementClient
+from azure.mgmt.subscription import SubscriptionClient
 from azure.mgmt.loganalytics import LogAnalyticsManagementClient
 from azure.ai.projects import AIProjectClient
 from datetime import timedelta
@@ -39,10 +40,8 @@ print(f"Application Insights key: {instrumentation_key}")
 
 # Resolve Log Analytics workspace customer ID (required by LogsQueryClient)
 print("Resolving Log Analytics workspace...")
-subscription_id = os.environ.get("AZURE_SUBSCRIPTION_ID")
-if not subscription_id:
-    print("ERROR: AZURE_SUBSCRIPTION_ID not found in .env file.")
-    raise SystemExit(1)
+sub_client = SubscriptionClient(credential)
+subscription_id = next(sub_client.subscriptions.list()).subscription_id
 
 ai_mgmt = ApplicationInsightsManagementClient(credential, subscription_id)
 workspace_resource_id = None

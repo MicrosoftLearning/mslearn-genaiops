@@ -402,10 +402,10 @@ The evaluation script integrates with GitHub Actions to automatically run evalua
     Create a service principal for GitHub Actions:
 
     ```powershell
-    az ad sp create-for-rbac --name "github-agent-evaluator" --create-password false
+    az ad sp create-for-rbac --name "github-agent-evaluator"
     ```
 
-    Save the `appId` and `tenant` values from the output. The workflow below uses OIDC federated credentials, so the generated `password` is not used in this lab. The `--create-password false` flag is included because some Entra ID tenants enforce a baseline security policy (`Block new password credentials in apps`) that rejects password credential creation; skipping it avoids that policy error since OIDC doesn't need a password anyway.
+    Save the `appId` and `tenant` values from the output. The workflow below uses OIDC federated credentials, so the generated `password` is not used in this lab.
 
     Assign the **Foundry User** role so the service principal can call the Foundry project API:
 
