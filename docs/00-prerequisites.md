@@ -147,6 +147,13 @@ azd auth login
 
 Both commands will open a browser window for authentication. Sign in with your Azure credentials.
 
+> ⚠️ **Important**
+> In some environments, the VS Code integrated terminal may crash or close during the interactive login flow.
+> If this happens, use device code authentication instead:
+> ```bash
+> az login --use-device-code
+> ```
+
 ## Troubleshooting
 
 ### Common issues
