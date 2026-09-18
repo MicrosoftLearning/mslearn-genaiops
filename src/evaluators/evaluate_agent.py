@@ -332,10 +332,18 @@ def retrieve_and_display_results(eval_object, run):
     }
 
     for item in scored_items:
-        if hasattr(item, "evaluator_outputs"):
-            for output in item.evaluator_outputs:
-                if output.name in scores and hasattr(output, "score"):
-                    scores[output.name].append(output.score)
+        # The Evals API returns one entry per evaluator in item.results, each
+        # carrying 'metric' (or 'name') and a numeric 'score'. Entries may come
+        # back as dicts or as model objects depending on SDK version.
+        for result in (getattr(item, "results", None) or []):
+            if isinstance(result, dict):
+                metric = result.get("metric") or result.get("name")
+                value = result.get("score")
+            else:
+                metric = getattr(result, "metric", None) or getattr(result, "name", None)
+                value = getattr(result, "score", None)
+            if metric in scores and value is not None:
+                scores[metric].append(float(value))
 
     # --- Build summary text (printed to console and written to file) ---
     # Everything written to `lines` ends up both on screen and in the file,
