@@ -174,8 +174,6 @@ Start by deploying the first version of the trail guide agent.
 
     Verify it's configured to read from `v1_instructions.txt`.
 
-    >
-
 1. Run the agent creation script:
 
     ```powershell
