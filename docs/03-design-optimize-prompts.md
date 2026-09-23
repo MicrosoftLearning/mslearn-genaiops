@@ -76,9 +76,9 @@ Now you'll use the Azure Developer CLI to deploy all required Azure resources.
 
     > ⚠️ **Important**
     > In some environments, the VS Code integrated terminal may crash or close during the interactive login flow.
-    > If this happens, authenticate using explicit credentials instead:
+    > If this happens, use device code authentication instead:
     > ```powershell
-    > az login --username <your-username> --password <your-password>
+    > az login --use-device-code
     > ```
 
 1. Provision resources:
